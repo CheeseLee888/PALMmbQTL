@@ -759,6 +759,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     } else {
       print(length(dataMerge_sort$IIDgeno))
       sparseGRM <- Matrix:::sparseMatrix(i = as.vector(1:nrow(data.new)), j = as.vector(1:nrow(data.new)), x = rep(1, nrow(data.new)), symmetric = TRUE)
+      rownames(sparseGRM) <- colnames(sparseGRM) <- data$id
       setupSparseGRM_new(sparseGRM)
     }
     # getsubGRM(sparseGRMFile, sparseGRMSampleIDFile, relatednessCutoff, dataMerge_sort$IID, dataMerge_sort$longlVar)
