@@ -1025,19 +1025,8 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     set_useGRMtoFitNULL(useGRMtoFitNULL)
 
     if (traitType != "count_nb") {
-      system.time(modglmm <- glmmkin.ai_PCG_Rcpp_multiV(bedFile, bimFile, famFile, Xorig, isCovariateOffset,
-        fit0,
-        tau = tau, fixtau = fixtau, maxiter = maxiter,
-        tol = tol, verbose = TRUE, nrun = nrun, tolPCG = tolPCG,
-        maxiterPCG = maxiterPCG, subPheno = dataMerge_sort, indicatorGenoSamplesWithPheno = indicatorGenoSamplesWithPheno,
-        obj.noK = obj.noK, out.transform = out.transform,
-        tauInit = tauInit, memoryChunk = memoryChunk,
-        LOCO = LOCO, chromosomeStartIndexVec = chromosomeStartIndexVec,
-        chromosomeEndIndexVec = chromosomeEndIndexVec,
-        traceCVcutoff = traceCVcutoff, isCovariateTransform = isCovariateTransform,
-        isDiagofKinSetAsOne = isDiagofKinSetAsOne,
-        isLowMemLOCO = isLowMemLOCO, covarianceIdxMat = covarianceIdxMat, isStoreSigma = isStoreSigma, useSparseGRMtoFitNULL = useSparseGRMtoFitNULL, useGRMtoFitNULL = useGRMtoFitNULL, isSparseGRMIdentity = isSparseGRMIdentity
-      ))
+      system.time(modglmm <- glmmkin(formula + offset(log(offsetCol)), data = data, kins = sparseGRM,
+                                          id = "id", family = poisson(link = "log"))
       modglmm$obj.glm.null$model <- as.data.frame(modglmm$obj.glm.null$model)
     } else {
       system.time(modglmm <- glmmkin.ai_PCG_Rcpp_multiV_NB(bedFile, bimFile, famFile, Xorig, isCovariateOffset,
