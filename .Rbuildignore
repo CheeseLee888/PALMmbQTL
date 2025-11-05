@@ -1,2 +1,4 @@
 thirdParty/cget
 ^\.github$
+^.*\.Rproj$
+^\.Rproj\.user$

@@ -24,3 +24,5 @@ R/*.lo
 R/.nfs00000013331217950004b123
 .DS_Store
 extdata/
+.Rhistory
+*.Rproj*
