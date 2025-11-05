@@ -1026,7 +1026,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     set_useGRMtoFitNULL(useGRMtoFitNULL)
 
     if (traitType != "count_nb") {
-      system.time(modglmm <- glmmkin(formula + offset(log(offsetCol)), data = data, kins = sparseGRM,
+      system.time(modglmm <- GMMAT::glmmkin(formula + offset(log(offsetCol)), data = data, kins = sparseGRM,
                                           id = "id", family = poisson(link = "log"))
       modglmm$obj.glm.null$model <- as.data.frame(modglmm$obj.glm.null$model)
     } else {
