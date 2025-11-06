@@ -763,8 +763,9 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       getsubGRM_orig(sparseGRMFile, sparseGRMSampleIDFile, relatednessCutoff, dataMerge_sort$IID)
     } else {
       print(length(dataMerge_sort$IIDgeno))
-      sparseGRM <- Matrix:::sparseMatrix(i = as.vector(1:nrow(data.new)), j = as.vector(1:nrow(data.new)), x = rep(1, nrow(data.new)), symmetric = TRUE)
-      rownames(sparseGRM) <- colnames(sparseGRM) <- data$id
+      # sparseGRM <- Matrix:::sparseMatrix(i = as.vector(1:nrow(data.new)), j = as.vector(1:nrow(data.new)), x = rep(1, nrow(data.new)), symmetric = TRUE)
+      sparseGRM <- Matrix:::sparseMatrix(i = as.vector(1:nrow(data)), j = as.vector(1:nrow(data)), x = rep(1, nrow(data)), symmetric = TRUE)
+      rownames(sparseGRM) <- colnames(sparseGRM) <- data$IID
       setupSparseGRM_new(sparseGRM)
     }
     # getsubGRM(sparseGRMFile, sparseGRMSampleIDFile, relatednessCutoff, dataMerge_sort$IID, dataMerge_sort$longlVar)
@@ -1034,6 +1035,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       head(data)
       # formula <- as.formula(formula)
       system.time(modglmm <- GMMAT::glmmkin(formula, data = data,
+                                            kins = sparseGRM,
                                           id = "IID", family = poisson(link = "log")))
       cat("glmmkin succeed!")
       # modglmm$obj.glm.null$model <- as.data.frame(modglmm$obj.glm.null$model)
