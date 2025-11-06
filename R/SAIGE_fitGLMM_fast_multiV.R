@@ -461,8 +461,13 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       formula <- paste0(phenoCol, "~ 1")
       hasCovariate <- FALSE
     }
-
+    
+    if(isCovariateOffset & offsetCol != ""){
+      formula <- paste0(formula, "+offset(log(", offsetCol, "))")
+    }
+    
     cat("formula is ", formula, "\n")
+    
     formula.null <- as.formula(formula)
     mmat <- model.matrix(formula.null, data, na.action = NULL)
     mmat <- cbind(mmat, data[, which(colnames(data) == phenoCol), drop = F])
@@ -717,10 +722,10 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       )
     } else {
       offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-      modwitcov <- glm(formula.new,
-        offset = offsetColVal, data = data.new,
-        family = "poisson", weights = varWeights
-      )
+      # modwitcov <- glm(formula.new,
+      #   offset = offsetColVal, data = data.new,
+      #   family = "poisson", weights = varWeights
+      # )
     }
   } else if (traitType == "count_nb") {
     if (length(offsetCol) == 0) {
@@ -740,7 +745,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   mmat <- model.matrix(formula.new, data = data.new, na.action = NULL)
 
   if (isCovariateOffset) {
-    covoffset <- mmat[, -1, drop = F] %*% modwitcov$coefficients[-1]
+    # covoffset <- mmat[, -1, drop = F] %*% modwitcov$coefficients[-1]
     print("isCovariateOffset=TRUE, so fixed effects coefficnets won't be estimated.")
     formula.new.withCov <- formula.new
     formula_nocov <- paste0(phenoCol, "~ 1")
@@ -750,7 +755,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     covoffset <- rep(0, nrow(data.new))
   }
 
-  data.new$covoffset <- covoffset
+  # data.new$covoffset <- covoffset
 
 
   if (useSparseGRMtoFitNULL | useSparseGRMforVarRatio) {
@@ -943,19 +948,19 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       }
       Xorig <- NULL
     } else {
-      fit0orig <- glm(formula.new.withCov, data = data.new, family = "poisson", weights = varWeights)
-      Xorig <- model.matrix(fit0orig)
-      rm(fit0orig)
-      gc()
-      if (length(offsetCol) == 0) {
-        fit0 <- glm(formula.new,
-          data = data.new, offset = covoffset,
-          family = "poisson", weights = varWeights
-        )
-      } else {
-        offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-        fit0 <- glm(formula.new, data = data.new, offset = offsetTotal, family = "poisson", weights = varWeights)
-      }
+      # fit0orig <- glm(formula.new.withCov, data = data.new, family = "poisson", weights = varWeights)
+      # Xorig <- model.matrix(fit0orig)
+      # rm(fit0orig)
+      # gc()
+      # if (length(offsetCol) == 0) {
+      #   fit0 <- glm(formula.new,
+      #     data = data.new, offset = covoffset,
+      #     family = "poisson", weights = varWeights
+      #   )
+      # } else {
+      #   offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
+      #   fit0 <- glm(formula.new, data = data.new, offset = offsetTotal, family = "poisson", weights = varWeights)
+      # }
     }
   } else if (traitType == "count_nb") {
     cat(phenoCol, " is a count_nb trait\n")
@@ -997,8 +1002,8 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   }
 
 
-  cat("glm:\n")
-  print(fit0)
+  # cat("glm:\n")
+  # print(fit0)
   obj.noK <- NULL
 
 
@@ -1007,8 +1012,8 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   # }else{
   #  isStoreSigma = TRUE
   # }
-  print("isStoreSigma")
-  print(isStoreSigma)
+  # print("isStoreSigma")
+  # print(isStoreSigma)
   # set_store_sigma(isStoreSigma)
 
   if (!skipModelFitting) {
@@ -1026,8 +1031,11 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     set_useGRMtoFitNULL(useGRMtoFitNULL)
 
     if (traitType != "count_nb") {
-      system.time(modglmm <- GMMAT::glmmkin(formula + offset(log(offsetCol)), data = data, kins = sparseGRM,
-                                          id = "id", family = poisson(link = "log"))
+      head(data)
+      # formula <- as.formula(formula)
+      system.time(modglmm <- GMMAT::glmmkin(formula, data = data,
+                                          id = "IID", family = poisson(link = "log")))
+      cat("glmmkin succeed!")
       modglmm$obj.glm.null$model <- as.data.frame(modglmm$obj.glm.null$model)
     } else {
       system.time(modglmm <- glmmkin.ai_PCG_Rcpp_multiV_NB(bedFile, bimFile, famFile, Xorig, isCovariateOffset,
