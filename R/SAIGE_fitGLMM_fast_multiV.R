@@ -1036,7 +1036,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       system.time(modglmm <- GMMAT::glmmkin(formula, data = data,
                                           id = "IID", family = poisson(link = "log")))
       cat("glmmkin succeed!")
-      modglmm$obj.glm.null$model <- as.data.frame(modglmm$obj.glm.null$model)
+      # modglmm$obj.glm.null$model <- as.data.frame(modglmm$obj.glm.null$model)
     } else {
       system.time(modglmm <- glmmkin.ai_PCG_Rcpp_multiV_NB(bedFile, bimFile, famFile, Xorig, isCovariateOffset,
         fit0,
@@ -1082,211 +1082,178 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     }
 
 
-    # spSigma_final = getSparseSigma_new()
-    # modglmm$spSigma = spSigma_final
-    # rm(spSigma_final)
-    if (traitType != "count_nb") {
-      for (x in names(modglmm$obj.glm.null)) {
-        attr(modglmm$obj.glm.null[[x]], ".Environment") <- c()
-      }
-    }
-    # modglmm$offset = covoffset
-    if (isCovariateOffset) {
-      modglmm$offset <- covoffset
-    } else {
-      if (hasCovariate) {
-        data.new.X <- model.matrix(fit0)[, -1, drop = F]
-        print(head(data.new))
-        print(head(data.new.X))
-        print(head(modglmm$coefficients[-1]))
-        modglmm$offset <- data.new.X %*% (as.vector(modglmm$coefficients[-1]))
-        if (LOCO) {
-          for (j in 1:22) {
-            if (modglmm$LOCOResult[[j]]$isLOCO) {
-              modglmm$LOCOResult[[j]]$offset <- data.new.X %*% (as.vector(modglmm$LOCOResult[[j]]$coefficients[-1]))
-            }
-          }
-        }
-      } else {
-        modglmm$offset <- covoffset
-      }
-    }
-
-    if (length(eCovarCol) > 0) {
-      cat(eCovarCol, "are environmental covariates\n")
-      modglmm$eMat <- data.new[, which(colnames(data.new) %in% eCovarCol), drop = F]
-      for (em in 1:ncol(modglmm$eMat)) {
-        modglmm$eMat[, em] <- (modglmm$eMat[, em] - mean(modglmm$eMat[, em])) / (sd(modglmm$eMat[, em]))
-      }
-    }
-
-    if (length(sampleCovarCol) > 0) {
-      cat(sampleCovarCol, "are sample-level covariates\n")
-
-      sampleCovarCol <- c(sampleCovarCol, sampleCovarCol_q_names)
-      modglmm$sampleXMat <- modglmm$X[, which(colnames(modglmm$X) %in% sampleCovarCol), drop = F]
-      modglmm$sampleXMat <- cbind(modglmm$X[, 1], modglmm$sampleXMat)
-      uniqsampleind <- which(!duplicated(modglmm$sampleID))
-      modglmm$sampleXMat <- modglmm$sampleXMat[uniqsampleind, ]
-    }
-
-
-    # if((skipVarianceRatioEstimation & useSparseGRMtoFitNULL)){
-    family <- fit0$family
-    eta <- modglmm$linear.predictors
-    mu <- modglmm$fitted.values
-    mu.eta <- family$mu.eta(eta)
-    sqrtW <- mu.eta / sqrt(family$variance(mu))
-    W <- sqrtW^2
-    W <- W * modglmm$varWeights
-    tauVecNew <- modglmm$theta
-    Sigma_iX <- getSigma_X_multiV(W, tauVecNew, modglmm$X, maxiterPCG, tolPCG, LOCO = FALSE)
-    if (!isShrinkModelOutput) {
-      Sigma_iXXSigma_iX <- Sigma_iX %*% solve(crossprod(modglmm$X, Sigma_iX))
-      modglmm$Sigma_iXXSigma_iX <- Sigma_iXXSigma_iX
-    }
+    # if (traitType != "count_nb") {
+    #   for (x in names(modglmm$obj.glm.null)) {
+    #     attr(modglmm$obj.glm.null[[x]], ".Environment") <- c()
+    #   }
     # }
-
-    modglmm$useSparseGRMforVarRatio <- useSparseGRMforVarRatio
-
-
-    # if(any(duplicated(modglmm$sampleID))){
-    if (useGRMtoFitNULL) {
-      modglmm$tauVal_sp <- modglmm$theta[3]
-    } else {
-      modglmm$tauVal_sp <- modglmm$theta[2]
-    }
+    # if (isCovariateOffset) {
+    #   modglmm$offset <- covoffset
+    # } else {
+    #   if (hasCovariate) {
+    #     data.new.X <- model.matrix(fit0)[, -1, drop = F]
+    #     print(head(data.new))
+    #     print(head(data.new.X))
+    #     print(head(modglmm$coefficients[-1]))
+    #     modglmm$offset <- data.new.X %*% (as.vector(modglmm$coefficients[-1]))
+    #     if (LOCO) {
+    #       for (j in 1:22) {
+    #         if (modglmm$LOCOResult[[j]]$isLOCO) {
+    #           modglmm$LOCOResult[[j]]$offset <- data.new.X %*% (as.vector(modglmm$LOCOResult[[j]]$coefficients[-1]))
+    #         }
+    #       }
+    #     }
+    #   } else {
+    #     modglmm$offset <- covoffset
+    #   }
     # }
-
-    # if(FALSE){
-    # if(length(fit0$y) <= 10000){
-
-    cat("isStoreSigma is ", isStoreSigma, "\n")
-    if (isStoreSigma) {
-      # family = fit0$family
-      # eta = modglmm$linear.predictors
-      # mu = modglmm$fitted.values
-      # mu.eta = family$mu.eta(eta)
-      # sqrtW = mu.eta/sqrt(family$variance(mu))
-      # W = sqrtW^2
-      # W = W * modglmm$varWeights;
-      # tauVecNew = modglmm$theta
-      # Matrix::writeMM(spSigma, file="/humgen/atgu1/fin/wzhou/projects/eQTL_method_dev/realdata/oneK1K/AnnaCuomo_Yavar/saigeqtl_manuscript/realdata/step1/LSM10.CD4_NC.spSigma.mtx")
-      # if(any(duplicated(dataMerge_sort$IID))){
-      modglmm$spSigma <- gettI_Sigma_I_multiV(W, tauVecNew, maxiterPCG, tolPCG, LOCO = FALSE)
-      # }else{
-      # 	gen_sp_Sigma_multiV(W, tauVecNew)
-      # 	spSigma = get_sp_Sigma_to_R()
-      # 	SigmaMat_sp = chol2inv(chol(spSigma))
-      # 	modglmm$spSigma = SigmaMat_sp
-      # }
-    }
+    # 
+    # if (length(eCovarCol) > 0) {
+    #   cat(eCovarCol, "are environmental covariates\n")
+    #   modglmm$eMat <- data.new[, which(colnames(data.new) %in% eCovarCol), drop = F]
+    #   for (em in 1:ncol(modglmm$eMat)) {
+    #     modglmm$eMat[, em] <- (modglmm$eMat[, em] - mean(modglmm$eMat[, em])) / (sd(modglmm$eMat[, em]))
+    #   }
     # }
-    # save(modglmm, file = modelOut)
-    tau <- modglmm$theta
-    alpha0 <- modglmm$coefficients
-
-
-    if (!is.null(out.transform) & is.null(fit0$offset)) {
-      coef.alpha <- Covariate_Transform_Back(alpha0, out.transform$Param.transform)
-      modglmm$coefficients <- coef.alpha
-    }
-
-
-    if (LOCO & isLowMemLOCO) {
-      modglmm$LOCOResult <- NULL
-      modglmm$LOCO <- FALSE
-      chromosomeStartIndexVec <- modglmm$chromosomeStartIndexVec
-      chromosomeEndIndexVec <- modglmm$chromosomeEndIndexVec
-      modglmm$chromosomeStartIndexVec <- NULL
-      modglmm$chromosomeEndIndexVec <- NULL
-      modelOut <- paste(c(outputPrefix, "_noLOCO.rda"), collapse = "")
-      fastSave(modglmm, file = modelOut)
-      modglmm$LOCO <- TRUE
-      modglmm$Y <- NULL
-      eta0 <- modglmm$linear.predictors
-      modglmm$linear.predictors <- NULL
-      modglmm$coefficients <- NULL
-      modglmm$cov <- NULL
-      modglmm$fitted.values <- NULL
-      modglmm$residuals <- NULL
-      modglmm$obj.noK <- NULL
-      offset0 <- modglmm$offset
-      modglmm$offset <- NULL
-      y <- fit0$y
-      gc()
-      # save(modglmm, file = modelOut)
-      set_Diagof_StdGeno_LOCO()
-      modglmm$LOCOResult <- list()
-      for (j in 1:22) {
-        startIndex <- chromosomeStartIndexVec[j]
-        endIndex <- chromosomeEndIndexVec[j]
-        if (!is.na(startIndex) && !is.na(endIndex)) {
-          cat("leave chromosome ", j, " out\n")
-          setStartEndIndex(startIndex, endIndex, j - 1)
-
-          re.coef_LOCO <- Get_Coef_multiV(y, X = model.matrix(fit0), tau, family = fit0$family, alpha = alpha0, eta = eta0, offset = offset0, verbose = TRUE, maxiterPCG = maxiterPCG, tolPCG = tolPCG, maxiter = maxiter, LOCO = TRUE, var_weights = var_weights)
-          cov <- re.coef_LOCO$cov
-          alpha <- re.coef_LOCO$alpha
-          eta <- re.coef_LOCO$eta
-          Y <- re.coef_LOCO$Y
-          mu <- re.coef_LOCO$mu
-          if (family$family == "binomial") {
-            mu2 <- mu * (1 - mu)
-          } else if (family$family == "poisson") {
-            mu2 <- mu
-          } else if (family$family == "gaussian") {
-            mu2 <- rep((1 / (tau[1])), length(res))
-          } else if (traitType == "count_nb") {
-            # mu2 = fit0$family$variance(mu)
-            mu2 <- rep((1 / (tau[1])), length(res))
-          }
-          res <- y - mu
-
-          if (!is.null(out.transform) & is.null(fit0$offset)) {
-            coef.alpha <- Covariate_Transform_Back(alpha, out.transform$Param.transform)
-          } else {
-            coef.alpha <- alpha
-          }
-
-          mu2_rescaled <- mu2 * var_weights
-          mu_rescaled <- mu * var_weights
-
-
-          if (!isCovariateOffset) {
-            obj.noK <- ScoreTest_NULL_Model(mu_rescaled, mu2_rescaled, y_rescaled, X)
-          } else {
-            obj.noK <- ScoreTest_NULL_Model(mu_rescaled, mu2_rescaled, y_rescaled, Xorig)
-          }
-          modglmm$LOCOResult[[j]] <- list(isLOCO = TRUE, coefficients = coef.alpha, linear.predictors = eta, fitted.values = mu, Y = Y, residuals = res, cov = cov, obj.noK = obj.noK)
-          if (!isCovariateOffset & hasCovariate) {
-            data.new.X <- model.matrix(fit0)[, -1, drop = F]
-            modglmm$LOCOResult[[j]]$offset <- data.new.X %*% (as.vector(modglmm$LOCOResult[[j]]$coefficients[-1]))
-          }
-          modelOutbychr <- paste(c(outputPrefix, "_chr", j, ".rda"), collapse = "")
-          if (j != 22) {
-            for (j1 in (j + 1):22) {
-              modglmm$LOCOResult[[j1]] <- list(NULL)
-            }
-          }
-          fastSave(modglmm, file = modelOutbychr)
-          modglmm$LOCOResult[[j]] <- list(NULL)
-          gc()
-        } else {
-          modglmm$LOCOResult[[j]] <- list(isLOCO = FALSE)
-        }
-      }
-      gc()
-      # modelOut_nonauto = paste(c(outputPrefix,"_noLOCO.rda"), collapse="")
-    } else {
-      # b = as.numeric(factor(dataMerge_sort$IID, levels =  unique(dataMerge_sort$IID)))
-      # I_mat = Matrix::sparseMatrix(i = 1:length(b), j = b, x = rep(1, length(b)))
-      # I_mat = 1.0 * I_mat
-      # modglmm$I_longl_mat = I_mat
-      # modglmm$I_longl_vec = b - 1
-      # modglmm$T_longl_mat = I_mat * (dataMerge_sort$longlVar)
-      modglmm$T_longl_vec <- dataMerge_sort$longlVar
-    }
+    # 
+    # if (length(sampleCovarCol) > 0) {
+    #   cat(sampleCovarCol, "are sample-level covariates\n")
+    # 
+    #   sampleCovarCol <- c(sampleCovarCol, sampleCovarCol_q_names)
+    #   modglmm$sampleXMat <- modglmm$X[, which(colnames(modglmm$X) %in% sampleCovarCol), drop = F]
+    #   modglmm$sampleXMat <- cbind(modglmm$X[, 1], modglmm$sampleXMat)
+    #   uniqsampleind <- which(!duplicated(modglmm$sampleID))
+    #   modglmm$sampleXMat <- modglmm$sampleXMat[uniqsampleind, ]
+    # }
+    # 
+    # 
+    # # if((skipVarianceRatioEstimation & useSparseGRMtoFitNULL)){
+    # family <- fit0$family
+    # eta <- modglmm$linear.predictors
+    # mu <- modglmm$fitted.values
+    # mu.eta <- family$mu.eta(eta)
+    # sqrtW <- mu.eta / sqrt(family$variance(mu))
+    # W <- sqrtW^2
+    # W <- W * modglmm$varWeights
+    # tauVecNew <- modglmm$theta
+    # Sigma_iX <- getSigma_X_multiV(W, tauVecNew, modglmm$X, maxiterPCG, tolPCG, LOCO = FALSE)
+    # if (!isShrinkModelOutput) {
+    #   Sigma_iXXSigma_iX <- Sigma_iX %*% solve(crossprod(modglmm$X, Sigma_iX))
+    #   modglmm$Sigma_iXXSigma_iX <- Sigma_iXXSigma_iX
+    # }
+    # 
+    # modglmm$useSparseGRMforVarRatio <- useSparseGRMforVarRatio
+    # 
+    # 
+    # if (useGRMtoFitNULL) {
+    #   modglmm$tauVal_sp <- modglmm$theta[3]
+    # } else {
+    #   modglmm$tauVal_sp <- modglmm$theta[2]
+    # }
+    # 
+    # 
+    # cat("isStoreSigma is ", isStoreSigma, "\n")
+    # if (isStoreSigma) {
+    #   modglmm$spSigma <- gettI_Sigma_I_multiV(W, tauVecNew, maxiterPCG, tolPCG, LOCO = FALSE)
+    # }
+    # tau <- modglmm$theta
+    # alpha0 <- modglmm$coefficients
+    # 
+    # 
+    # if (!is.null(out.transform) & is.null(fit0$offset)) {
+    #   coef.alpha <- Covariate_Transform_Back(alpha0, out.transform$Param.transform)
+    #   modglmm$coefficients <- coef.alpha
+    # }
+    # 
+    # 
+    # if (LOCO & isLowMemLOCO) {
+    #   modglmm$LOCOResult <- NULL
+    #   modglmm$LOCO <- FALSE
+    #   chromosomeStartIndexVec <- modglmm$chromosomeStartIndexVec
+    #   chromosomeEndIndexVec <- modglmm$chromosomeEndIndexVec
+    #   modglmm$chromosomeStartIndexVec <- NULL
+    #   modglmm$chromosomeEndIndexVec <- NULL
+    #   modelOut <- paste(c(outputPrefix, "_noLOCO.rda"), collapse = "")
+    #   fastSave(modglmm, file = modelOut)
+    #   modglmm$LOCO <- TRUE
+    #   modglmm$Y <- NULL
+    #   eta0 <- modglmm$linear.predictors
+    #   modglmm$linear.predictors <- NULL
+    #   modglmm$coefficients <- NULL
+    #   modglmm$cov <- NULL
+    #   modglmm$fitted.values <- NULL
+    #   modglmm$residuals <- NULL
+    #   modglmm$obj.noK <- NULL
+    #   offset0 <- modglmm$offset
+    #   modglmm$offset <- NULL
+    #   y <- fit0$y
+    #   gc()
+    #   # save(modglmm, file = modelOut)
+    #   set_Diagof_StdGeno_LOCO()
+    #   modglmm$LOCOResult <- list()
+    #   for (j in 1:22) {
+    #     startIndex <- chromosomeStartIndexVec[j]
+    #     endIndex <- chromosomeEndIndexVec[j]
+    #     if (!is.na(startIndex) && !is.na(endIndex)) {
+    #       cat("leave chromosome ", j, " out\n")
+    #       setStartEndIndex(startIndex, endIndex, j - 1)
+    # 
+    #       re.coef_LOCO <- Get_Coef_multiV(y, X = model.matrix(fit0), tau, family = fit0$family, alpha = alpha0, eta = eta0, offset = offset0, verbose = TRUE, maxiterPCG = maxiterPCG, tolPCG = tolPCG, maxiter = maxiter, LOCO = TRUE, var_weights = var_weights)
+    #       cov <- re.coef_LOCO$cov
+    #       alpha <- re.coef_LOCO$alpha
+    #       eta <- re.coef_LOCO$eta
+    #       Y <- re.coef_LOCO$Y
+    #       mu <- re.coef_LOCO$mu
+    #       if (family$family == "binomial") {
+    #         mu2 <- mu * (1 - mu)
+    #       } else if (family$family == "poisson") {
+    #         mu2 <- mu
+    #       } else if (family$family == "gaussian") {
+    #         mu2 <- rep((1 / (tau[1])), length(res))
+    #       } else if (traitType == "count_nb") {
+    #         # mu2 = fit0$family$variance(mu)
+    #         mu2 <- rep((1 / (tau[1])), length(res))
+    #       }
+    #       res <- y - mu
+    # 
+    #       if (!is.null(out.transform) & is.null(fit0$offset)) {
+    #         coef.alpha <- Covariate_Transform_Back(alpha, out.transform$Param.transform)
+    #       } else {
+    #         coef.alpha <- alpha
+    #       }
+    # 
+    #       mu2_rescaled <- mu2 * var_weights
+    #       mu_rescaled <- mu * var_weights
+    # 
+    # 
+    #       if (!isCovariateOffset) {
+    #         obj.noK <- ScoreTest_NULL_Model(mu_rescaled, mu2_rescaled, y_rescaled, X)
+    #       } else {
+    #         obj.noK <- ScoreTest_NULL_Model(mu_rescaled, mu2_rescaled, y_rescaled, Xorig)
+    #       }
+    #       modglmm$LOCOResult[[j]] <- list(isLOCO = TRUE, coefficients = coef.alpha, linear.predictors = eta, fitted.values = mu, Y = Y, residuals = res, cov = cov, obj.noK = obj.noK)
+    #       if (!isCovariateOffset & hasCovariate) {
+    #         data.new.X <- model.matrix(fit0)[, -1, drop = F]
+    #         modglmm$LOCOResult[[j]]$offset <- data.new.X %*% (as.vector(modglmm$LOCOResult[[j]]$coefficients[-1]))
+    #       }
+    #       modelOutbychr <- paste(c(outputPrefix, "_chr", j, ".rda"), collapse = "")
+    #       if (j != 22) {
+    #         for (j1 in (j + 1):22) {
+    #           modglmm$LOCOResult[[j1]] <- list(NULL)
+    #         }
+    #       }
+    #       fastSave(modglmm, file = modelOutbychr)
+    #       modglmm$LOCOResult[[j]] <- list(NULL)
+    #       gc()
+    #     } else {
+    #       modglmm$LOCOResult[[j]] <- list(isLOCO = FALSE)
+    #     }
+    #   }
+    #   gc()
+    #   # modelOut_nonauto = paste(c(outputPrefix,"_noLOCO.rda"), collapse="")
+    # } else {
+    #   modglmm$T_longl_vec <- dataMerge_sort$longlVar
+    # }
 
 
     t_end <- proc.time()
@@ -1295,22 +1262,20 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     print(t_end - t_begin)
 
 
-    # if(bedFile != "" & !useGRMtoFitNULL){
-    if (bedFile != "") {
-      subSampleInGeno <- dataMerge_sort$IndexGeno
-      if (is.null(dataMerge_sort$IndexGeno)) {
-        subSampleInGeno <- dataMerge_sort$IndexPheno
-      }
-
-      print(subSampleInGeno[1:1000])
-      print(head(dataMerge_sort))
-      print("HEREHRE")
-
-      subSampleInGeno_unique <- subSampleInGeno[!duplicated(subSampleInGeno)]
-
-      # setgeno(bedFile, bimFile, famFile, subSampleInGeno, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
-      setgeno(bedFile, bimFile, famFile, subSampleInGeno_unique, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
-    }
+    # if (bedFile != "") {
+    #   subSampleInGeno <- dataMerge_sort$IndexGeno
+    #   if (is.null(dataMerge_sort$IndexGeno)) {
+    #     subSampleInGeno <- dataMerge_sort$IndexPheno
+    #   }
+    # 
+    #   print(subSampleInGeno[1:1000])
+    #   print(head(dataMerge_sort))
+    #   print("HEREHRE")
+    # 
+    #   subSampleInGeno_unique <- subSampleInGeno[!duplicated(subSampleInGeno)]
+    # 
+    #   setgeno(bedFile, bimFile, famFile, subSampleInGeno_unique, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
+    # }
   } else {
     cat("Skip fitting the NULL GLMM\n")
     if (!file.exists(modelOut)) {
