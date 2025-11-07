@@ -144,7 +144,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     useSparseGRMtoFitNULL <- FALSE
     useSparseGRMforVarRatio <- FALSE
     LOCO <- FALSE
-    # nThreads <- 1
     cat("No GRM will be used to fit the NULL model and nThreads is set to 1\n")
   }
 
@@ -156,7 +155,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
 
   if (!skipVarianceRatioEstimation) {
     SPAGMMATOut <- paste0(outputPrefix, "_", numMarkersForVarRatio, "markers.SAIGE.results.txt")
-    # Check_OutputFile_Create(SPAGMMATOut)
 
     if (outputPrefix_varRatio == "") {
       outputPrefix_varRatio <- outputPrefix
@@ -184,12 +182,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
 
 
   if (useSparseGRMtoFitNULL) {
-    # useSparseGRMforVarRatio = FALSE
     LOCO <- FALSE
-    # nThreads <- 1
-    # if (bedFile != "") {
-    #  cat("sparse GRM will be used to fit the NULL model and nThreads is set to 1\n")
-    # }
     cat("Leave-one-chromosome-out is not applied\n")
   }
 
@@ -347,7 +340,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
         header = T,
         stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F
       )
-      # data = data.frame(ydat)
 
       file.remove(paste0(outputPrefix, "_", phenoCol, "_colnames_subset_temp"))
       file.remove(paste0(outputPrefix, "_", phenoCol, "_lineNum_temp"))
@@ -538,7 +530,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       varWeights <- NULL
     }
     if (sparseGRMSampleIDFile != "") {
-      # if((useSparseGRMtoFitNULL & !skipVarianceRatioEstimation) | useSparseGRMforVarRatio){
       sampleListwithGenov0 <- data.table::fread(sparseGRMSampleIDFile,
         header = F, , colClasses = c("character"), data.table = F
       )
@@ -566,7 +557,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
         by.x = "IID", by.y = "IIDgeno"
       )
       dataMerge_sort <- dataMerge[with(dataMerge, order(IndexGeno)), ]
-      # dataMerge_sort = dataMerge[with(dataMerge, order(IndexPheno)),]
     } else {
       dataMerge_sort <- mmat_nomissing
       dataMerge_sort$IIDgeno <- dataMerge_sort$IID
@@ -574,7 +564,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
 
     print("Test")
     print(head(dataMerge_sort))
-    # dataMerge_sort = dataMerge
 
     rm(mmat)
     rm(mmat_nomissing)
@@ -596,17 +585,12 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
 
     if (any(duplicated(dataMerge_sort$IID))) {
       cat(nrow(dataMerge_sort), " observations will be used for analysis\n")
-      # if(longlCol != ""){
-      # dataMerge_sort = dataMerge_sort[with(dataMerge_sort, order(IndexGeno, longlVar)),]
-      #  dataMerge_sort = dataMerge_sort[with(dataMerge_sort, order(longlVar)),]
-      # }
       set_I_mat_inR(dataMerge_sort$IID)
       if (longlCol != "") {
         set_T_mat_inR(dataMerge_sort$IID, dataMerge_sort$longlVar)
       }
     } else {
       if (!useGRMtoFitNULL) {
-        # stop("No duplicated IDs are observed in the phenotype file, so GRM must be used to fit the null model. Please set useGRMtoFitNULL=TRUE\n")
         cat("No duplicated IDs are observed in the phenotype file, so the identity matrix will be used as a sparse GRM will be used to fit the null model\n")
         isSparseGRMIdentity <- TRUE
         useSparseGRMtoFitNULL <- TRUE
@@ -768,21 +752,10 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       rownames(sparseGRM) <- colnames(sparseGRM) <- data$IID
       setupSparseGRM_new(sparseGRM)
     }
-    # getsubGRM(sparseGRMFile, sparseGRMSampleIDFile, relatednessCutoff, dataMerge_sort$IID, dataMerge_sort$longlVar)
-    # m4 = gen_sp_v2(sparseGRMtest)
-    # cat("Setting up sparse GRM using ", sparseGRMFile, " and ", sparseGRMSampleIDFile, "\n")
-    # cat("Dimension of the sparse GRM is ", dim(m4), "\n")
-    # A = summary(m4)
-    # locationMatinR = rbind(A$i - 1, A$j - 1)
-    # valueVecinR = A$x
-    # setupSparseGRM(dim(m4)[1], locationMatinR, valueVecinR)
-    # setupSparseGRM_new(sparseGRMtest)
-    # rm(sparseGRMtest)
     gc()
   }
 
   # allow for multiple variance components
-  # set_Vmat_vec(VmatFilelist, VmatSampleFilelist, dataMerge_sort$IID, dataMerge_sort$longlVar)
   set_Vmat_vec_orig(VmatFilelist, VmatSampleFilelist, dataMerge_sort$IID)
 
   numofV <- get_numofV()
@@ -803,14 +776,12 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       } else {
         num_Kmat <- numofV + 2
       }
-      # k = num_Kmat + 3
     } else {
       if (useGRMtoFitNULL) {
         num_Kmat <- 7 + numofV * 3
       } else {
         num_Kmat <- 4 + numofV * 3
       }
-      # k = num_Kmat + 2
     }
   } else {
     if (useGRMtoFitNULL) {
@@ -818,7 +789,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     } else {
       num_Kmat <- numofV + 1
     }
-    # k = 2
   }
 
   k <- num_Kmat
@@ -923,18 +893,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     }
   } else if (traitType == "count") {
     cat(phenoCol, " is a count trait\n")
-    # print("before remove zeros")
-    # print(dim(dataMerge_sort))
-    # if(isRemoveZerosinPheno){
-    #    dataMerge_sort = dataMerge_sort[which(dataMerge_sort[, which(colnames(dataMerge_sort) == phenoCol)] > 0),]
-    #    cat("Removing all zeros in the phenotype\n")
-    #    if(nrow(dataMerge_sort) == 0){
-    #        stop("ERROR: no samples are left after removing zeros in the phenotype\n")
-
-    #    }
-    # }
-    # print("after remove zeros")
-    # print(dim(dataMerge_sort))
     miny <- min(dataMerge_sort[, which(colnames(dataMerge_sort) == phenoCol)])
     if (miny < 0) {
       stop("ERROR! phenotype value needs to be non-negative \n")
@@ -1008,17 +966,10 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   obj.noK <- NULL
 
 
-  # if(length(fit0$y) > 200000){
-  #  isStoreSigma = FALSE
-  # }else{
-  #  isStoreSigma = TRUE
-  # }
   # print("isStoreSigma")
   # print(isStoreSigma)
-  # set_store_sigma(isStoreSigma)
 
   if (!skipModelFitting) {
-    # setisUseSparseSigmaforNullModelFitting(useSparseGRMtoFitNULL)
     cat("Start fitting the NULL GLMM\n")
     t_begin <- proc.time()
     print(t_begin)
@@ -1026,7 +977,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
 
     tau <- rep(0, k)
     fixtau <- rep(0, k)
-    # tauInit = tau
 
     set_isSparseGRM(useSparseGRMtoFitNULL)
     set_useGRMtoFitNULL(useGRMtoFitNULL)
@@ -1300,21 +1250,15 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
 
     subSampleInGeno_unique <- subSampleInGeno[!duplicated(subSampleInGeno)]
 
-    # setgeno(bedFile, bimFile, famFile, subSampleInGeno, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
     setgeno(bedFile, bimFile, famFile, subSampleInGeno_unique, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
 
 
-    # setgeno(bedFile, bimFile, famFile, dataMerge_sort$IndexGeno, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
     tau <- modglmm$theta
 
     if (any(duplicated(modglmm$sampleID))) {
       set_I_mat_inR(modglmm$sampleID)
-      # if(longlCol != ""){
-      #        set_T_mat_inR(dataMerge_sort$IID, dataMerge_sort$longlVar)
-      # }
     }
     set_dup_sample_index(as.numeric(factor(modglmm$sampleID, levels = unique(modglmm$sampleID))))
-    # setisUseSparseSigmaforNullModelFitting(useSparseGRMtoFitNULL)
   }
 
   if (!skipVarianceRatioEstimation) {
@@ -1445,13 +1389,8 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
   mu <- obj.glmm.null$fitted.values
   mu.eta <- family$mu.eta(eta)
 
-  # var_weights = weights(obj.glm.null)
   var_weights <- obj.glmm.null$varWeights
-  # if(!is.null(var_weights)){
   sqrtW <- mu.eta / sqrt(family$variance(mu))
-  # }else{
-  #  sqrtW = mu.eta/sqrt(family$variance(mu))
-  # }
 
 
   print("mu[1:20]")
@@ -1462,21 +1401,12 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
   print(W[1:20])
   tauVecNew <- obj.glmm.null$theta
 
-  # isStoreSigma=FALSE
-  # if(isStoreSigma){
-  #       gen_sp_Sigma_multiV(W, tauVecNew)
-  # }
   X <- obj.glmm.null$X
 
 
   set_isSparseGRM(useSparseGRMtoFitNULL)
   set_useGRMtoFitNULL(useGRMtoFitNULL)
 
-  # if(!useGRMtoFitNULL){
-  # if(useSparseGRMforVarRatio){
-  # }
-  # useSparseGRMforVarRatio = FALSE
-  # }
 
   Sigma_iX_noLOCO <- getSigma_X_multiV(W, tauVecNew, X, maxiterPCG, tolPCG, LOCO = FALSE)
 
@@ -1523,7 +1453,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
     cat("length(MACvector_forVarRatio): ", length(MACvector_forVarRatio), "\n")
 
     if (length(MACvector_forVarRatio) > 0) {
-      # MACdata = data.frame(MACvector = c(MACvector, MACvector_forVarRatio), geno_ind = c(rep(0, length(MACvector)), rep(1, length(MACvector_forVarRatio))), indexInGeno = c(seq(1,length(MACvector)), seq(1,length(MACvector_forVarRatio))))
       MACdata <- data.frame(MACvector = MACvector_forVarRatio, geno_ind = rep(1, length(MACvector_forVarRatio)), indexInGeno = seq(1, length(MACvector_forVarRatio)))
     } else {
       stop("No markers were found for variance ratio estimation. Please make sure there are at least 200 markers in each MAC category\n")
@@ -1574,7 +1503,7 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
         }
       }
     }
-  } # if(!isCateVarianceRatio){
+  }
 
 
 
@@ -1586,8 +1515,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
   varRatioTable <- NULL
 
 
-  # uniqsampleind = which(!duplicated(obj.glmm.null$sampleID))
-  # var_weights_sample = var_weights[uniqsampleind]
 
 
   Vsample0 <- as.vector(crossprod(obj.noK$V, I_mat))
@@ -1597,14 +1524,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
   XVXsample_inv0 <- solve(XVXsample0)
   XXVXsample_inv0 <- Xsample0 %*% XVXsample_inv0
   XVX_inv_XVsample0 <- XXVXsample_inv0 * Vsample0
-  # XVsample0_e_list = list()
-  # for(ne in 1:ncol(obj.glmm.null$eMat)){
-  #  evec = obj.glmm.null$eMat[,ne]
-  #  Vsample0_e = as.vector(t(obj.noK$V * evec) %*% I_mat)
-  #
-  #    XVsample0_e =  t(Xsample0 * (Vsample0_e))
-  #    XVsample0_e_list[[ne]] = XVsample0_e
-  #  }
 
   for (k in 1:length(listOfMarkersForVarRatio)) {
     if (cateVarRatioIndexVec[k] == 1) {
@@ -1639,7 +1558,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
             G0 <- Get_OneSNP_Geno_forVarRatio(i - 1)
           }
 
-          # if(sum(duplicated(obj.glmm.null$sampleID)) > 0){
           if (sum(G0) / (2 * length(G0)) > 0.5) {
             G0 <- 2 - G0
           }
@@ -1650,23 +1568,16 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
           print(dim(I_mat))
           print(length(G0sample))
           G0 <- as.numeric(I_mat %*% G0sample)
-          # }
-          # print("length(G0)   bbbb")
-          # print(length(G0))
           cat("G0", G0[1:10], "\n")
 
           CHR <- bimPlink[Indexvector_forVarRatio[i] + 1, 1]
           cat("CHR ", CHR, "\n")
           print(bimPlink[Indexvector_forVarRatio[i] + 1, ])
-          # if(sum(G0)/(2*Nnomissing) > 0.5){
           if (sum(G0) / (2 * length(G0)) > 0.5) {
             G0 <- 2 - G0
           }
           print("length(G0)")
           print(length(G0))
-          # if(any(duplicated(obj.glmm.null$sampleID))){
-          # 	G0 = G0[dupSampleIndex]
-          # }
           NAset <- which(G0 == 0)
           AC <- sum(G0)
           print("length(NAset)")
@@ -1681,26 +1592,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
             }
 
             G <- G0 - obj.noK$XXVX_inv %*% (obj.noK$XV %*% G0) # G1 is X adjusted
-            # g = G/sqrt(AC)
-            # q = innerProduct(g * sqrt(var_weights),y)
-            # q = innerProduct(G,y)
-            # eta = obj.glmm.null$linear.predictors
-            # mu = obj.glmm.null$fitted.values
-            # mu.eta = family$mu.eta(eta)
-            # sqrtW = mu.eta/sqrt(obj.glm.null$family$variance(mu))
-            # W = sqrtW^2
-            # W = W * var_weights
-            # W = W * var_weights
-            # print("W[1:10]")
-            # print(W[1:10])
-            # print("mu.eta[1:10]")
-            # print(mu.eta[1:10])
-            # print("obj.glm.null$family$variance(mu)[1:10]")
-            # print(obj.glm.null$family$variance(mu)[1:10])
-            # print("mu[1:100]")
-            # print(mu[1:100])
-            # print("y[1:100]")
-            # print(y[1:100])
 
 
             set_isSparseGRM(useSparseGRMtoFitNULL)
@@ -1717,7 +1608,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
             cat("var1 is ", var1, "\n")
             p_exact <- pchisq(S^2 / var1, df = 1, lower.tail = F)
             cat("p_exact ", p_exact, "\n")
-            # res_sample = as.vector(obj.glmm.null$residuals %*% I_mat)
 
 
 
@@ -1729,27 +1619,13 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
               for (ne in 1:ncol(obj.glmm.null$eMat)) {
                 evec <- obj.glmm.null$eMat[, ne]
 
-                # evec = rnorm(length(G))
 
                 print("evec[1:100]")
                 print(evec[1:100])
-                # evec = t(I_mat) %*% evec
-                # XVsample0_e = XVsample0_e_list[[ne]]
                 GE <- G0 * evec
-                # GE = G * evec
-                # GE = G0
                 print("length(GE)")
                 print(length(GE))
                 GE_tilde <- GE - obj.noK$XXVX_inv %*% (obj.noK$XV %*% GE)
-                # GE_tilde_new = GE - I_mat %*% XXVXsample_inv0 %*%  (XVsample0_e %*% G0sample)
-                # print("sum(GE_tilde != GE_tilde_new)")
-                # print(sum((GE_tilde -  GE_tilde_new)^2))
-
-                # print(obj.noK$XXVX_inv[1:2,])
-                # XXVX_invtemp = I_mat %*% XXVXsample_inv0
-                # print(XXVX_invtemp[1:2,])
-
-                # obj.glmm.null$eMat[,ne] = GE_tilde
                 getildeMat <- cbind(getildeMat, GE_tilde)
 
                 Sigma_iGE <- getSigma_G_multiV(W, tauVecNew, GE_tilde, maxiterPCG, tolPCG, LOCO = FALSE)
@@ -1761,10 +1637,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
                 cat("S_GE ", S_GE, "\n")
                 cat("var1GE ", var1GE, "\n")
 
-                # I_mat_e = I_mat * evec
-                # GE_sample = as.vector(t(G0) %*% I_mat_e)
-                # GE_sample_tilde = GE_sample  -  XXVXsample_inv0 %*%  (XVsample0 %*% GE_sample)
-                # getilde_sample0_Mat = cbind(getilde_sample0_Mat, GE_sample_tilde)
                 if (useSparseGRMforVarRatio) {
                   set_isSparseGRM(useSparseGRMforVarRatio)
                   Sigma_iGE_sparse <- getSigma_G_noV(W, tauVecNew, GE_tilde, maxiterPCG, tolPCG, LOCO = FALSE)
@@ -1793,24 +1665,12 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
             G_noXadj <- as.vector(G0sample - mean(G0sample))
             G0_sample_tilde <- G0sample - XXVXsample_inv0 %*% XVsample0 %*% G0sample
 
-            # if(useSparseGRMforVarRatio){
-            # 	set_isSparseGRM(useSparseGRMforVarRatio)
-            # 	Sigma_iG = getSigma_G_noV(W, tauVecNew, G, maxiterPCG, tolPCG, LOCO=FALSE)
-            # 	var2_a = t(G) %*% Sigma_iG
-            # 	var2sparseGRM = var2_a[1,1]
-            # 	cat("var2sparseGRM ", var2sparseGRM, "\n")
-            # 	varRatio_sparseGRM_vec = c(varRatio_sparseGRM_vec, var1/var2sparseGRM)
-
-            # }else{
             if (any(duplicated(obj.glmm.null$sampleID))) {
               if (useGRMtoFitNULL) {
                 tauVal <- tauVecNew[3]
               } else {
                 tauVal <- tauVecNew[2]
               }
-              # Sigma_iG = getSigma_G_V(W, tauVal, tauVecNew[1], G, maxiterPCG, tolPCG)
-              # Sigma_iG = getSigma_G_multiV(W, tauVal, tauVecNew[1], G, maxiterPCG, tolPCG)
-              # var2_a = t(G) %*% Sigma_iG
               if (isStoreSigma) {
                 Sigma_iG <- (obj.glmm.null$spSigma) %*% G0_sample_tilde
                 var2_a <- crossprod(G0_sample_tilde, Sigma_iG)
@@ -1825,7 +1685,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
             } else {
               varRatio_sparseGRM_vec <- c(varRatio_sparseGRM_vec, 1)
             }
-            # }
 
 
             if (obj.glmm.null$traitType == "binary") {
@@ -1838,12 +1697,9 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
               if (!is.null(obj.glmm.null$eMat)) {
                 for (ne in 1:ncol(obj.glmm.null$eMat)) {
                   GE_tilde <- getildeMat[, ne]
-                  # GE_sample_tilde = getilde_sample0_Mat[,ne]
                   var22nullGE <- innerProduct(tmpW, GE_tilde * GE_tilde)
-                  # var22nullGE = innerProduct(as.vector(t(mu*(1-mu)*var_weights) %*% I_mat), as.vector(GE_sample_tilde*GE_sample_tilde))
 
 
-                  # var22nullGE = innerProduct(mu*(1-mu)*var_weights, GE_tilde*GE_tilde)
                   var2nullGE_vec <- c(var2nullGE_vec, var22nullGE)
                 }
               }
@@ -1855,9 +1711,7 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
               if (!is.null(obj.glmm.null$eMat)) {
                 for (ne in 1:ncol(obj.glmm.null$eMat)) {
                   GE_tilde <- getildeMat[, ne]
-                  # GE_sample_tilde = getilde_sample0_Mat[,ne]
                   var22nullGE <- innerProduct(GE_tilde, GE_tilde * var_weights)
-                  # var22nullGE = innerProduct(as.vector(GE_sample_tilde), as.vector(GE_sample_tilde)*as.vector(t(var_weights) %*% I_mat))
                   var2nullGE_vec <- c(var2nullGE_vec, var22nullGE)
                 }
               }
@@ -1865,23 +1719,13 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
               tmpW <- mu * var_weights
               tmpWI <- as.vector(crossprod(tmpW, I_mat))
               var2null <- innerProduct(tmpW, G * G)
-              # cat("mean(G0_sample_tilde) ", mean(G0_sample_tilde), "\n")
-              # var2null_new = innerProduct(as.vector(t(mu*var_weights) %*% I_mat), G0_sample_tilde*G0_sample_tilde)
               var2null_sample <- innerProduct(tmpWI, G0_sample_tilde * G0_sample_tilde)
-              # cat("var2null ", var2null, "\n")
-              # cat("var2null_new ", var2null_new, "\n")
-              # muI <- as.vector(crossprod(mu, I_mat)) * as.vector(var_weights)
               var2null_noXadj <- innerProduct(tmpWI, G_noXadj * G_noXadj)
               var2nullGE_vec <- NULL
               if (!is.null(obj.glmm.null$eMat)) {
                 for (ne in 1:ncol(obj.glmm.null$eMat)) {
                   GE_tilde <- getildeMat[, ne]
-                  # GE_sample_tilde = getilde_sample0_Mat[,ne]
-                  # cat("mean(GE_sample_tilde) ", mean(GE_sample_tilde), "\n")
                   var22nullGE <- innerProduct(tmpW, GE_tilde * GE_tilde)
-                  # var22nullGE = innerProduct(as.vector(t(mu*var_weights) %*% I_mat), as.vector(GE_sample_tilde*GE_sample_tilde))
-                  # cat("var22nullGE_old ", var22nullGE_old, "\n")
-                  # cat("var22nullGE ", var22nullGE, "\n")
 
                   var2nullGE_vec <- c(var2nullGE_vec, var22nullGE)
                 }
@@ -1893,9 +1737,7 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
               var2nullGE_vec <- NULL
               if (!is.null(obj.glmm.null$eMat)) {
                 for (ne in 1:ncol(obj.glmm.null$eMat)) {
-                  # GE_tilde = getildeMat[,ne]
                   GE_sample_tilde <- getilde_sample0_Mat[, ne]
-                  # var22nullGE = innerProduct(W, GE_tilde*GE_tilde)
                   var22nullGE <- innerProduct(as.vector(crossprod(W, I_mat)), as.vector(GE_sample_tilde * GE_sample_tilde))
                   var2nullGE_vec <- c(var2nullGE_vec, var22nullGE)
                 }
@@ -1905,12 +1747,9 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
             cat("mu\n")
             print(mu[1:100])
             cat("AC ", AC, "\n")
-            # cat("S ", S*sqrt(AC), "\n")
             cat("var1 ", var1, "\n")
             cat("var2null ", var2null, "\n")
             cat("var2null_noXadj ", var2null_noXadj, "\n")
-            # cat("p_approx ", p_approx, "\n")
-            # cat("p_approx_true ", p_approx_true, "\n")
             varRatio_NULL_vec <- c(varRatio_NULL_vec, var1 / var2null)
             varRatio_NULL_sample_vec <- c(varRatio_NULL_sample_vec, var1 / var2null_sample)
             varRatio_NULL_noXadj_vec <- c(varRatio_NULL_noXadj_vec, var1 / var2null_noXadj)
@@ -1918,7 +1757,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
               varRatio_NULL_eg_mat <- rbind(varRatio_NULL_eg_mat, var1GE_vec / var2nullGE_vec)
               varRatio_sparse_eg_mat <- rbind(varRatio_sparse_eg_mat, var1GE_vec / var2sparseGE_vec)
             }
-            # indexInMarkerList = indexInMarkerList + 1
             numTestedMarker <- numTestedMarker + 1
           } else {
             indexInMarkerList <- indexInMarkerList + 1
@@ -1935,7 +1773,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
         print("varRatio_NULL_noXadj_vec")
         print(varRatio_NULL_noXadj_vec)
 
-        # ratioCV = calCV(varRatio_NULL_vec)
         ratioCV <- calCV(varRatio_NULL_noXadj_vec)
 
         if (ratioCV > ratioCVcutoff) {
@@ -1984,7 +1821,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
       varRatioTable <- rbind(varRatioTable, c(varRatio_null_sample, "null_sample", k))
 
 
-      # varRatioTable = rbind(varRatioTable, c(varRatio_null_noXadj, "null", k))
     } else { # if(cateVarRatioVec[k] == 1)
       varRatioTable <- rbind(varRatioTable, c(1, "null", k))
       varRatioTable <- rbind(varRatioTable, c(1, "null_noXadj", k))
@@ -1993,7 +1829,7 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
         varRatioTable <- rbind(varRatioTable, c(1, "sparse", k))
       }
     }
-  } # for(k in 1:length(listOfMarkersForVarRatio)){
+  }
   write.table(varRatioTable, varRatioOutFile, quote = F, col.names = F, row.names = F)
   data <- read.table(varRatioOutFile, header = F)
   print(data)
