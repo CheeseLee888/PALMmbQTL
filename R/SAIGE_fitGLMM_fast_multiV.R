@@ -828,50 +828,30 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     print(head(data.new))
     if (!isCovariateOffset) {
       if (length(offsetCol) == 0) {
-        fit0 <- glm(formula.new, data = data.new, family = binomial, weights = varWeights)
       } else {
         offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-        fit0 <- glm(formula.new, data = data.new, offset = offsetColVal, family = binomial, weights = varWeights)
       }
       Xorig <- NULL
     } else {
-      fit0orig <- glm(formula.new.withCov, data = data.new, family = binomial, weights = varWeights)
-      Xorig <- model.matrix(fit0orig)
-      rm(fit0orig)
       gc()
       if (length(offsetCol) == 0) {
-        fit0 <- glm(formula.new,
-          data = data.new, offset = covoffset,
-          family = binomial, weights = varWeights
-        )
       } else {
         offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-        fit0 <- glm(formula.new, data = data.new, offset = offsetTotal, family = binomial, weights = varWeights)
       }
     }
   } else if (traitType == "quantitative") {
     cat(phenoCol, " is a quantitative trait\n")
     if (!isCovariateOffset) {
       if (length(offsetCol) == 0) {
-        fit0 <- glm(formula.new, data = data.new, family = gaussian(link = "identity"), weights = varWeights)
       } else {
         offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-        fit0 <- glm(formula.new, data = data.new, offset = offsetColVal, family = gaussian(link = "identity"), weights = varWeights)
       }
       Xorig <- NULL
     } else {
-      fit0orig <- glm(formula.new.withCov, data = data.new, family = gaussian(link = "identity"), weights = varWeights)
-      Xorig <- model.matrix(fit0orig)
-      rm(fit0orig)
       gc()
       if (length(offsetCol) == 0) {
-        fit0 <- glm(formula.new,
-          data = data.new, offset = covoffset,
-          family = gaussian(link = "identity"), weights = varWeights
-        )
       } else {
         offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-        fit0 <- glm(formula.new, data = data.new, offset = offsetTotal, family = gaussian(link = "identity"), weights = varWeights)
       }
     }
   } else if (traitType == "count") {
@@ -883,25 +863,15 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
 
     if (!isCovariateOffset) {
       if (length(offsetCol) == 0) {
-        fit0 <- glm(formula.new, data = data.new, family = "poisson", weights = varWeights)
       } else {
         offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-        fit0 <- glm(formula.new, data = data.new, offset = offsetColVal, family = "poisson", weights = varWeights)
       }
       Xorig <- NULL
     } else {
-      # fit0orig <- glm(formula.new.withCov, data = data.new, family = "poisson", weights = varWeights)
-      # Xorig <- model.matrix(fit0orig)
-      # rm(fit0orig)
       # gc()
       # if (length(offsetCol) == 0) {
-      #   fit0 <- glm(formula.new,
-      #     data = data.new, offset = covoffset,
-      #     family = "poisson", weights = varWeights
-      #   )
       # } else {
       #   offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-      #   fit0 <- glm(formula.new, data = data.new, offset = offsetTotal, family = "poisson", weights = varWeights)
       # }
     }
   } else if (traitType == "count_nb") {
@@ -919,33 +889,21 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     }
     if (!isCovariateOffset) {
       if (length(offsetCol) == 0) {
-        fit0 <- glm(formula.new, data = data.new, family = NegBin(), weights = varWeights)
       } else {
         offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-        fit0 <- glm(formula.new, data = data.new, offset = offsetColVal, family = NegBin(), weights = varWeights)
       }
 
       Xorig <- NULL
     } else {
-      fit0orig <- glm(formula.new.withCov, data = data.new, family = NegBin(), weights = varWeights)
-      Xorig <- model.matrix(fit0orig)
-      rm(fit0orig)
       gc()
       if (length(offsetCol) == 0) {
-        fit0 <- glm(formula.new,
-          data = data.new, offset = covoffset,
-          family = NegBin()
-        )
       } else {
         offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-        fit0 <- glm(formula.new, data = data.new, offset = offsetTotal, family = NegBin(), weights = varWeights)
       }
     }
   }
 
 
-  # cat("glm:\n")
-  # print(fit0)
   obj.noK <- NULL
 
 
@@ -991,29 +949,18 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       varWeights <- modglmm$varWeights
       if (!isCovariateOffset) {
         if (length(offsetCol) == 0) {
-          fit0 <- glm(formula.new, data = data.new, family = gaussian(link = "identity"), weights = varWeights)
         } else {
           offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-          fit0 <- glm(formula.new, data = data.new, offset = offsetColVal, family = gaussian(link = "identity"), weights = varWeights)
         }
         Xorig <- NULL
       } else {
-        fit0orig <- glm(formula.new.withCov, data = data.new, family = gaussian(link = "identity"), weights = varWeights)
-        Xorig <- model.matrix(fit0orig)
-        rm(fit0orig)
         gc()
         if (length(offsetCol) == 0) {
-          fit0 <- glm(formula.new,
-            data = data.new, offset = covoffset,
-            family = gaussian(link = "identity"), weights = varWeights
-          )
         } else {
           offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-          fit0 <- glm(formula.new, data = data.new, offset = offsetTotal, family = gaussian(link = "identity"), weights = varWeights)
         }
       }
 
-      modglmm$obj.glm.null <- fit0
     }
 
 ##################
@@ -1026,7 +973,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     #   modglmm$offset <- covoffset
     # } else {
     #   if (hasCovariate) {
-    #     data.new.X <- model.matrix(fit0)[, -1, drop = F]
     #     print(head(data.new))
     #     print(head(data.new.X))
     #     print(head(modglmm$coefficients[-1]))
@@ -1056,7 +1002,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     # 
     # 
     # # if((skipVarianceRatioEstimation & useSparseGRMtoFitNULL)){
-    # family <- fit0$family
     # eta <- modglmm$linear.predictors
     # mu <- modglmm$fitted.values
     # mu.eta <- family$mu.eta(eta)
