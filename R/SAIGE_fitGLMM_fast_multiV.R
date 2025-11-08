@@ -839,7 +839,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     # sqrtW <- mu.eta / sqrt(family$variance(mu))
     # W <- sqrtW^2
     # W <- W * modglmm$varWeights
-    # tauVecNew <- modglmm$theta
     # Sigma_iX <- getSigma_X_multiV(W, tauVecNew, modglmm$X, maxiterPCG, tolPCG, LOCO = FALSE)
     # if (!isShrinkModelOutput) {
     #   Sigma_iXXSigma_iX <- Sigma_iX %*% solve(crossprod(modglmm$X, Sigma_iX))
@@ -849,18 +848,12 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     # modglmm$useSparseGRMforVarRatio <- useSparseGRMforVarRatio
     # 
     # 
-    # if (useGRMtoFitNULL) {
-    #   modglmm$tauVal_sp <- modglmm$theta[3]
-    # } else {
-    #   modglmm$tauVal_sp <- modglmm$theta[2]
-    # }
     # 
     # 
     # cat("isStoreSigma is ", isStoreSigma, "\n")
     # if (isStoreSigma) {
     #   modglmm$spSigma <- gettI_Sigma_I_multiV(W, tauVecNew, maxiterPCG, tolPCG, LOCO = FALSE)
     # }
-    # tau <- modglmm$theta
     # alpha0 <- modglmm$coefficients
     # 
     # 
@@ -914,7 +907,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     setgeno(bedFile, bimFile, famFile, subSampleInGeno_unique, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
 
 
-    tau <- modglmm$theta
 
     if (any(duplicated(modglmm$sampleID))) {
       set_I_mat_inR(modglmm$sampleID)
@@ -1047,7 +1039,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
   W <- W * var_weights
   print("mu[1:20]")
   print(W[1:20])
-  tauVecNew <- obj.glmm.null$theta
 
   X <- obj.glmm.null$X
 
@@ -1293,11 +1284,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
                   var2sparseGE_vec <- c(var2sparseGE_vec, var2sparseGRM_GE)
                 } else {
                   if (any(duplicated(obj.glmm.null$sampleID))) {
-                    if (useGRMtoFitNULL) {
-                      tauVal <- tauVecNew[3]
-                    } else {
-                      tauVal <- tauVecNew[2]
-                    }
                     Sigma_iGE_sparse <- getSigma_G_V(W, tauVal, tauVecNew[1], GE_tilde, maxiterPCG, tolPCG)
                     var2_a_GE <- crossprod(GE_tilde, Sigma_iGE_sparse)
                     var2sparseGRM_GE <- var2_a_GE[1, 1]
@@ -1314,11 +1300,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
             G0_sample_tilde <- G0sample - XXVXsample_inv0 %*% XVsample0 %*% G0sample
 
             if (any(duplicated(obj.glmm.null$sampleID))) {
-              if (useGRMtoFitNULL) {
-                tauVal <- tauVecNew[3]
-              } else {
-                tauVal <- tauVecNew[2]
-              }
               if (isStoreSigma) {
                 Sigma_iG <- (obj.glmm.null$spSigma) %*% G0_sample_tilde
                 var2_a <- crossprod(G0_sample_tilde, Sigma_iG)
