@@ -637,16 +637,8 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     stop("ERROR: This traitType is not supported in the current version.\n")
   } else if (traitType == "count") {
     if (length(offsetCol) == 0) {
-      modwitcov <- glm(formula.new,
-        data = data.new,
-        family = "poisson", weights = varWeights
-      )
     } else {
       offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-      # modwitcov <- glm(formula.new,
-      #   offset = offsetColVal, data = data.new,
-      #   family = "poisson", weights = varWeights
-      # )
     }
   } else if (traitType == "count_nb") {
     stop("ERROR: This traitType is not supported in the current version.\n")
