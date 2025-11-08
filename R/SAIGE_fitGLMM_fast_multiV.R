@@ -683,12 +683,10 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   # allow for multiple variance components
   set_Vmat_vec_orig(VmatFilelist, VmatSampleFilelist, dataMerge_sort$IID)
 
-  numofV <- get_numofV()
 
   print(dataMerge_sort$IID[1:200])
   print(any(duplicated(dataMerge_sort$IID)))
 
-  cat("numofV ", numofV, "\n")
   if (any(duplicated(dataMerge_sort$IID))) {
     print("HERE")
     if (longlCol == "") {
@@ -696,31 +694,12 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       print(useGRMtoFitNULL)
       if (useGRMtoFitNULL) {
         print("HERE2")
-        num_Kmat <- numofV + 3
-        cat("num_Kmat ", num_Kmat, "\n")
-      } else {
-        num_Kmat <- numofV + 2
       }
-    } else {
-      if (useGRMtoFitNULL) {
-        num_Kmat <- 7 + numofV * 3
-      } else {
-        num_Kmat <- 4 + numofV * 3
-      }
-    }
-  } else {
-    if (useGRMtoFitNULL) {
-      num_Kmat <- numofV + 2
-    } else {
-      num_Kmat <- numofV + 1
     }
   }
 
-  k <- num_Kmat
 
 
-  set_num_Kmat(num_Kmat)
-  cat("num_Kmat ", num_Kmat, "\n")
 
 
   if (longlCol != "") {
@@ -799,8 +778,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     print(t_begin)
 
 
-    tau <- rep(0, k)
-    fixtau <- rep(0, k)
 
     set_isSparseGRM(useSparseGRMtoFitNULL)
     set_useGRMtoFitNULL(useGRMtoFitNULL)
