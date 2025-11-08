@@ -3,7 +3,7 @@
 #' @param plinkFile character. Path to plink file to be used for calculating elements of the genetic relationship matrix (GRM). minMAFforGRM can be used to specify the minimum MAF of markers in the plink file to be used for constructing GRM. Genetic markers are also randomly selected from the plink file to estimate the variance ratios
 #' @param phenoFile character. Path to the phenotype file. The file can be either tab or space delimited. The phenotype file has a header and contains at least two columns. One column is for phentoype and the other column is for sample IDs. Additional columns can be included in the phenotype file for covariates in the null model. Please specify the names of the covariates using the argument covarColList and specify categorical covariates using the argument qCovarCol. All categorical covariates must also be included in covarColList.
 #' @param phenoCol character. Column name for the phenotype in phenoFile e.g. "CAD"
-#' @param traitType character. e.g. "binary" or "quantitative". By default, "binary"
+#' @param traitType character. e.g. "binary", "quantitative", "count" or "count_nb". By default, "count".
 #' @param invNormalize logical. Whether to perform the inverse normalization for the phentoype or not. e.g. TRUE or FALSE. By default, FALSE
 #' @param covarColList vector of characters. Covariates to be used in the null model. e.g c("Sex", "Age")
 #' @param qCovarCol vector of characters. Categorical covariates to be used in the null model. All categorical covariates listed in qCovarCol must be also in covarColList,  e,g c("Sex").
@@ -58,7 +58,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
                                phenoFile = "",
                                phenoCol = "",
                                isRemoveZerosinPheno = FALSE,
-                               traitType = "binary",
+                               traitType = "count",
                                invNormalize = FALSE,
                                covarColList = NULL,
                                qCovarCol = NULL,
@@ -589,36 +589,12 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   print(head(dataMerge_sort))
 
   if (traitType == "quantitative" & invNormalize) {
-    cat(
-      "Perform the inverse nomalization for ", phenoCol,
-      "\n"
-    )
-    invPheno <- qnorm((rank(dataMerge_sort[, which(colnames(dataMerge_sort) ==
-      phenoCol)], na.last = "keep") - 0.5) / sum(!is.na(dataMerge_sort[
-      ,
-      which(colnames(dataMerge_sort) == phenoCol)
-    ])))
-    dataMerge_sort[, which(colnames(dataMerge_sort) == phenoCol)] <- invPheno
+    stop("ERROR: This traitType is not supported in the current version.\n")
   }
   print("Test4")
   print(head(dataMerge_sort))
   if (traitType == "binary" & (length(covarColList) > 0)) {
-    out_checksep <- checkPerfectSep(formula.null,
-      data = dataMerge_sort,
-      minCovariateCount
-    )
-    covarColList <- covarColList[!(covarColList %in% out_checksep)]
-    formula <- paste0(phenoCol, "~", paste0(covarColList,
-      collapse = "+"
-    ))
-    formula.null <- as.formula(formula)
-    if (length(covarColList) == 1) {
-      hasCovariate <- FALSE
-    } else {
-      hasCovariate <- TRUE
-    }
-    dataMerge_sort <- dataMerge_sort[, !(names(dataMerge_sort) %in%
-      out_checksep)]
+    stop("ERROR: This traitType is not supported in the current version.\n")
   }
   if (!hasCovariate) {
     print("No covariate is includes so isCovariateOffset = FALSE")
@@ -656,31 +632,9 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   }
 
   if (traitType == "binary") {
-    if (length(offsetCol) == 0) {
-      modwitcov <- glm(formula.new,
-        data = data.new,
-        family = binomial, weights = varWeights
-      )
-    } else {
-      offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-      modwitcov <- glm(formula.new,
-        offset = offsetColVal, data = data.new,
-        family = binomial, weights = varWeights
-      )
-    }
+    stop("ERROR: This traitType is not supported in the current version.\n")
   } else if (traitType == "quantitative") {
-    if (length(offsetCol) == 0) {
-      modwitcov <- glm(formula.new,
-        data = data.new,
-        family = gaussian(link = "identity"), weights = varWeights
-      )
-    } else {
-      offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-      modwitcov <- glm(formula.new,
-        offset = offsetColVal, data = data.new,
-        family = gaussian(link = "identity"), weights = varWeights
-      )
-    }
+    stop("ERROR: This traitType is not supported in the current version.\n")
   } else if (traitType == "count") {
     if (length(offsetCol) == 0) {
       modwitcov <- glm(formula.new,
@@ -695,19 +649,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       # )
     }
   } else if (traitType == "count_nb") {
-    if (length(offsetCol) == 0) {
-      modwitcov <- glm(formula.new,
-        data = data.new,
-        family = NegBin(), weights = varWeights
-      )
-    } else {
-      print(head(data.new))
-      offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-      modwitcov <- glm(formula.new,
-        offset = offsetColVal, data = data.new,
-        family = NegBin(), weights = varWeights
-      )
-    }
+    stop("ERROR: This traitType is not supported in the current version.\n")
   }
   mmat <- model.matrix(formula.new, data = data.new, na.action = NULL)
 
@@ -817,43 +759,9 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
 
 
   if (traitType == "binary") {
-    cat(phenoCol, " is a binary trait\n")
-    uniqPheno <- sort(unique(dataMerge_sort[, which(colnames(dataMerge_sort) == phenoCol)]))
-    if (uniqPheno[1] != 0 | uniqPheno[2] != 1) {
-      stop("ERROR! phenotype value needs to be 0 or 1 \n")
-    }
-    print("formula.new")
-    print(formula.new)
-    print("head(data.new)")
-    print(head(data.new))
-    if (!isCovariateOffset) {
-      if (length(offsetCol) == 0) {
-      } else {
-        offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-      }
-      Xorig <- NULL
-    } else {
-      gc()
-      if (length(offsetCol) == 0) {
-      } else {
-        offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-      }
-    }
+    stop("ERROR: This traitType is not supported in the current version.\n")
   } else if (traitType == "quantitative") {
-    cat(phenoCol, " is a quantitative trait\n")
-    if (!isCovariateOffset) {
-      if (length(offsetCol) == 0) {
-      } else {
-        offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-      }
-      Xorig <- NULL
-    } else {
-      gc()
-      if (length(offsetCol) == 0) {
-      } else {
-        offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-      }
-    }
+    stop("ERROR: This traitType is not supported in the current version.\n")
   } else if (traitType == "count") {
     cat(phenoCol, " is a count trait\n")
     miny <- min(dataMerge_sort[, which(colnames(dataMerge_sort) == phenoCol)])
@@ -875,32 +783,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       # }
     }
   } else if (traitType == "count_nb") {
-    cat(phenoCol, " is a count_nb trait\n")
-    if (isRemoveZerosinPheno) {
-      dataMerge_sort <- dataMerge_sort[which(dataMerge_sort[, which(colnames(dataMerge_sort) == phenoCol)] > 0), ]
-      cat("Removing all zeros in the phenotype\n")
-      if (nrow(dataMerge_sort) == 0) {
-        stop("ERROR: no samples are left after removing zeros in the phenotype\n")
-      }
-    }
-    miny <- min(dataMerge_sort[, which(colnames(dataMerge_sort) == phenoCol)])
-    if (miny < 0) {
-      stop("ERROR! phenotype value needs to be non-negative \n")
-    }
-    if (!isCovariateOffset) {
-      if (length(offsetCol) == 0) {
-      } else {
-        offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-      }
-
-      Xorig <- NULL
-    } else {
-      gc()
-      if (length(offsetCol) == 0) {
-      } else {
-        offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-      }
-    }
+    stop("ERROR: This traitType is not supported in the current version.\n")
   }
 
 
@@ -931,36 +814,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       cat("glmmkin succeed!")
       # modglmm$obj.glm.null$model <- as.data.frame(modglmm$obj.glm.null$model)
     } else {
-      system.time(modglmm <- glmmkin.ai_PCG_Rcpp_multiV_NB(bedFile, bimFile, famFile, Xorig, isCovariateOffset,
-        fit0,
-        tau = tau, fixtau = fixtau, maxiter = maxiter,
-        tol = tol, verbose = TRUE, nrun = nrun, tolPCG = tolPCG,
-        maxiterPCG = maxiterPCG, subPheno = dataMerge_sort, indicatorGenoSamplesWithPheno = indicatorGenoSamplesWithPheno,
-        obj.noK = obj.noK, out.transform = out.transform,
-        tauInit = tauInit, memoryChunk = memoryChunk,
-        LOCO = LOCO, chromosomeStartIndexVec = chromosomeStartIndexVec,
-        chromosomeEndIndexVec = chromosomeEndIndexVec,
-        traceCVcutoff = traceCVcutoff, isCovariateTransform = isCovariateTransform,
-        isDiagofKinSetAsOne = isDiagofKinSetAsOne,
-        isLowMemLOCO = isLowMemLOCO, covarianceIdxMat = covarianceIdxMat, isStoreSigma = isStoreSigma, useSparseGRMtoFitNULL = useSparseGRMtoFitNULL, useGRMtoFitNULL = useGRMtoFitNULL, isSparseGRMIdentity = isSparseGRMIdentity
-      ))
-
-      data.new$y <- modglmm$y
-      varWeights <- modglmm$varWeights
-      if (!isCovariateOffset) {
-        if (length(offsetCol) == 0) {
-        } else {
-          offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-        }
-        Xorig <- NULL
-      } else {
-        gc()
-        if (length(offsetCol) == 0) {
-        } else {
-          offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-        }
-      }
-
+      stop("ERROR: This traitType is not supported in the current version.\n")
     }
 
 ##################
@@ -1505,33 +1359,9 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
 
 
             if (obj.glmm.null$traitType == "binary") {
-              tmpW <- mu * (1 - mu) * var_weights
-              tmpWI <- as.vector(crossprod(tmpW, I_mat))
-              var2null <- innerProduct(tmpW, G * G)
-              var2null_sample <- innerProduct(tmpWI, G0_sample_tilde * G0_sample_tilde)
-              var2null_noXadj <- innerProduct(tmpWI, G_noXadj * G_noXadj)
-              var2nullGE_vec <- NULL
-              if (!is.null(obj.glmm.null$eMat)) {
-                for (ne in 1:ncol(obj.glmm.null$eMat)) {
-                  GE_tilde <- getildeMat[, ne]
-                  var22nullGE <- innerProduct(tmpW, GE_tilde * GE_tilde)
-
-
-                  var2nullGE_vec <- c(var2nullGE_vec, var22nullGE)
-                }
-              }
+              stop("ERROR: This traitType is not supported in the current version.\n")
             } else if (obj.glmm.null$traitType == "quantitative") {
-              var2null <- innerProduct(G, G * var_weights)
-              var2null_sample <- innerProduct(G0_sample_tilde, G0_sample_tilde * var_weights)
-              var2null_noXadj <- innerProduct(G_noXadj, G_noXadj * as.vector(crossprod(var_weights, I_mat)))
-              var2nullGE_vec <- NULL
-              if (!is.null(obj.glmm.null$eMat)) {
-                for (ne in 1:ncol(obj.glmm.null$eMat)) {
-                  GE_tilde <- getildeMat[, ne]
-                  var22nullGE <- innerProduct(GE_tilde, GE_tilde * var_weights)
-                  var2nullGE_vec <- c(var2nullGE_vec, var22nullGE)
-                }
-              }
+              stop("ERROR: This traitType is not supported in the current version.\n")
             } else if (obj.glmm.null$traitType == "count") {
               tmpW <- mu * var_weights
               tmpWI <- as.vector(crossprod(tmpW, I_mat))
@@ -1548,17 +1378,7 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
                 }
               }
             } else if (obj.glmm.null$traitType == "count_nb") {
-              var2null <- innerProduct(W, G * G) ## To update
-              var2null_sample <- innerProduct(as.vector(crossprod(W, I_mat)), G0_sample_tilde * G0_sample_tilde)
-              var2null_noXadj <- innerProduct(as.vector(crossprod(W, I_mat)), G_noXadj * G_noXadj)
-              var2nullGE_vec <- NULL
-              if (!is.null(obj.glmm.null$eMat)) {
-                for (ne in 1:ncol(obj.glmm.null$eMat)) {
-                  GE_sample_tilde <- getilde_sample0_Mat[, ne]
-                  var22nullGE <- innerProduct(as.vector(crossprod(W, I_mat)), as.vector(GE_sample_tilde * GE_sample_tilde))
-                  var2nullGE_vec <- c(var2nullGE_vec, var22nullGE)
-                }
-              }
+              stop("ERROR: This traitType is not supported in the current version.\n")
             }
 
             cat("mu\n")
