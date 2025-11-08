@@ -47,7 +47,6 @@
 #' @param sexCol character. Coloumn name for sex in the phenotype file, e.g Sex. By default, ''
 #' @param isCovariateOffset logical. Whether to estimate fixed effect coeffciets. By default, FALSE.
 #' @param isStoreSigma logical. Whether to store sigma matrix. By default, FALSE. If number of individuals is greater than 10,000, this option may use large memory
-#' @param isShrinkModelOutput logical. remove unnecessary objects for step2 from the model output. By default, FALSE.
 #' @param isExportResiduals logical. export a residual vector. By default, FALSE.
 #' @return a file ended with .rda that contains the glmm model information, a file ended with .varianceRatio.txt that contains the variance ratio values, and a file ended with #markers.SPAOut.txt that contains the SPAGMMAT tests results for the markers used for estimating the variance ratio.
 #' @export
@@ -117,7 +116,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
                                VcellmatSampleFilelist = "",
                                useGRMtoFitNULL = TRUE,
                                isStoreSigma = FALSE,
-                               isShrinkModelOutput = FALSE,
                                isExportResiduals = FALSE) {
   ## set up output files
   modelOut <- paste0(outputPrefix, ".rda")
@@ -781,17 +779,11 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
                                             kins = sparseGRM,
                                           id = "IID", family = poisson(link = "log")))
       cat("glmmkin succeed!")
-      # modglmm$obj.glm.null$model <- as.data.frame(modglmm$obj.glm.null$model)
     } else {
       stop("ERROR: This traitType is not supported in the current version.\n")
     }
 
 ##################
-    # if (traitType != "count_nb") {
-    #   for (x in names(modglmm$obj.glm.null)) {
-    #     attr(modglmm$obj.glm.null[[x]], ".Environment") <- c()
-    #   }
-    # }
     # if (isCovariateOffset) {
     #   modglmm$offset <- covoffset
     # } else {
@@ -832,10 +824,9 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     # W <- sqrtW^2
     # W <- W * modglmm$varWeights
     # Sigma_iX <- getSigma_X_multiV(W, tauVecNew, modglmm$X, maxiterPCG, tolPCG, LOCO = FALSE)
-    # if (!isShrinkModelOutput) {
-    #   Sigma_iXXSigma_iX <- Sigma_iX %*% solve(crossprod(modglmm$X, Sigma_iX))
-    #   modglmm$Sigma_iXXSigma_iX <- Sigma_iXXSigma_iX
-    # }
+    # 
+    # Sigma_iXXSigma_iX <- Sigma_iX %*% solve(crossprod(modglmm$X, Sigma_iX))
+    # modglmm$Sigma_iXXSigma_iX <- Sigma_iXXSigma_iX
     # 
     # modglmm$useSparseGRMforVarRatio <- useSparseGRMforVarRatio
     # 
@@ -930,24 +921,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   }
   closeGenoFile_plink()
 
-  # clean up saved model (as in ReadModel)
-  if (isShrinkModelOutput) {
-    modglmm$Y <- NULL
-    modglmm$linear.predictors <- NULL
-    modglmm$coefficients <- NULL
-    modglmm$cov <- NULL
-    if (sum(duplicated(modglmm$sampleID)) > 0) {
-      modglmm$obj.noK$Sigma_iXXSigma_iX <- matrix(1)
-      modglmm$X <- NULL
-      if (is.null(modglmm$eMat)) {
-        modglmm$obj.noK$XV <- NULL
-        modglmm$obj.noK$XVX <- NULL
-        modglmm$obj.noK$XXVX_inv <- NULL
-        modglmm$obj.noK$XVX_inv <- NULL
-        modglmm$obj.noK$XVX_inv_XV <- NULL
-      }
-    }
-  }
   fastSave(modglmm, file = modelOut)
 
   if (isExportResiduals) {
@@ -1015,7 +988,6 @@ extractVarianceRatio_multiV <- function(obj.glmm.null,
     stop("ERROR: chromosome column in plink bim file is no numeric!\n")
   }
 
-  family <- obj.glm.null$family
   print(family)
   eta <- obj.glmm.null$linear.predictors
   mu <- obj.glmm.null$fitted.values
