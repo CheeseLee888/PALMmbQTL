@@ -20,7 +20,7 @@
 #' @param skipModelFitting logical.  Whether to skip fitting the null model and only calculating the variance ratio, By default, FALSE. If TURE, the model file ".rda" is needed
 #' @param memoryChunk integer or float. The size (Gb) for each memory chunk. By default, 2
 #' @param tauInit vector of numbers. e.g. c(1,1), Initial values for tau. For binary traits, the first element will be always be set to 1. If the tauInit is 0,0, the second element will be 0.5 for binary traits and the initial tau vector for quantitative traits is 1,0
-#' @param LOCO logical. Whether to apply the leave-one-chromosome-out (LOCO) option. By default, TRUE
+#' @param LOCO logical. Whether to apply the leave-one-chromosome-out (LOCO) option. By default, FALSE
 #' @param traceCVcutoff numeric. The threshold for coefficient of variation (CV) for the trace estimator to increase nrun. By default, 0.0025
 #' @param ratioCVcutoff numeric. The threshold for coefficient of variation (CV) for the variance ratio estimate. If ratioCV > ratioCVcutoff. numMarkersForVarRatio will be increased by 10. By default, 0.001
 #' @param outputPrefix character. Path to the output files with prefix.
@@ -79,7 +79,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
                                skipModelFitting = FALSE,
                                memoryChunk = 2,
                                tauInit = c(0, 0),
-                               LOCO = TRUE,
+                               LOCO = FALSE,
                                isLowMemLOCO = FALSE,
                                traceCVcutoff = 0.0025,
                                ratioCVcutoff = 0.001,
@@ -127,9 +127,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       stop("skipModelFitting=TRUE but ", modelOut, " does not exist\n")
     }
   } else {
-    if (LOCO & isLowMemLOCO) {
-      modelOut <- paste(c(outputPrefix, "_noLOCO.rda"), collapse = "")
-    }
     file.create(modelOut, showWarnings = TRUE)
   }
 
@@ -143,7 +140,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   if (!useGRMtoFitNULL) {
     useSparseGRMtoFitNULL <- FALSE
     useSparseGRMforVarRatio <- FALSE
-    LOCO <- FALSE
     cat("No GRM will be used to fit the NULL model and nThreads is set to 1\n")
   }
 
@@ -182,7 +178,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
 
 
   if (useSparseGRMtoFitNULL) {
-    LOCO <- FALSE
     cat("Leave-one-chromosome-out is not applied\n")
   }
 
@@ -233,18 +228,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     }
     if (!file.exists(bimFile)) {
       stop("ERROR! bim file does not exsit\n")
-    } else {
-      if (LOCO) {
-        chrVec <- data.table::fread(bimFile, header = F, data.table = F, select = 1)
-        updatechrList <- updateChrStartEndIndexVec(chrVec)
-        LOCO <- updatechrList$LOCO
-        chromosomeStartIndexVec <- updatechrList$chromosomeStartIndexVec
-        chromosomeEndIndexVec <- updatechrList$chromosomeEndIndexVec
-      }
-      if (!LOCO) {
-        chromosomeStartIndexVec <- rep(NA, 22)
-        chromosomeEndIndexVec <- rep(NA, 22)
-      }
     }
 
 
@@ -1033,7 +1016,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       modglmm$obj.glm.null <- fit0
     }
 
-
+##################
     # if (traitType != "count_nb") {
     #   for (x in names(modglmm$obj.glm.null)) {
     #     attr(modglmm$obj.glm.null[[x]], ".Environment") <- c()
@@ -1048,13 +1031,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     #     print(head(data.new.X))
     #     print(head(modglmm$coefficients[-1]))
     #     modglmm$offset <- data.new.X %*% (as.vector(modglmm$coefficients[-1]))
-    #     if (LOCO) {
-    #       for (j in 1:22) {
-    #         if (modglmm$LOCOResult[[j]]$isLOCO) {
-    #           modglmm$LOCOResult[[j]]$offset <- data.new.X %*% (as.vector(modglmm$LOCOResult[[j]]$coefficients[-1]))
-    #         }
-    #       }
-    #     }
     #   } else {
     #     modglmm$offset <- covoffset
     #   }
@@ -1116,97 +1092,9 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     #   coef.alpha <- Covariate_Transform_Back(alpha0, out.transform$Param.transform)
     #   modglmm$coefficients <- coef.alpha
     # }
-    # 
-    # 
-    # if (LOCO & isLowMemLOCO) {
-    #   modglmm$LOCOResult <- NULL
-    #   modglmm$LOCO <- FALSE
-    #   chromosomeStartIndexVec <- modglmm$chromosomeStartIndexVec
-    #   chromosomeEndIndexVec <- modglmm$chromosomeEndIndexVec
-    #   modglmm$chromosomeStartIndexVec <- NULL
-    #   modglmm$chromosomeEndIndexVec <- NULL
-    #   modelOut <- paste(c(outputPrefix, "_noLOCO.rda"), collapse = "")
-    #   fastSave(modglmm, file = modelOut)
-    #   modglmm$LOCO <- TRUE
-    #   modglmm$Y <- NULL
-    #   eta0 <- modglmm$linear.predictors
-    #   modglmm$linear.predictors <- NULL
-    #   modglmm$coefficients <- NULL
-    #   modglmm$cov <- NULL
-    #   modglmm$fitted.values <- NULL
-    #   modglmm$residuals <- NULL
-    #   modglmm$obj.noK <- NULL
-    #   offset0 <- modglmm$offset
-    #   modglmm$offset <- NULL
-    #   y <- fit0$y
-    #   gc()
-    #   # save(modglmm, file = modelOut)
-    #   set_Diagof_StdGeno_LOCO()
-    #   modglmm$LOCOResult <- list()
-    #   for (j in 1:22) {
-    #     startIndex <- chromosomeStartIndexVec[j]
-    #     endIndex <- chromosomeEndIndexVec[j]
-    #     if (!is.na(startIndex) && !is.na(endIndex)) {
-    #       cat("leave chromosome ", j, " out\n")
-    #       setStartEndIndex(startIndex, endIndex, j - 1)
-    # 
-    #       re.coef_LOCO <- Get_Coef_multiV(y, X = model.matrix(fit0), tau, family = fit0$family, alpha = alpha0, eta = eta0, offset = offset0, verbose = TRUE, maxiterPCG = maxiterPCG, tolPCG = tolPCG, maxiter = maxiter, LOCO = TRUE, var_weights = var_weights)
-    #       cov <- re.coef_LOCO$cov
-    #       alpha <- re.coef_LOCO$alpha
-    #       eta <- re.coef_LOCO$eta
-    #       Y <- re.coef_LOCO$Y
-    #       mu <- re.coef_LOCO$mu
-    #       if (family$family == "binomial") {
-    #         mu2 <- mu * (1 - mu)
-    #       } else if (family$family == "poisson") {
-    #         mu2 <- mu
-    #       } else if (family$family == "gaussian") {
-    #         mu2 <- rep((1 / (tau[1])), length(res))
-    #       } else if (traitType == "count_nb") {
-    #         # mu2 = fit0$family$variance(mu)
-    #         mu2 <- rep((1 / (tau[1])), length(res))
-    #       }
-    #       res <- y - mu
-    # 
-    #       if (!is.null(out.transform) & is.null(fit0$offset)) {
-    #         coef.alpha <- Covariate_Transform_Back(alpha, out.transform$Param.transform)
-    #       } else {
-    #         coef.alpha <- alpha
-    #       }
-    # 
-    #       mu2_rescaled <- mu2 * var_weights
-    #       mu_rescaled <- mu * var_weights
-    # 
-    # 
-    #       if (!isCovariateOffset) {
-    #         obj.noK <- ScoreTest_NULL_Model(mu_rescaled, mu2_rescaled, y_rescaled, X)
-    #       } else {
-    #         obj.noK <- ScoreTest_NULL_Model(mu_rescaled, mu2_rescaled, y_rescaled, Xorig)
-    #       }
-    #       modglmm$LOCOResult[[j]] <- list(isLOCO = TRUE, coefficients = coef.alpha, linear.predictors = eta, fitted.values = mu, Y = Y, residuals = res, cov = cov, obj.noK = obj.noK)
-    #       if (!isCovariateOffset & hasCovariate) {
-    #         data.new.X <- model.matrix(fit0)[, -1, drop = F]
-    #         modglmm$LOCOResult[[j]]$offset <- data.new.X %*% (as.vector(modglmm$LOCOResult[[j]]$coefficients[-1]))
-    #       }
-    #       modelOutbychr <- paste(c(outputPrefix, "_chr", j, ".rda"), collapse = "")
-    #       if (j != 22) {
-    #         for (j1 in (j + 1):22) {
-    #           modglmm$LOCOResult[[j1]] <- list(NULL)
-    #         }
-    #       }
-    #       fastSave(modglmm, file = modelOutbychr)
-    #       modglmm$LOCOResult[[j]] <- list(NULL)
-    #       gc()
-    #     } else {
-    #       modglmm$LOCOResult[[j]] <- list(isLOCO = FALSE)
-    #     }
-    #   }
-    #   gc()
-    #   # modelOut_nonauto = paste(c(outputPrefix,"_noLOCO.rda"), collapse="")
-    # } else {
-    #   modglmm$T_longl_vec <- dataMerge_sort$longlVar
-    # }
 
+
+##################
 
     t_end <- proc.time()
     print(t_end)
@@ -1234,9 +1122,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       stop("skipModelFitting=TRUE but ", modelOut, " does not exist\n")
     }
     load(modelOut)
-    if (is.null(modglmm$LOCO)) {
-      modglmm$LOCO <- FALSE
-    }
 
     # need check
     subSampleInGeno <- dataMerge_sort$IndexGeno
@@ -1262,19 +1147,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   }
 
   if (!skipVarianceRatioEstimation) {
-    if (LOCO) {
-      MsubIndVec <- getQCdMarkerIndex()
-      print(length(MsubIndVec))
-      chrVec <- data.table::fread(bimFile, header = F)[, 1]
-      print(length(chrVec))
-      chrVec <- chrVec[which(MsubIndVec == TRUE)]
-      updatechrList <- updateChrStartEndIndexVec(chrVec)
-      LOCO <- updatechrList$LOCO
-      chromosomeStartIndexVec <- updatechrList$chromosomeStartIndexVec
-      chromosomeEndIndexVec <- updatechrList$chromosomeEndIndexVec
-      set_Diagof_StdGeno_LOCO()
-      load(modelOut)
-    }
     cat("Start estimating variance ratios\n")
     extractVarianceRatio_multiV(
       obj.glmm.null = modglmm,
