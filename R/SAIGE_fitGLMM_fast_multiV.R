@@ -47,6 +47,7 @@
 #' @param sexCol character. Coloumn name for sex in the phenotype file, e.g Sex. By default, ''
 #' @param isCovariateOffset logical. Whether to estimate fixed effect coeffciets. By default, FALSE.
 #' @param isStoreSigma logical. Whether to store sigma matrix. By default, FALSE. If number of individuals is greater than 10,000, this option may use large memory
+#' @param isShrinkModelOutput logical. remove unnecessary objects for step2 from the model output. By default, FALSE.
 #' @param isExportResiduals logical. export a residual vector. By default, FALSE.
 #' @return a file ended with .rda that contains the glmm model information, a file ended with .varianceRatio.txt that contains the variance ratio values, and a file ended with #markers.SPAOut.txt that contains the SPAGMMAT tests results for the markers used for estimating the variance ratio.
 #' @export
@@ -66,7 +67,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
                                offsetCol = NULL,
                                varWeightsCol = NULL,
                                longlCol = "",
-                               sampleIDColinphenoFile = "",
+                               sampleIDColinphenoFile = "IID",
                                cellIDColinphenoFile = "",
                                tol = 0.02,
                                maxiter = 20,
@@ -116,6 +117,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
                                VcellmatSampleFilelist = "",
                                useGRMtoFitNULL = TRUE,
                                isStoreSigma = FALSE,
+                               isShrinkModelOutput = FALSE,
                                isExportResiduals = FALSE) {
   ## set up output files
   modelOut <- paste0(outputPrefix, ".rda")
@@ -772,81 +774,52 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     set_isSparseGRM(useSparseGRMtoFitNULL)
     set_useGRMtoFitNULL(useGRMtoFitNULL)
 
+    # Core step1 for PALM-mbQTL
     if (traitType != "count_nb") {
-      head(data)
-      # formula <- as.formula(formula)
-      system.time(modglmm <- GMMAT::glmmkin(formula, data = data,
-                                            kins = sparseGRM,
-                                          id = "IID", family = poisson(link = "log")))
-      cat("glmmkin succeed!")
+      system.time(modglmm <- GMMAT::glmmkin(
+        formula, 
+        data = data,
+        kins = sparseGRM,
+        id = sampleIDColinphenoFile, 
+        family = poisson(link = "log")
+        ))
+      cat("glmmkin succeed!\n")
     } else {
       stop("ERROR: This traitType is not supported in the current version.\n")
     }
 
-##################
-    # if (isCovariateOffset) {
-    #   modglmm$offset <- covoffset
-    # } else {
-    #   if (hasCovariate) {
-    #     print(head(data.new))
-    #     print(head(data.new.X))
-    #     print(head(modglmm$coefficients[-1]))
-    #     modglmm$offset <- data.new.X %*% (as.vector(modglmm$coefficients[-1]))
-    #   } else {
-    #     modglmm$offset <- covoffset
-    #   }
-    # }
-    # 
-    # if (length(eCovarCol) > 0) {
-    #   cat(eCovarCol, "are environmental covariates\n")
-    #   modglmm$eMat <- data.new[, which(colnames(data.new) %in% eCovarCol), drop = F]
-    #   for (em in 1:ncol(modglmm$eMat)) {
-    #     modglmm$eMat[, em] <- (modglmm$eMat[, em] - mean(modglmm$eMat[, em])) / (sd(modglmm$eMat[, em]))
-    #   }
-    # }
-    # 
-    # if (length(sampleCovarCol) > 0) {
-    #   cat(sampleCovarCol, "are sample-level covariates\n")
-    # 
-    #   sampleCovarCol <- c(sampleCovarCol, sampleCovarCol_q_names)
-    #   modglmm$sampleXMat <- modglmm$X[, which(colnames(modglmm$X) %in% sampleCovarCol), drop = F]
-    #   modglmm$sampleXMat <- cbind(modglmm$X[, 1], modglmm$sampleXMat)
-    #   uniqsampleind <- which(!duplicated(modglmm$sampleID))
-    #   modglmm$sampleXMat <- modglmm$sampleXMat[uniqsampleind, ]
-    # }
-    # 
-    # 
-    # # if((skipVarianceRatioEstimation & useSparseGRMtoFitNULL)){
-    # eta <- modglmm$linear.predictors
-    # mu <- modglmm$fitted.values
-    # mu.eta <- family$mu.eta(eta)
-    # sqrtW <- mu.eta / sqrt(family$variance(mu))
-    # W <- sqrtW^2
-    # W <- W * modglmm$varWeights
-    # Sigma_iX <- getSigma_X_multiV(W, tauVecNew, modglmm$X, maxiterPCG, tolPCG, LOCO = FALSE)
-    # 
-    # Sigma_iXXSigma_iX <- Sigma_iX %*% solve(crossprod(modglmm$X, Sigma_iX))
-    # modglmm$Sigma_iXXSigma_iX <- Sigma_iXXSigma_iX
-    # 
-    # modglmm$useSparseGRMforVarRatio <- useSparseGRMforVarRatio
-    # 
-    # 
-    # 
-    # 
-    # cat("isStoreSigma is ", isStoreSigma, "\n")
-    # if (isStoreSigma) {
-    #   modglmm$spSigma <- gettI_Sigma_I_multiV(W, tauVecNew, maxiterPCG, tolPCG, LOCO = FALSE)
-    # }
-    # alpha0 <- modglmm$coefficients
-    # 
-    # 
-    # if (!is.null(out.transform) & is.null(fit0$offset)) {
-    #   coef.alpha <- Covariate_Transform_Back(alpha0, out.transform$Param.transform)
-    #   modglmm$coefficients <- coef.alpha
-    # }
 
+    if (isCovariateOffset) {
+      modglmm$offset <- covoffset
+    } else {
+      if (hasCovariate) {
+        print(head(data.new))
+        print(head(data.new.X))
+        print(head(modglmm$coefficients[-1]))
+        modglmm$offset <- data.new.X %*% (as.vector(modglmm$coefficients[-1]))
+      } else {
+        modglmm$offset <- covoffset
+      }
+    }
+    
+    if (length(eCovarCol) > 0) {
+      cat(eCovarCol, "are environmental covariates\n")
+      modglmm$eMat <- data.new[, which(colnames(data.new) %in% eCovarCol), drop = F]
+      for (em in 1:ncol(modglmm$eMat)) {
+        modglmm$eMat[, em] <- (modglmm$eMat[, em] - mean(modglmm$eMat[, em])) / (sd(modglmm$eMat[, em]))
+      }
+    }
+    
+    if (length(sampleCovarCol) > 0) {
+      cat(sampleCovarCol, "are sample-level covariates\n")
+    
+      sampleCovarCol <- c(sampleCovarCol, sampleCovarCol_q_names)
+      modglmm$sampleXMat <- modglmm$X[, which(colnames(modglmm$X) %in% sampleCovarCol), drop = F]
+      modglmm$sampleXMat <- cbind(modglmm$X[, 1], modglmm$sampleXMat)
+      uniqsampleind <- which(!duplicated(modglmm$sampleID))
+      modglmm$sampleXMat <- modglmm$sampleXMat[uniqsampleind, ]
+    }
 
-##################
 
     t_end <- proc.time()
     print(t_end)
@@ -854,20 +827,20 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     print(t_end - t_begin)
 
 
-    # if (bedFile != "") {
-    #   subSampleInGeno <- dataMerge_sort$IndexGeno
-    #   if (is.null(dataMerge_sort$IndexGeno)) {
-    #     subSampleInGeno <- dataMerge_sort$IndexPheno
-    #   }
-    # 
-    #   print(subSampleInGeno[1:1000])
-    #   print(head(dataMerge_sort))
-    #   print("HEREHRE")
-    # 
-    #   subSampleInGeno_unique <- subSampleInGeno[!duplicated(subSampleInGeno)]
-    # 
-    #   setgeno(bedFile, bimFile, famFile, subSampleInGeno_unique, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
-    # }
+    if (bedFile != "") {
+      subSampleInGeno <- dataMerge_sort$IndexGeno
+      if (is.null(dataMerge_sort$IndexGeno)) {
+        subSampleInGeno <- dataMerge_sort$IndexPheno
+      }
+    
+      print(subSampleInGeno[1:1000])
+      print(head(dataMerge_sort))
+      print("HEREHRE")
+    
+      subSampleInGeno_unique <- subSampleInGeno[!duplicated(subSampleInGeno)]
+    
+      setgeno(bedFile, bimFile, famFile, subSampleInGeno_unique, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
+    }
   } else {
     cat("Skip fitting the NULL GLMM\n")
     if (!file.exists(modelOut)) {
