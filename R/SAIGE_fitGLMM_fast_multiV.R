@@ -788,19 +788,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       stop("ERROR: This traitType is not supported in the current version.\n")
     }
 
-
-    if (isCovariateOffset) {
-      modglmm$offset <- covoffset
-    } else {
-      if (hasCovariate) {
-        print(head(data.new))
-        print(head(data.new.X))
-        print(head(modglmm$coefficients[-1]))
-        modglmm$offset <- data.new.X %*% (as.vector(modglmm$coefficients[-1]))
-      } else {
-        modglmm$offset <- covoffset
-      }
-    }
     
     if (length(eCovarCol) > 0) {
       cat(eCovarCol, "are environmental covariates\n")
