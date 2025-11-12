@@ -126,7 +126,6 @@ SPAGMMATtest <- function(bgenFile = "",
                          is_sparseGRM = TRUE,
                          max_MAC_use_ER = 4,
                          is_EmpSPA = FALSE) {
-  # cat("r.corr is ", r.corr, "\n")
   if (!(impute_method %in% c("best_guess", "mean", "minor"))) {
     stop("impute_method should be 'best_guess', 'mean' or 'minor'.")
   }
@@ -137,7 +136,6 @@ SPAGMMATtest <- function(bgenFile = "",
     is_output_moreDetails = is_output_moreDetails,
     is_overwrite_output = is_overwrite_output
   )
-  # is_rewrite_XnonPAR_forMales = is_rewrite_XnonPAR_forMales)
   cat("dosage_zerod_cutoff ", dosage_zerod_cutoff, "\n")
   checkArgsListNumeric(
     start = 1,
@@ -156,13 +154,9 @@ SPAGMMATtest <- function(bgenFile = "",
   )
 
 
-  # if(file.exists(SAIGEOutputFile)) {print("ok -2 file exist")}
-  # print("setSAIGEobjInCPP -3")
-  # print_g_n_unique()
 
 
   ## check and create the output file
-  # Check_OutputFile_Create(SAIGEOutputFile)
   OutputFile <- SAIGEOutputFile
   OutputFileIndex <- NULL
   if (is.null(OutputFileIndex)) {
@@ -201,10 +195,6 @@ SPAGMMATtest <- function(bgenFile = "",
     isGroupTest <- TRUE
     Check_File_Exist(groupFile, "groupFile")
     cat("group-based test will be performed\n")
-    # checkArgsList_for_Region(method_to_CollapseUltraRare,
-    # order the max MAF from lowest to highest
-    # maxMAF_in_groupTest = maxMAF_in_groupTest[order(maxMAF_in_groupTest)]
-    # maxMAC_in_groupTest = maxMAC_in_groupTest[order(maxMAC_in_groupTest)]
 
     cat("maxMAF_in_groupTest ", maxMAF_in_groupTest, "\n")
     cat("minMAF_in_groupTest_Exclude ", minMAF_in_groupTest_Exclude, "\n")
@@ -222,16 +212,8 @@ SPAGMMATtest <- function(bgenFile = "",
 
 
 
-    # if(file.exists(SAIGEOutputFile)) {print("ok -1 file exist")}
 
     IsOutputlogPforSingle <- FALSE # to check
-    # OUT_Filename_Single<-sprintf("%s.single",SAIGEOutputFile)
-    # Check_OutputFile_Create(OUT_Filename_Single)
-    # if (sum(weights.beta.rare != weights.beta.common) > 0) {
-    #  cat("WARNING:The option for weights.beta.common is not fully developed\n")
-    #  cat("weights.beta.common is set to be equal to weights.beta.rare\n")
-    #  weights.beta.common = weights.beta.rare
-    # }
 
     # method_to_CollapseUltraRare,
     # DosageCutoff_for_UltraRarePresence,
@@ -241,11 +223,7 @@ SPAGMMATtest <- function(bgenFile = "",
       MACCutoff_to_CollapseUltraRare,
       minGroupMAC_in_BurdenTest
     )
-    # cat("dosage_zerod_cutoff is ", dosage_zerod_cutoff, "\n")
-    # cat("dosage_zerod_MAC_cutoff is ", dosage_zerod_MAC_cutoff, "\n")
   }
-  # print("setSAIGEobjInCPP -2")
-  # print_g_n_unique()
   if (GMMATmodel_varianceRatio_multiTraits_File != "") {
     if (GMMATmodelFile != "" | varianceRatioFile != "") {
       stop("GMMATmodel_varianceRatio_multiTraits_File is specified while varianceRatioFile and/or GMMATmodelFile are also specified. Please check\n")
@@ -278,7 +256,6 @@ SPAGMMATtest <- function(bgenFile = "",
   }
 
   if (!LOCO) {
-    # 	LOCO = FALSE
     print("LOCO = FASLE and leave-one-chromosome-out is not applied")
   }
 
@@ -290,11 +267,8 @@ SPAGMMATtest <- function(bgenFile = "",
   set_Vmat_vec_orig(VmatFilelist, VmatSampleFilelist, obj.model.List[[1]]$sampleID)
 
   ratioVecList <- Get_Variance_Ratio_multiTrait(varianceRatioFile, cateVarRatioMinMACVecExclude, cateVarRatioMaxMACVecInclude, isGroupTest, isSparseGRM) # readInGLMM.R
-  # print("ratioVecList")
-  # print(ratioVecList)
 
 
-  # pval_cutoff_for_fastTest = 0
 
   if (!is_fastTest) {
     pval_cutoff_for_fastTest <- 1
@@ -304,8 +278,6 @@ SPAGMMATtest <- function(bgenFile = "",
   nsample <- length(unique(obj.model.List[[1]]$sampleID))
   cateVarRatioMaxMACVecInclude <- c(cateVarRatioMaxMACVecInclude, nsample)
 
-  # print("setSAIGEobjInCPP -1b")
-  # print_g_n_unique()
 
   # in Geno.R
   objGeno <- setGenoInput(
@@ -334,8 +306,6 @@ SPAGMMATtest <- function(bgenFile = "",
     isCondition <- FALSE
   }
 
-  # print("setSAIGEobjInCPP -1a")
-  # print_g_n_unique()
   condition_genoIndex_a <- c(-1)
   condition_genoIndex <- c(-1)
   if (isCondition) {
@@ -346,45 +316,23 @@ SPAGMMATtest <- function(bgenFile = "",
     print("condition_genoIndex_a")
     print(condition_genoIndex_a)
   }
-  # set up the SAIGE object based on the null model results
-  # print("SigmaMat_sp")
-  # print(SigmaMat_sp)
-
-
-  # print(names(obj.model))
-  # print(names(obj.model$obj.noK))
-  # obj.model$varWeights = rep(1, length(obj.model$y))
-  # print(obj.model$obj_cc$res.out)
-
-
-  # print("SigmaMat_sp")
-  # print(SigmaMat_sp)
 
   b <- as.numeric(factor(obj.model.List[[1]]$sampleID, levels = unique(obj.model.List[[1]]$sampleID)))
   I_mat <- Matrix::sparseMatrix(i = 1:length(b), j = b, x = rep(1, length(b)))
   I_mat <- 1.0 * I_mat
-  #     set_I_longl_mat_SAIGEtest(I_mat, b-1)
   if (!is.null(obj.model.List[[1]]$T_longl_vec)) {
     T_longl_mat <- I_mat * (obj.model.List[[1]]$T_longl_vec)
-    # set_T_longl_mat_SAIGEtest(T_longl_mat, obj.model$T_longl_vec)
   } else {
     obj.model.List[[1]]$T_longl_vec <- rep(1, length(b))
     T_longl_mat <- I_mat * (obj.model.List[[1]]$T_longl_vec)
   }
 
-  # print("obj.model$spSigma ")
-  # print(obj.model$spSigma)
   if (!is.null(obj.model.List[[1]]$spSigma)) {
-    # SigmaMat_sp = getSparseSigma_new()
     isSparseGRM <- TRUE
     SigmaMat_sp <- NULL
-    # SigmaMat_sp = chol2inv(chol(obj.model.List[[1]]$spSigma))
     for (gm in 1:length(obj.model.List)) {
       SigmaMat_sp <- cbind(SigmaMat_sp, obj.model.List[[gm]]$spSigma)
       print(dim(SigmaMat_sp))
-      # SigmaMat_sp = SigmaMat_sp %*% I_mat
-      # SigmaMat_sp = t(I_mat)%*%SigmaMat_sp
-      # print(dim(SigmaMat_sp))
     }
     cat("isSparseGRM 2 ", isSparseGRM, "\n")
   } else {
@@ -394,18 +342,9 @@ SPAGMMATtest <- function(bgenFile = "",
 
 
 
-  # print("sum(!duplicated(obj.model$X))")
-  # print(sum(!duplicated(obj.model$X)))
-  # print("length(unique(obj.model$sampleID))")
-  # print(length(unique(obj.model$sampleID)))
   eMat <- NULL
   isgxe_vec <- NULL
   for (oml in 1:length(obj.model.List)) {
-    # print("dim(I_mat)")
-    # print(dim(I_mat))
-    # print("obj.model.List[[oml]]$eMat)")
-    # print(dim(obj.model.List[[oml]]$eMat))
-    # eMat = cbind(eMat, t(I_mat)%*%(obj.model.List[[oml]]$eMat))
     eMat <- cbind(eMat, (obj.model.List[[oml]]$eMat))
     isgxe_vec <- c(isgxe_vec, obj.model.List[[oml]]$isgxe)
   }
@@ -415,11 +354,7 @@ SPAGMMATtest <- function(bgenFile = "",
   }
 
   cat("pval_cutoff_for_gxe ", pval_cutoff_for_gxe, "\n")
-  # print("dim(eMat)")
-  # print(dim(eMat))
-  # print(isgxe_vec)
   eMat <- as.matrix(eMat)
-  # setAssocTest_GlobalVarsInCPP_GbyE(eMat, TRUE, 0.001)
   XV_gxe <- NULL
   X_gxe <- NULL
   XVX_inv_XV_gxe <- NULL
@@ -458,12 +393,8 @@ SPAGMMATtest <- function(bgenFile = "",
       obj.model <- obj.model.List[[oml]]
       Xsample0 <- obj.model$sampleXMat ## from step 1
       Xsample[[oml]] <- data.table::as.data.table(Xsample0)
-      # print(dim(I_mat))
-      # print(length(obj.model$obj.noK$V))
       Vsample0 <- as.vector(t(obj.model$obj.noK$V) %*% I_mat)
       Vsample[[oml]] <- data.table::as.data.table(Vsample0)
-      # print(dim(Xsample))
-      # print(length(Vsample))
       XVsample0 <- t(Xsample0 * Vsample0)
       XVsample[[oml]] <- data.table::as.data.table(XVsample0)
       XVXsample0 <- t(Xsample0) %*% (t(XVsample0))
@@ -479,17 +410,6 @@ SPAGMMATtest <- function(bgenFile = "",
       Sigma_iXXSigma_iX0 <- obj.model$Sigma_iXXSigma_iX
       Sigma_iXXSigma_iX[[oml]] <- data.table::as.data.table(Sigma_iXXSigma_iX0)
 
-      # print(dim(XVXsample))
-      # print("dim(XXVXsample_inv)")
-      # print(dim(XXVXsample_inv))
-      # print("dim(XVsample)")
-      # print(dim(XVsample))
-      # print("dim(XVX_inv_XVsample)")
-      # print(dim(XVX_inv_XVsample))
-      # print("dim(Sigma_iXXSigma_iX)")
-      # print(dim(Sigma_iXXSigma_iX))
-      # print("dim(Xsample)")
-      # print(dim(Xsample))
 
       res_sample0 <- as.vector(t(I_mat) %*% (obj.model$residuals))
       mu_sample0 <- as.vector(t(I_mat) %*% (obj.model$mu))
@@ -501,14 +421,6 @@ SPAGMMATtest <- function(bgenFile = "",
       mu2_sample <- cbind(mu2_sample, mu2_sample0)
       S_a_sample <- cbind(S_a_sample, S_a_sample0)
 
-      # print("dim(S_a_sample)")
-      # print(dim(S_a_sample))
-      # print("dim(res_sample)")
-      # print(dim(res_sample))
-      # print("dim(mu2_sample)")
-      # print(dim(mu2_sample))
-      # print("dim(mu_sample)")
-      # print(dim(mu_sample))
       uniqsampleind <- which(!duplicated(obj.model$sampleID))
       varWeights_sample <- cbind(varWeights_sample, obj.model$varWeights[uniqsampleind])
 
@@ -516,14 +428,10 @@ SPAGMMATtest <- function(bgenFile = "",
       y <- cbind(y, obj.model$y)
       offset <- cbind(offset, obj.model$offset)
       obj_cc_res.out <- cbind(obj_cc_res.out, obj.model$obj_cc$res.out)
-      # tauVal_sp = cbind(tauVal_sp, obj.model$tauVal_sp)
       traitType <- c(traitType, obj.model$traitType)
       if (isgxe_vec[1]) {
         XV_gxe <- rbind(XV_gxe, obj.model$obj.noK$XV)
         XXVX_inv_gxe <- rbind(XXVX_inv_gxe, obj.model$obj.noK$XXVX_inv)
-        # X_gxe = rbind(X_gxe, obj.model$X)
-        # XVX_inv_XV_gxe = rbind(XVX_inv_XV_gxe, obj.model$obj.noK$XVX_inv_XV)
-        # XVX_gxe = rbind(XVX_gxe,  obj.model$obj.noK$XVX)
         X_gxe <- matrix(1)
         XVX_inv_XV_gxe <- matrix(1)
         XVX_gxe <- matrix(1)
@@ -531,8 +439,6 @@ SPAGMMATtest <- function(bgenFile = "",
         res_gxe <- cbind(res_gxe, obj.model$residuals)
         mu2_gxe <- cbind(mu2_gxe, obj.model$mu2)
         mu_gxe <- cbind(mu_gxe, obj.model$mu)
-        # S_a_gxe_sub = (as.matrix(obj.model$X)) * (as.vector(obj.model$residuals))
-        # S_a_gxe = cbind(S_a_gxe, colSums(S_a_gxe_sub))
         S_a_gxe <- matrix(1)
         varWeights_gxe <- cbind(varWeights_gxe, obj.model$varWeights)
       } else {
@@ -560,35 +466,6 @@ SPAGMMATtest <- function(bgenFile = "",
   gc()
 
 
-  # print("dim(ratioVecList$ratioVec_sparse)")
-  # print(dim(ratioVecList$ratioVec_sparse))
-
-  # print(ratioVecList)
-  # print(SPAcutoff)
-  # print(theta)
-  # print(dim(varWeights_sample))
-  # print(traitType)
-  # print(dim(y))
-  # print(is_noadjCov)
-  # print(pval_cutoff_for_fastTest)
-  # print(condition_genoIndex)
-  # print(is_Firth_beta)
-  # print(pCutoffforFirth)
-
-  # print(dim(offset))
-  # print(dim(obj_cc_res.out))
-  # print(dim(SigmaMat_sp))
-  # print(obj.model$tauVal_sp)
-  # print(dim(I_mat))
-  # print(b-1)
-  # print(dim(T_longl_mat))
-  # print(length(obj.model$T_longl_vec))
-  # print(obj.model$T_longl_vec)
-  # print("ok")
-  # print(obj.model$cumul)
-
-  # print("XXVXsample_inv")
-  # print(XXVXsample_inv)
   if (sum(duplicated(obj.model.List[[1]]$sampleID)) > 0) {
     if (FALSE) {
       print("XXVXsample_inv")
@@ -651,11 +528,8 @@ SPAGMMATtest <- function(bgenFile = "",
       print(varWeights_gxe)
     }
 
-    # print("OKKKK")
-    # print(traitType)
 
 
-    # if(FALSE){
     setSAIGEobjInCPP(
       t_XVX = XVXsample,
       t_XXVX_inv = XXVXsample_inv,
@@ -711,17 +585,10 @@ SPAGMMATtest <- function(bgenFile = "",
       t_mu_gxe = mu_gxe,
       t_varWeights_gxe = varWeights_gxe
     )
-    # }
 
 
 
-    # print("setSAIGEobjInCPP 0")
-    # print_g_n_unique()
-
-    # print("ratioVecList")
-    # print(ratioVecList)
   } else {
-    # }
     X <- NULL
     V <- NULL
     XV <- NULL
@@ -743,13 +610,9 @@ SPAGMMATtest <- function(bgenFile = "",
     for (oml in 1:length(obj.model.List)) {
       obj.model <- obj.model.List[[oml]]
       traitType <- c(traitType, obj.model$traitType)
-      # XVX = rbind(XVX, obj.model$obj.noK$XVX)
       XXVX_inv <- rbind(XXVX_inv, obj.model$obj.noK$XXVX_inv)
       XV <- rbind(XV, obj.model$obj.noK$XV)
-      # XVX_inv_XV = rbind(XVX_inv_XV, obj.model$obj.noK$XVX_inv_XV)
       Sigma_iXXSigma_iX <- rbind(Sigma_iXXSigma_iX, obj.model$Sigma_iXXSigma_iX)
-      # X = rbind(X, obj.model$X)
-      # S_a = cbind(S_a, obj.model$obj.noK$S_a)
       res <- cbind(res, obj.model$residuals)
       mu2 <- cbind(mu2, obj.model$mu2)
       mu <- cbind(mu, obj.model$mu)
@@ -765,18 +628,14 @@ SPAGMMATtest <- function(bgenFile = "",
     if (isgxe_vec[1]) {
       XV_gxe <- XV
       XXVX_inv_gxe <- XXVX_inv
-      # X_gxe = X
       X_gxe <- matrix(1)
-      # XVX_inv_XV_gxe = XVX_inv_XV
       XVX_inv_XV_gxe <- matrix(1)
-      # XVX_gxe = XVX
       XVX_gxe <- matrix(1)
       y_gxe <- y
       res_gxe <- res
       mu2_gxe <- mu2
       mu_gxe <- mu
       varWeights_gxe <- varWeights
-      # S_a_gxe = S_a
       S_a_gxe <- matrix(1)
     } else {
       XV_gxe <- matrix(1)
@@ -851,18 +710,7 @@ SPAGMMATtest <- function(bgenFile = "",
     )
   }
 
-  # if(any(duplicated(obj.model$sampleID))){
-  # 	b = as.numeric(factor(obj.model$sampleID, levels =  unique(obj.model$sampleID)))
-  # 	I_mat = Matrix::sparseMatrix(i = 1:length(b), j = b, x = rep(1, length(b)))
-  # 	I_mat = 1.0 * I_mat
-  # 	set_I_longl_mat_SAIGEtest(I_mat, b-1)
-  # 	if(!is.null(obj.model$T_longl_vec)){
-  # 		T_longl_mat = I_mat * (obj.model$T_longl_vec)
-  # 		set_T_longl_mat_SAIGEtest(T_longl_mat, obj.model$T_longl_vec)
-  # 	}
-  # }
 
-  # rm(sparseSigmaRList)
   gc()
 
 
@@ -870,12 +718,7 @@ SPAGMMATtest <- function(bgenFile = "",
 
   # process condition
   if (isCondition) {
-    # n = length(obj.model$y) #sample size
     n <- ncol(I_mat)
-    # n_uniq = length(unique(obj.model))
-    ## re-order the conditioning markers
-    ## condition_original = unlist(strsplit(condition, ","))
-    # condition_genoIndex=extract_genoIndex_condition(condition, objGeno$markerInfo, genoType)
     print("condition_genoIndex")
     print(condition_genoIndex)
 
@@ -883,8 +726,6 @@ SPAGMMATtest <- function(bgenFile = "",
       if (!is.null(weights_for_condition)) {
         condition_weights <- as.matrix(weights_for_condition)
         print(condition_weights)
-        # print(condition_genoIndex$cond_genoIndex)
-        # condition_weights = as.numeric(unlist(strsplit(weights_for_condition, ",")))
         if (nrow(condition_weights) != length(condition_genoIndex$cond_genoIndex)) {
           stop("The length of the provided weights for conditioning markers is not equal to the number of conditioning markers\n")
         }
@@ -907,7 +748,7 @@ SPAGMMATtest <- function(bgenFile = "",
       } else {
         BetaDist_weight_mat <- matrix(c(0, 0), ncol = 2)
       }
-    } else { # if(isGroupTest){
+    } else {
       BetaDist_weight_mat <- matrix(c(0, 0), ncol = 2)
       condition_weights <- matrix(rep(0, length(condition_genoIndex$cond_genoIndex)), ncol = 1)
     }
@@ -915,7 +756,6 @@ SPAGMMATtest <- function(bgenFile = "",
 
     condition_genoIndex_a <- as.character(format(condition_genoIndex$cond_genoIndex, scientific = FALSE))
     condition_genoIndex_prev_a <- as.character(format(condition_genoIndex$cond_genoIndex_prev, scientific = FALSE))
-    # 	print("OKKK")
 
     print("condition_genoIndex_prev_a")
     print(condition_genoIndex_prev_a)
@@ -933,7 +773,6 @@ SPAGMMATtest <- function(bgenFile = "",
 
     assign_conditionMarkers_factors(genoType, condition_genoIndex_prev_a, condition_genoIndex_a, n, condition_weights, BetaDist_weight_mat, is_equal_weight_in_groupTest)
 
-    # 	print("OKKK2")
     if (obj.model$traitType[1] == "binary" & isGroupTest) {
       outG2cond <- RegionSetUpConditional_binary_InCPP(condition_weights)
       G2condList_list <- NULL
@@ -948,33 +787,19 @@ SPAGMMATtest <- function(bgenFile = "",
         G2condList_list[[oml]] <- G2condList
         assign_conditionMarkers_factors_binary_region_multiTrait(scaleFactorVec, oml - 1)
       }
-      # print(G2condList)
-      # print(scaleFactorVec)
     }
   } else {
     condition_weights <- c(0)
   }
 
-  # traitType = obj.model$traitType
   mu <- as.vector(t(I_mat) %*% (obj.model$mu))
   isgxe <- obj.model$isgxe
   rm(obj.model)
   gc()
-  # print(gc(v=T))
-  # if(file.exists(SAIGEOutputFile)) {print("ok 0 file exist")}
-
-
-  # cat("Number of all markers to test:\t", nrow(markerInfo), "\n")
-  # cat("Number of markers in each chunk:\t", numLinesOutput, "\n")
-  # cat("Number of chunks for all markers:\t", nChunks, "\n")
-  # }
-  # print("SAIGE.Marker -1")
-  # print_g_n_unique()
 
   if (!isGroupTest) {
     OutputFile <- SAIGEOutputFile
 
-    # if(file.exists(SAIGEOutputFile)) {print("ok 2 file exist")}
     if (!is.null(objGeno$markerInfo$CHROM)) {
       setorderv(objGeno$markerInfo, col = c("CHROM", "POS"))
     }
@@ -1012,9 +837,6 @@ SPAGMMATtest <- function(bgenFile = "",
     }
 
 
-    # cat("maxMAF_in_groupTest b ", maxMAF_in_groupTest, "\n")
-    # cat("minMAF_in_groupTest b ", minMAF_in_groupTest, "\n")
-    # cat("MAFlimitMat ", MAFlimitMat, "\n")
 
     maxMACbinind <- which(maxMAC_in_groupTest > 0)
     if (length(maxMACbinind) > 0) {
@@ -1023,9 +845,6 @@ SPAGMMATtest <- function(bgenFile = "",
       for (i in 1:length(maxMACbinind)) {
         checkArgNumeric(maxMAC_in_groupTest_to_MAF[i], deparse(substitute(maxMAC_in_groupTest_to_MAF[i])), 0, 0.5, FALSE, TRUE)
       }
-      # maxMAF_in_groupTest = unique(c(maxMAF_in_groupTest, maxMAC_in_groupTest_to_MAF))
-      # maxMAF_in_groupTest = maxMAF_in_groupTest[order(maxMAF_in_groupTest)]
-      # cat("max MAF cutoff ", maxMAF_in_groupTest, "will be applied\n")
 
 
       if (is.null(minMAC_in_groupTest_Exclude)) {
@@ -1036,7 +855,7 @@ SPAGMMATtest <- function(bgenFile = "",
         cat("minMAC_in_groupTest: ", minMAC_in_groupTest, " is specified, corresponding to min MAF ", minMAC_in_groupTest_to_MAF, "\n")
       }
       MAFlimitMat <- rbind(MAFlimitMat, cbind(minMAC_in_groupTest_to_MAF, maxMAC_in_groupTest_to_MAF))
-    } # if(length(maxMACbinind) > 0){
+    }
 
     print(MAFlimitMat)
     MAFlimitMat <- MAFlimitMat[!duplicated(MAFlimitMat), , drop = F]
@@ -1048,7 +867,6 @@ SPAGMMATtest <- function(bgenFile = "",
     cat("corresponding min MAF cutoff (exclude) ", minMAF_in_groupTest, "will be applied\n")
 
 
-    # cat("MAFlimitMat b ", MAFlimitMat, "\n")
 
 
     # method_to_CollapseUltraRare,
