@@ -56,6 +56,10 @@ option_list <- list(
     type = "character", default = "",
     help = "Path to fam file (PLINK)"
   ),
+  make_option("--gdsFile",
+    type = "character", default = "",
+    help = "Path to gds file."
+  ),
   make_option("--AlleleOrder",
     type = "character", default = "alt-first",
     help = "alt-first or ref-first for bgen or PLINK files"
@@ -363,6 +367,7 @@ SPAGMMATtest(
   bedFile = opt$bedFile,
   bimFile = opt$bimFile,
   famFile = opt$famFile,
+  gdsFile = opt$gdsFile,
   AlleleOrder = opt$AlleleOrder,
   idstoIncludeFile = opt$idstoIncludeFile,
   rangestoIncludeFile = opt$rangestoIncludeFile,
