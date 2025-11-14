@@ -71,6 +71,7 @@ SPAGMMATtest <- function(bgenFile = "",
                          bedFile = "",
                          bimFile = "",
                          famFile = "",
+                         gdsFile = "",
                          AlleleOrder = "alt-first", # new
                          idstoIncludeFile = "",
                          rangestoIncludeFile = "",
@@ -244,8 +245,8 @@ SPAGMMATtest <- function(bgenFile = "",
     phenotype_name_vec <- as.character(seq(1, length(GMMATmodelFile_vec)))
   }
 
-  obj.model.List <- ReadModel_multiTrait(GMMATmodelFile, chrom, LOCO, is_Firth_beta, is_EmpSPA, espa_nt = 9999, espa_range = c(-20, 20)) # readInGLMM.R8
-
+  # obj.model.List <- ReadModel_multiTrait(GMMATmodelFile, chrom, LOCO, is_Firth_beta, is_EmpSPA, espa_nt = 9999, espa_range = c(-20, 20)) # readInGLMM.R8
+  load(GMMATmodelFile)
 
   if (obj.model.List[[1]]$traitType == "binary") {
     if (max_MAC_use_ER > 0) {
@@ -803,27 +804,33 @@ SPAGMMATtest <- function(bgenFile = "",
     if (!is.null(objGeno$markerInfo$CHROM)) {
       setorderv(objGeno$markerInfo, col = c("CHROM", "POS"))
     }
-
-    SAIGE.Marker(
-      traitType,
-      phenotype_name_vec,
-      genoType,
-      objGeno$markerInfo$genoIndex_prev,
-      objGeno$markerInfo$genoIndex,
-      objGeno$markerInfo$CHROM,
-      OutputFile,
-      OutputFileIndex,
-      markers_per_chunk,
-      is_output_moreDetails,
-      is_imputed_data,
-      is_Firth_beta,
-      LOCO,
-      chrom,
-      isCondition,
-      is_overwrite_output,
-      objGeno$anyInclude,
-      isgxe
-    )
+    
+    glmm.score(
+      modglmm,
+      infile = gdsFile,
+      center = T, 
+      outfile = OutputFile
+      )
+    # SAIGE.Marker(
+    #   traitType,
+    #   phenotype_name_vec,
+    #   genoType,
+    #   objGeno$markerInfo$genoIndex_prev,
+    #   objGeno$markerInfo$genoIndex,
+    #   objGeno$markerInfo$CHROM,
+    #   OutputFile,
+    #   OutputFileIndex,
+    #   markers_per_chunk,
+    #   is_output_moreDetails,
+    #   is_imputed_data,
+    #   is_Firth_beta,
+    #   LOCO,
+    #   chrom,
+    #   isCondition,
+    #   is_overwrite_output,
+    #   objGeno$anyInclude,
+    #   isgxe
+    # )
   } else {
     MAFlimitMat <- NULL
     if (is.null(minMAF_in_groupTest_Exclude)) {
