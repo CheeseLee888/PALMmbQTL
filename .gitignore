@@ -26,4 +26,6 @@ R/.nfs00000013331217950004b123
 extdata/
 .Rhistory
 *.Rproj*
-extdata_palm/
+extdata_palm/input
+extdata_palm/output
+.Rproj.user
