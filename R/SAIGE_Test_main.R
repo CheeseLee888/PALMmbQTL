@@ -172,17 +172,7 @@ SPAGMMATtest <- function(bgenFile = "",
     min_MAC <- min(min_MAF, min(minMAC_in_groupTest_Exclude))
   }
 
-  setAssocTest_GlobalVarsInCPP(
-    impute_method,
-    max_missing,
-    min_MAF,
-    min_MAC,
-    min_Info,
-    dosage_zerod_cutoff,
-    dosage_zerod_MAC_cutoff,
-    OutputFile,
-    max_MAC_use_ER
-  )
+
 
   if (groupFile == "") {
     isGroupTest <- FALSE
@@ -215,71 +205,42 @@ SPAGMMATtest <- function(bgenFile = "",
 
 
     IsOutputlogPforSingle <- FALSE # to check
-
-    # method_to_CollapseUltraRare,
-    # DosageCutoff_for_UltraRarePresence,
-    setRegion_GlobalVarsInCPP(
-      maxMAF_in_groupTest,
-      markers_per_chunk_in_groupTest,
-      MACCutoff_to_CollapseUltraRare,
-      minGroupMAC_in_BurdenTest
-    )
-  }
-  if (GMMATmodel_varianceRatio_multiTraits_File != "") {
-    if (GMMATmodelFile != "" | varianceRatioFile != "") {
-      stop("GMMATmodel_varianceRatio_multiTraits_File is specified while varianceRatioFile and/or GMMATmodelFile are also specified. Please check\n")
-    } else {
-      modelvrfile_data <- data.table::fread(GMMATmodel_varianceRatio_multiTraits_File, header = F, data.table = F)
-      if (ncol(modelvrfile_data) != 3) {
-        stop("GMMATmodel_varianceRatio_multiTraits_File needs to have 3 columns: phenotype name, model file, and variance ratio file\n")
-      } else {
-        GMMATmodelFile_vec <- modelvrfile_data[, 2]
-        GMMATmodelFile <- paste(GMMATmodelFile_vec, collapse = ",")
-        varianceRatioFile_vec <- modelvrfile_data[, 3]
-        varianceRatioFile <- paste(varianceRatioFile_vec, collapse = ",")
-        phenotype_name_vec <- as.character(modelvrfile_data[, 1])
-      }
-    }
-  } else {
-    GMMATmodelFile_vec <- unlist(strsplit(GMMATmodelFile, split = ","))
-    phenotype_name_vec <- as.character(seq(1, length(GMMATmodelFile_vec)))
   }
 
-  # obj.model.List <- ReadModel_multiTrait(GMMATmodelFile, chrom, LOCO, is_Firth_beta, is_EmpSPA, espa_nt = 9999, espa_range = c(-20, 20)) # readInGLMM.R8
-  load(GMMATmodelFile)
-
-  # if (obj.model.List[[1]]$traitType == "binary") {
-  #   if (max_MAC_use_ER > 0) {
-  #     cat("P-values of genetic variants with MAC <= ", max_MAC_use_ER, " will be calculated via effecient resampling.\n")
+  # if (GMMATmodel_varianceRatio_multiTraits_File != "") {
+  #   if (GMMATmodelFile != "" | varianceRatioFile != "") {
+  #     stop("GMMATmodel_varianceRatio_multiTraits_File is specified while varianceRatioFile and/or GMMATmodelFile are also specified. Please check\n")
+  #   } else {
+  #     modelvrfile_data <- data.table::fread(GMMATmodel_varianceRatio_multiTraits_File, header = F, data.table = F)
+  #     if (ncol(modelvrfile_data) != 3) {
+  #       stop("GMMATmodel_varianceRatio_multiTraits_File needs to have 3 columns: phenotype name, model file, and variance ratio file\n")
+  #     } else {
+  #       GMMATmodelFile_vec <- modelvrfile_data[, 2]
+  #       GMMATmodelFile <- paste(GMMATmodelFile_vec, collapse = ",")
+  #       varianceRatioFile_vec <- modelvrfile_data[, 3]
+  #       varianceRatioFile <- paste(varianceRatioFile_vec, collapse = ",")
+  #       phenotype_name_vec <- as.character(modelvrfile_data[, 1])
+  #     }
   #   }
   # } else {
-  #   max_MAC_use_ER <- 0
+  #   GMMATmodelFile_vec <- unlist(strsplit(GMMATmodelFile, split = ","))
+  #   phenotype_name_vec <- as.character(seq(1, length(GMMATmodelFile_vec)))
   # }
-  # 
-  # if (!LOCO) {
-  #   print("LOCO = FASLE and leave-one-chromosome-out is not applied")
-  # }
-  # 
-  # isSparseGRM <- is_sparseGRM
-  # 
-  # 
-  # cat("isSparseGRM ", isSparseGRM, "\n")
-  # 
-  # set_Vmat_vec_orig(VmatFilelist, VmatSampleFilelist, obj.model.List[[1]]$sampleID)
-  # 
-  # ratioVecList <- Get_Variance_Ratio_multiTrait(varianceRatioFile, cateVarRatioMinMACVecExclude, cateVarRatioMaxMACVecInclude, isGroupTest, isSparseGRM) # readInGLMM.R
-  # 
-  # 
-  # 
-  # if (!is_fastTest) {
-  #   pval_cutoff_for_fastTest <- 1
-  # }
-  # 
-  # 
+
+  load(GMMATmodelFile)
+
+  if (!LOCO) {
+    print("LOCO = FASLE and leave-one-chromosome-out is not applied")
+  }
+  
+  isSparseGRM <- is_sparseGRM
+  cat("isSparseGRM ", isSparseGRM, "\n")
+  
+#####################################################
   # nsample <- length(unique(obj.model.List[[1]]$sampleID))
   # cateVarRatioMaxMACVecInclude <- c(cateVarRatioMaxMACVecInclude, nsample)
-  # 
-  # 
+  
+  
   # # in Geno.R
   # objGeno <- setGenoInput(
   #   bgenFile = bgenFile,
@@ -299,14 +260,14 @@ SPAGMMATtest <- function(bgenFile = "",
   #   AlleleOrder = AlleleOrder,
   #   sampleInModel = obj.model.List[[1]]$sampleID
   # )
-  # 
+  
   # genoType <- objGeno$genoType
   # if (condition != "") {
   #   isCondition <- TRUE
   # } else {
   #   isCondition <- FALSE
   # }
-  # 
+  
   # condition_genoIndex_a <- c(-1)
   # condition_genoIndex <- c(-1)
   # if (isCondition) {
@@ -317,412 +278,19 @@ SPAGMMATtest <- function(bgenFile = "",
   #   print("condition_genoIndex_a")
   #   print(condition_genoIndex_a)
   # }
-  # 
-  # b <- as.numeric(factor(obj.model.List[[1]]$sampleID, levels = unique(obj.model.List[[1]]$sampleID)))
-  # I_mat <- Matrix::sparseMatrix(i = 1:length(b), j = b, x = rep(1, length(b)))
-  # I_mat <- 1.0 * I_mat
-  # if (!is.null(obj.model.List[[1]]$T_longl_vec)) {
-  #   T_longl_mat <- I_mat * (obj.model.List[[1]]$T_longl_vec)
-  # } else {
-  #   obj.model.List[[1]]$T_longl_vec <- rep(1, length(b))
-  #   T_longl_mat <- I_mat * (obj.model.List[[1]]$T_longl_vec)
-  # }
-  # 
-  # if (!is.null(obj.model.List[[1]]$spSigma)) {
-  #   isSparseGRM <- TRUE
-  #   SigmaMat_sp <- NULL
-  #   for (gm in 1:length(obj.model.List)) {
-  #     SigmaMat_sp <- cbind(SigmaMat_sp, obj.model.List[[gm]]$spSigma)
-  #     print(dim(SigmaMat_sp))
-  #   }
-  #   cat("isSparseGRM 2 ", isSparseGRM, "\n")
-  # } else {
-  #   SigmaMat_sp <- Matrix:::sparseMatrix(i = c(1, 1, 2, 2), j = c(1, 2, 1, 2), x = as.vector(c(0, 0, 0, 0)))
-  # }
-  # 
-  # 
-  # 
-  # 
-  # eMat <- NULL
-  # isgxe_vec <- NULL
-  # for (oml in 1:length(obj.model.List)) {
-  #   eMat <- cbind(eMat, (obj.model.List[[oml]]$eMat))
-  #   isgxe_vec <- c(isgxe_vec, obj.model.List[[oml]]$isgxe)
-  # }
-  # 
+  
+  
   # if (sum(isgxe_vec) != 0 && sum(isgxe_vec) != length(isgxe_vec)) {
   #   stop("isgxe for all traits needs to be the same (perform or not perform dynamic qtl analyses)\n")
   # }
-  # 
-  # cat("pval_cutoff_for_gxe ", pval_cutoff_for_gxe, "\n")
-  # eMat <- as.matrix(eMat)
-  # XV_gxe <- NULL
-  # X_gxe <- NULL
-  # XVX_inv_XV_gxe <- NULL
-  # XVX_gxe <- NULL
-  # S_a_gxe <- NULL
-  # XXVX_inv_gxe <- NULL
-  # y_gxe <- NULL
-  # res_gxe <- NULL
-  # mu2_gxe <- NULL
-  # mu_gxe <- NULL
-  # 
-  # varWeights_gxe <- NULL
-  # 
-  # ## Set up the sample level summary statistics. This is specifically for data sets with repeated measurements
-  # if (sum(duplicated(obj.model.List[[1]]$sampleID)) > 0) {
-  #   Xsample <- list()
-  #   Vsample <- list()
-  #   XVsample <- list()
-  #   XVXsample <- list()
-  #   XXVXsample_inv <- list()
-  #   XVX_inv_XVsample <- list()
-  #   Sigma_iXXSigma_iX <- list()
-  #   res_sample <- NULL
-  #   mu_sample <- NULL
-  #   mu2_sample <- NULL
-  #   S_a_sample <- NULL
-  #   theta <- NULL
-  #   y <- NULL
-  #   offset <- NULL
-  #   obj_cc_res.out <- NULL
-  #   tauVal_sp <- NULL
-  #   traitType <- NULL
-  #   varWeights_sample <- NULL
-  # 
-  #   for (oml in 1:length(obj.model.List)) {
-  #     obj.model <- obj.model.List[[oml]]
-  #     Xsample0 <- obj.model$sampleXMat ## from step 1
-  #     Xsample[[oml]] <- data.table::as.data.table(Xsample0)
-  #     Vsample0 <- as.vector(t(obj.model$obj.noK$V) %*% I_mat)
-  #     Vsample[[oml]] <- data.table::as.data.table(Vsample0)
-  #     XVsample0 <- t(Xsample0 * Vsample0)
-  #     XVsample[[oml]] <- data.table::as.data.table(XVsample0)
-  #     XVXsample0 <- t(Xsample0) %*% (t(XVsample0))
-  #     XVXsample_inv0 <- solve(XVXsample0)
-  #     XVXsample[[oml]] <- data.table::as.data.table(XVXsample0)
-  #     XXVXsample_inv0 <- Xsample0 %*% XVXsample_inv0
-  #     XVX_inv_XVsample0 <- XXVXsample_inv0 * Vsample0
-  # 
-  #     XXVXsample_inv[[oml]] <- data.table::as.data.table(XXVXsample_inv0)
-  # 
-  #     XVX_inv_XVsample[[oml]] <- data.table::as.data.table(XVX_inv_XVsample0)
-  # 
-  #     Sigma_iXXSigma_iX0 <- obj.model$Sigma_iXXSigma_iX
-  #     Sigma_iXXSigma_iX[[oml]] <- data.table::as.data.table(Sigma_iXXSigma_iX0)
-  # 
-  # 
-  #     res_sample0 <- as.vector(t(I_mat) %*% (obj.model$residuals))
-  #     mu_sample0 <- as.vector(t(I_mat) %*% (obj.model$mu))
-  #     mu2_sample0 <- as.vector(t(I_mat) %*% (obj.model$mu2))
-  #     S_a_sample0 <- rowSums(t(Xsample0) * res_sample0)
-  # 
-  #     res_sample <- cbind(res_sample, res_sample0)
-  #     mu_sample <- cbind(mu_sample, mu_sample0)
-  #     mu2_sample <- cbind(mu2_sample, mu2_sample0)
-  #     S_a_sample <- cbind(S_a_sample, S_a_sample0)
-  # 
-  #     uniqsampleind <- which(!duplicated(obj.model$sampleID))
-  #     varWeights_sample <- cbind(varWeights_sample, obj.model$varWeights[uniqsampleind])
-  # 
-  #     theta <- cbind(theta, obj.model$theta)
-  #     y <- cbind(y, obj.model$y)
-  #     offset <- cbind(offset, obj.model$offset)
-  #     obj_cc_res.out <- cbind(obj_cc_res.out, obj.model$obj_cc$res.out)
-  #     traitType <- c(traitType, obj.model$traitType)
-  #     if (isgxe_vec[1]) {
-  #       XV_gxe <- rbind(XV_gxe, obj.model$obj.noK$XV)
-  #       XXVX_inv_gxe <- rbind(XXVX_inv_gxe, obj.model$obj.noK$XXVX_inv)
-  #       X_gxe <- matrix(1)
-  #       XVX_inv_XV_gxe <- matrix(1)
-  #       XVX_gxe <- matrix(1)
-  #       y_gxe <- cbind(y_gxe, obj.model$y)
-  #       res_gxe <- cbind(res_gxe, obj.model$residuals)
-  #       mu2_gxe <- cbind(mu2_gxe, obj.model$mu2)
-  #       mu_gxe <- cbind(mu_gxe, obj.model$mu)
-  #       S_a_gxe <- matrix(1)
-  #       varWeights_gxe <- cbind(varWeights_gxe, obj.model$varWeights)
-  #     } else {
-  #       XV_gxe <- matrix(1)
-  #       XXVX_inv_gxe <- matrix(1)
-  #       X_gxe <- matrix(1)
-  #       XVX_inv_XV_gxe <- matrix(1)
-  #       XVX_gxe <- matrix(1)
-  #       y_gxe <- matrix(1)
-  #       res_gxe <- matrix(1)
-  #       mu2_gxe <- matrix(1)
-  #       mu_gxe <- matrix(1)
-  #       S_a_gxe <- matrix(1)
-  #       varWeights_gxe <- matrix(1)
-  #     }
-  #   }
-  #   Xsample <- as.matrix(data.table::rbindlist(Xsample))
-  #   Vsample <- as.matrix(data.table::rbindlist(Vsample))
-  #   XVsample <- as.matrix(data.table::rbindlist(XVsample))
-  #   XVXsample <- as.matrix(data.table::rbindlist(XVXsample))
-  #   XXVXsample_inv <- as.matrix(data.table::rbindlist(XXVXsample_inv))
-  #   XVX_inv_XVsample <- as.matrix(data.table::rbindlist(XVX_inv_XVsample))
-  #   Sigma_iXXSigma_iX <- as.matrix(data.table::rbindlist(Sigma_iXXSigma_iX))
-  # }
-  # gc()
-  # 
-  # 
-  # if (sum(duplicated(obj.model.List[[1]]$sampleID)) > 0) {
-  #   if (FALSE) {
-  #     print("XXVXsample_inv")
-  #     print(length(XVXsample))
-  #     print(length(XXVXsample_inv))
-  #     print(length(XVsample))
-  #     print(XXVXsample_inv)
-  #     print(XVsample)
-  #     print(length(XVX_inv_XVsample))
-  #     print(length(Sigma_iXXSigma_iX))
-  #     print(length(Xsample))
-  #     print(length(S_a_sample))
-  #     print(length(res_sample))
-  #     print(length(mu2_sample))
-  #     print(length(mu_sample))
-  #     print(ratioVecList)
-  #     print(length(as.matrix(ratioVecList$ratioVec_sparse)))
-  #     print(length(as.matrix(ratioVecList$ratioVec_null)))
-  #     print(length(as.matrix(ratioVecList$ratioVec_null_noXadj)))
-  #     print(length(as.matrix(ratioVecList$ratioVec_null_eg)))
-  #     print(length(as.matrix(ratioVecList$ratioVec_sparse_eg)))
-  #     print(length(cateVarRatioMinMACVecExclude))
-  #     print(length(cateVarRatioMaxMACVecInclude))
-  #     print(length(SPAcutoff))
-  #     print(length(theta))
-  #     print(length(varWeights_sample))
-  #     print(length(traitType))
-  #     print(length(y))
-  #     print(length(impute_method))
-  #     print(length(isSparseGRM))
-  #     print(length(is_noadjCov))
-  #     print(length(pval_cutoff_for_fastTest))
-  #     print(length(isCondition))
-  #     print(length(condition_genoIndex_a))
-  #     print(length(is_Firth_beta))
-  #     print(length(pCutoffforFirth))
-  #     print(length(offset))
-  #     print(length(obj_cc_res.out))
-  #     print(length(SigmaMat_sp))
-  #     print(length(obj.model$tauVal_sp))
-  #     print(obj.model$tauVal_sp)
-  #     print("ok")
-  #     print(length(I_mat))
-  #     print(length(b - 1))
-  #     print(length(T_longl_mat))
-  #     print(length(obj.model.List[[1]]$T_longl_vec))
-  #     print(length(is_EmpSPA))
-  #     print(obj.model$cumul)
-  #     print(isgxe_vec[1])
-  #     print(dim(XV_gxe))
-  #     print(dim(X_gxe))
-  #     print(dim(XVX_inv_XV_gxe))
-  #     print(dim(XVX_gxe))
-  #     print(dim(S_a_gxe))
-  #     print(dim(XXVX_inv_gxe))
-  #     print(dim(y_gxe))
-  #     print(dim(res_gxe))
-  #     print(dim(mu2_gxe))
-  #     print(dim(mu_gxe))
-  #     print(varWeights_gxe)
-  #   }
-  # 
-  # 
-  # 
-  #   setSAIGEobjInCPP(
-  #     t_XVX = XVXsample,
-  #     t_XXVX_inv = XXVXsample_inv,
-  #     t_XV = XVsample,
-  #     t_XVX_inv_XV = XVX_inv_XVsample,
-  #     t_Sigma_iXXSigma_iX = Sigma_iXXSigma_iX, ## specifically for sparse V, check later
-  #     t_X = Xsample,
-  #     t_S_a = S_a_sample,
-  #     t_res = res_sample,
-  #     t_mu2 = mu2_sample,
-  #     t_mu = mu_sample,
-  #     t_varRatio_sparse = as.matrix(ratioVecList$ratioVec_sparse),
-  #     t_varRatio_null = as.matrix(ratioVecList$ratioVec_null),
-  #     t_varRatio_null_sample = as.matrix(ratioVecList$ratioVec_null_sample),
-  #     t_varRatio_null_noXadj = as.matrix(ratioVecList$ratioVec_null_noXadj),
-  #     t_varRatio_null_eg = as.matrix(ratioVecList$ratioVec_null_eg),
-  #     t_varRatio_sparse_eg = as.matrix(ratioVecList$ratioVec_sparse_eg),
-  #     t_cateVarRatioMinMACVecExclude = cateVarRatioMinMACVecExclude,
-  #     t_cateVarRatioMaxMACVecInclude = cateVarRatioMaxMACVecInclude,
-  #     t_SPA_Cutoff = SPAcutoff,
-  #     t_tauvec = theta,
-  #     t_varWeightsvec = varWeights_sample,
-  #     t_traitType = as.vector(traitType),
-  #     t_y = as.matrix(y),
-  #     t_impute_method = impute_method,
-  #     t_flagSparseGRM = isSparseGRM,
-  #     t_isnoadjCov = is_noadjCov,
-  #     t_pval_cutoff_for_fastTest = pval_cutoff_for_fastTest,
-  #     t_isCondition = isCondition,
-  #     t_condition_genoIndex = condition_genoIndex_a,
-  #     t_is_Firth_beta = is_Firth_beta,
-  #     t_pCutoffforFirth = pCutoffforFirth,
-  #     t_offset = offset, ## check later
-  #     t_resout = obj_cc_res.out, ## for ER, check later
-  #     t_SigmaMat_sp = SigmaMat_sp,
-  #     t_tauVal_sp = obj.model$tauVal_sp,
-  #     t_Ilongmat = I_mat,
-  #     t_I_longl_vec = b - 1,
-  #     t_Tlongmat = T_longl_mat,
-  #     t_T_longl_vec = obj.model.List[[1]]$T_longl_vec,
-  #     t_is_EmpSPA = is_EmpSPA,
-  #     t_cumul = obj.model$cumul,
-  #     t_is_gxe = isgxe_vec[1],
-  #     t_XV_gxe = XV_gxe,
-  #     t_X_gxe = X_gxe,
-  #     t_XVX_inv_XV_gxe = XVX_inv_XV_gxe,
-  #     t_XVX_gxe = XVX_gxe,
-  #     t_S_a_gxe = S_a_gxe,
-  #     t_XXVX_inv_gxe = XXVX_inv_gxe,
-  #     t_y_gxe = y_gxe,
-  #     t_res_gxe = res_gxe,
-  #     t_mu2_gxe = mu2_gxe,
-  #     t_mu_gxe = mu_gxe,
-  #     t_varWeights_gxe = varWeights_gxe
-  #   )
-  # 
-  # 
-  # 
-  # } else {
-  #   X <- NULL
-  #   V <- NULL
-  #   XV <- NULL
-  #   XVX <- NULL
-  #   XXVX_inv <- NULL
-  #   XVX_inv_XV <- NULL
-  #   Sigma_iXXSigma_iX <- NULL
-  #   res <- NULL
-  #   mu <- NULL
-  #   mu2 <- NULL
-  #   S_a <- NULL
-  #   theta <- NULL
-  #   y <- NULL
-  #   offset <- NULL
-  #   obj_cc_res.out <- NULL
-  #   tauVal_sp <- NULL
-  #   traitType <- NULL
-  #   varWeights <- NULL
-  #   for (oml in 1:length(obj.model.List)) {
-  #     obj.model <- obj.model.List[[oml]]
-  #     traitType <- c(traitType, obj.model$traitType)
-  #     XXVX_inv <- rbind(XXVX_inv, obj.model$obj.noK$XXVX_inv)
-  #     XV <- rbind(XV, obj.model$obj.noK$XV)
-  #     Sigma_iXXSigma_iX <- rbind(Sigma_iXXSigma_iX, obj.model$Sigma_iXXSigma_iX)
-  #     res <- cbind(res, obj.model$residuals)
-  #     mu2 <- cbind(mu2, obj.model$mu2)
-  #     mu <- cbind(mu, obj.model$mu)
-  # 
-  #     theta <- cbind(theta, obj.model$theta)
-  #     y <- cbind(y, obj.model$y)
-  #     offset <- cbind(offset, obj.model$offset)
-  #     obj_cc_res.out <- cbind(obj_cc_res.out, obj.model$obj_cc$res.out)
-  #     tauVal_sp <- cbind(tauVal_sp, obj.model$tauVal_sp)
-  #     varWeights <- cbind(varWeights, obj.model$varWeights)
-  #   }
-  # 
-  #   if (isgxe_vec[1]) {
-  #     XV_gxe <- XV
-  #     XXVX_inv_gxe <- XXVX_inv
-  #     X_gxe <- matrix(1)
-  #     XVX_inv_XV_gxe <- matrix(1)
-  #     XVX_gxe <- matrix(1)
-  #     y_gxe <- y
-  #     res_gxe <- res
-  #     mu2_gxe <- mu2
-  #     mu_gxe <- mu
-  #     varWeights_gxe <- varWeights
-  #     S_a_gxe <- matrix(1)
-  #   } else {
-  #     XV_gxe <- matrix(1)
-  #     XXVX_inv_gxe <- matrix(1)
-  #     X_gxe <- matrix(1)
-  #     XVX_inv_XV_gxe <- matrix(1)
-  #     XVX_gxe <- matrix(1)
-  #     y_gxe <- matrix(1)
-  #     res_gxe <- matrix(1)
-  #     mu2_gxe <- matrix(1)
-  #     mu_gxe <- matrix(1)
-  #     varWeights_gxe <- matrix(1)
-  #     S_a_gxe <- matrix(1)
-  #   }
-  # 
-  #   mu_sample <- mu
-  # 
-  #   setSAIGEobjInCPP(
-  #     t_XVX = XVX,
-  #     t_XXVX_inv = XXVX_inv,
-  #     t_XV = XV,
-  #     t_XVX_inv_XV = XVX_inv_XV,
-  #     t_Sigma_iXXSigma_iX = Sigma_iXXSigma_iX,
-  #     t_X = X,
-  #     t_S_a = S_a,
-  #     t_res = res,
-  #     t_mu2 = mu2,
-  #     t_mu = mu,
-  #     t_varRatio_sparse = as.matrix(ratioVecList$ratioVec_sparse),
-  #     t_varRatio_null = as.matrix(ratioVecList$ratioVec_null),
-  #     t_varRatio_null_sample = as.matrix(ratioVecList$ratioVec_null_sample),
-  #     t_varRatio_null_noXadj = as.matrix(ratioVecList$ratioVec_null_noXadj),
-  #     t_varRatio_null_eg = as.matrix(ratioVecList$ratioVec_null_eg),
-  #     t_varRatio_sparse_eg = as.matrix(ratioVecList$ratioVec_sparse_eg),
-  #     t_cateVarRatioMinMACVecExclude = cateVarRatioMinMACVecExclude,
-  #     t_cateVarRatioMaxMACVecInclude = cateVarRatioMaxMACVecInclude,
-  #     t_SPA_Cutoff = SPAcutoff,
-  #     t_tauvec = theta,
-  #     t_varWeightsvec = varWeights,
-  #     t_traitType = traitType,
-  #     t_y = y,
-  #     t_impute_method = impute_method,
-  #     t_flagSparseGRM = isSparseGRM,
-  #     t_isnoadjCov = is_noadjCov,
-  #     t_pval_cutoff_for_fastTest = pval_cutoff_for_fastTest,
-  #     t_isCondition = isCondition,
-  #     t_condition_genoIndex = condition_genoIndex_a,
-  #     t_is_Firth_beta = is_Firth_beta,
-  #     t_pCutoffforFirth = pCutoffforFirth,
-  #     t_offset = offset,
-  #     t_resout = obj_cc_res.out,
-  #     t_SigmaMat_sp = SigmaMat_sp,
-  #     t_tauVal_sp = obj.model$tauVal_sp,
-  #     t_Ilongmat = I_mat,
-  #     t_I_longl_vec = b - 1,
-  #     t_Tlongmat = T_longl_mat,
-  #     t_T_longl_vec = obj.model.List[[1]]$T_longl_vec,
-  #     t_is_EmpSPA = is_EmpSPA,
-  #     t_cumul = obj.model$cumul,
-  #     t_is_gxe = isgxe_vec[1],
-  #     t_XV_gxe = XV_gxe,
-  #     t_X_gxe = X_gxe,
-  #     t_XVX_inv_XV_gxe = XVX_inv_XV_gxe,
-  #     t_XVX_gxe = XVX_gxe,
-  #     t_S_a_gxe = S_a_gxe,
-  #     t_XXVX_inv_gxe = XXVX_inv_gxe,
-  #     t_y_gxe = y_gxe,
-  #     t_res_gxe = res_gxe,
-  #     t_mu2_gxe = mu2_gxe,
-  #     t_mu_gxe = mu_gxe,
-  #     t_varWeights_gxe = varWeights_gxe
-  #   )
-  # }
-  # 
-  # 
-  # gc()
-  # 
-  # 
-  # setAssocTest_GlobalVarsInCPP_GbyE(eMat, isgxe_vec[1], as.numeric(pval_cutoff_for_gxe), XV_gxe, XXVX_inv_gxe, y_gxe, res_gxe, mu2_gxe, mu_gxe, varWeights_gxe)
-  # 
+  
+
   # # process condition
   # if (isCondition) {
   #   n <- ncol(I_mat)
   #   print("condition_genoIndex")
   #   print(condition_genoIndex)
-  # 
+  
   #   if (isGroupTest) {
   #     if (!is.null(weights_for_condition)) {
   #       condition_weights <- as.matrix(weights_for_condition)
@@ -733,8 +301,8 @@ SPAGMMATtest <- function(bgenFile = "",
   #     } else {
   #       condition_weights <- matrix(rep(0, length(condition_genoIndex$cond_genoIndex)), ncol = 1)
   #     }
-  # 
-  # 
+  
+  
   #     if (!is.null(weights.beta)) {
   #       BetaDist_weight_mat <- NULL
   #       for (i in 1:length(weights.beta)) {
@@ -753,11 +321,11 @@ SPAGMMATtest <- function(bgenFile = "",
   #     BetaDist_weight_mat <- matrix(c(0, 0), ncol = 2)
   #     condition_weights <- matrix(rep(0, length(condition_genoIndex$cond_genoIndex)), ncol = 1)
   #   }
-  # 
-  # 
+  
+  
   #   condition_genoIndex_a <- as.character(format(condition_genoIndex$cond_genoIndex, scientific = FALSE))
   #   condition_genoIndex_prev_a <- as.character(format(condition_genoIndex$cond_genoIndex_prev, scientific = FALSE))
-  # 
+  
   #   print("condition_genoIndex_prev_a")
   #   print(condition_genoIndex_prev_a)
   #   print("condition_genoIndex_a")
@@ -769,19 +337,19 @@ SPAGMMATtest <- function(bgenFile = "",
   #   BetaDist_weight_mat <- as.matrix(BetaDist_weight_mat)
   #   print("BetaDist_weight_mat")
   #   print(dim(BetaDist_weight_mat))
-  # 
-  # 
-  # 
+  
+  
+  
   #   assign_conditionMarkers_factors(genoType, condition_genoIndex_prev_a, condition_genoIndex_a, n, condition_weights, BetaDist_weight_mat, is_equal_weight_in_groupTest)
-  # 
+  
   #   if (obj.model$traitType[1] == "binary" & isGroupTest) {
   #     outG2cond <- RegionSetUpConditional_binary_InCPP(condition_weights)
   #     G2condList_list <- NULL
   #     for (oml in 1:length(obj.model.List)) {
   #       startcond <- (oml - 1) * length(condition_genoIndex$cond_genoIndex) + 1
   #       endcond <- oml * length(condition_genoIndex$cond_genoIndex)
-  # 
-  # 
+  
+  
   #       G2condList <- get_newPhi_scaleFactor(q.sum = outG2cond$qsum_G2_cond[oml], mu.a = mu_sample[, oml], g.sum = outG2cond$gsum_G2_cond[, oml], p.new = outG2cond$pval_G2_cond[startcond:endcond], Score = outG2cond$Score_G2_cond[startcond:endcond], Phi = outG2cond$VarMat_G2_cond[, startcond:endcond], "SKAT-O")
   #       scaleFactorVec <- as.vector(G2condList$scaleFactor)
   #       G2condList$scaleFactorVec <- scaleFactorVec
@@ -792,11 +360,12 @@ SPAGMMATtest <- function(bgenFile = "",
   # } else {
   #   condition_weights <- c(0)
   # }
-  # 
+  
   # mu <- as.vector(t(I_mat) %*% (obj.model$mu))
   # isgxe <- obj.model$isgxe
   # rm(obj.model)
   # gc()
+#####################################################
 
   if (!isGroupTest) {
     OutputFile <- SAIGEOutputFile
@@ -832,104 +401,104 @@ SPAGMMATtest <- function(bgenFile = "",
     #   isgxe
     # )
   } else {
-    MAFlimitMat <- NULL
-    if (is.null(minMAF_in_groupTest_Exclude)) {
-      minMAF_in_groupTest <- rep(0, length(maxMAF_in_groupTest))
-    } else {
-      minMAF_in_groupTest <- minMAF_in_groupTest_Exclude
-    }
-    MAFlimitMat <- cbind(minMAF_in_groupTest, maxMAF_in_groupTest)
-    if (length(maxMAF_in_groupTest) == 1) {
-      MAFlimitMat <- matrix(c(minMAF_in_groupTest, maxMAF_in_groupTest), ncol = 2, nrow = 1)
-    }
+    # MAFlimitMat <- NULL
+    # if (is.null(minMAF_in_groupTest_Exclude)) {
+    #   minMAF_in_groupTest <- rep(0, length(maxMAF_in_groupTest))
+    # } else {
+    #   minMAF_in_groupTest <- minMAF_in_groupTest_Exclude
+    # }
+    # MAFlimitMat <- cbind(minMAF_in_groupTest, maxMAF_in_groupTest)
+    # if (length(maxMAF_in_groupTest) == 1) {
+    #   MAFlimitMat <- matrix(c(minMAF_in_groupTest, maxMAF_in_groupTest), ncol = 2, nrow = 1)
+    # }
 
 
 
-    maxMACbinind <- which(maxMAC_in_groupTest > 0)
-    if (length(maxMACbinind) > 0) {
-      maxMAC_in_groupTest_to_MAF <- (maxMAC_in_groupTest) / (2 * length(mu))
-      cat("maxMAC_in_groupTest: ", maxMAC_in_groupTest, " is specified, corresponding to max MAF ", maxMAC_in_groupTest_to_MAF, "\n")
-      for (i in 1:length(maxMACbinind)) {
-        checkArgNumeric(maxMAC_in_groupTest_to_MAF[i], deparse(substitute(maxMAC_in_groupTest_to_MAF[i])), 0, 0.5, FALSE, TRUE)
-      }
+    # maxMACbinind <- which(maxMAC_in_groupTest > 0)
+    # if (length(maxMACbinind) > 0) {
+    #   maxMAC_in_groupTest_to_MAF <- (maxMAC_in_groupTest) / (2 * length(mu))
+    #   cat("maxMAC_in_groupTest: ", maxMAC_in_groupTest, " is specified, corresponding to max MAF ", maxMAC_in_groupTest_to_MAF, "\n")
+    #   for (i in 1:length(maxMACbinind)) {
+    #     checkArgNumeric(maxMAC_in_groupTest_to_MAF[i], deparse(substitute(maxMAC_in_groupTest_to_MAF[i])), 0, 0.5, FALSE, TRUE)
+    #   }
 
 
-      if (is.null(minMAC_in_groupTest_Exclude)) {
-        minMAC_in_groupTest <- rep(0, length(maxMAC_in_groupTest))
-      } else {
-        minMAC_in_groupTest <- minMAC_in_groupTest_Exclude
-        minMAC_in_groupTest_to_MAF <- minMAC_in_groupTest / (2 * length(mu))
-        cat("minMAC_in_groupTest: ", minMAC_in_groupTest, " is specified, corresponding to min MAF ", minMAC_in_groupTest_to_MAF, "\n")
-      }
-      MAFlimitMat <- rbind(MAFlimitMat, cbind(minMAC_in_groupTest_to_MAF, maxMAC_in_groupTest_to_MAF))
-    }
+    #   if (is.null(minMAC_in_groupTest_Exclude)) {
+    #     minMAC_in_groupTest <- rep(0, length(maxMAC_in_groupTest))
+    #   } else {
+    #     minMAC_in_groupTest <- minMAC_in_groupTest_Exclude
+    #     minMAC_in_groupTest_to_MAF <- minMAC_in_groupTest / (2 * length(mu))
+    #     cat("minMAC_in_groupTest: ", minMAC_in_groupTest, " is specified, corresponding to min MAF ", minMAC_in_groupTest_to_MAF, "\n")
+    #   }
+    #   MAFlimitMat <- rbind(MAFlimitMat, cbind(minMAC_in_groupTest_to_MAF, maxMAC_in_groupTest_to_MAF))
+    # }
 
-    print(MAFlimitMat)
-    MAFlimitMat <- MAFlimitMat[!duplicated(MAFlimitMat), , drop = F]
-    print(MAFlimitMat)
-    MAFlimitMat <- MAFlimitMat[order(MAFlimitMat[, 2], MAFlimitMat[, 1]), , drop = F]
-    minMAF_in_groupTest <- MAFlimitMat[, 1]
-    maxMAF_in_groupTest <- MAFlimitMat[, 2]
-    cat("max MAF cutoff ", maxMAF_in_groupTest, "will be applied\n")
-    cat("corresponding min MAF cutoff (exclude) ", minMAF_in_groupTest, "will be applied\n")
-
-
+    # print(MAFlimitMat)
+    # MAFlimitMat <- MAFlimitMat[!duplicated(MAFlimitMat), , drop = F]
+    # print(MAFlimitMat)
+    # MAFlimitMat <- MAFlimitMat[order(MAFlimitMat[, 2], MAFlimitMat[, 1]), , drop = F]
+    # minMAF_in_groupTest <- MAFlimitMat[, 1]
+    # maxMAF_in_groupTest <- MAFlimitMat[, 2]
+    # cat("max MAF cutoff ", maxMAF_in_groupTest, "will be applied\n")
+    # cat("corresponding min MAF cutoff (exclude) ", minMAF_in_groupTest, "will be applied\n")
 
 
-    # method_to_CollapseUltraRare,
-    # DosageCutoff_for_UltraRarePresence,
-    if (r.corr == 0 & is_Firth_beta) {
-      print("WARNING: Note that the Firth correction has not been implemented for Burden test effect sizes when SKAT-O test is conducted. If the corrected Burden test effect sizes is needed, please use r.corr=1 to only conduct Burden test.")
-      if (is_single_in_groupTest) {
-        print("Firth correction will be used for effect sizes of single variant tests")
-      }
-    }
 
-    BetaDist_weight_mat <- matrix(c(0, 0), ncol = 2)
 
-    if (!is.null(weights.beta)) {
-      BetaDist_weight_mat <- NULL
-      for (i in 1:length(weights.beta)) {
-        weightsbeta_val_vec <- as.numeric(unlist(strsplit(weights.beta[i], split = ",")))
-        if (length(weightsbeta_val_vec) == 2) {
-          BetaDist_weight_mat <- rbind(BetaDist_weight_mat, weightsbeta_val_vec)
-        } else {
-          stop("The ", i, "th element in weights.beta does not have 2 elements\n")
-        }
-      }
-    }
+    # # method_to_CollapseUltraRare,
+    # # DosageCutoff_for_UltraRarePresence,
+    # if (r.corr == 0 & is_Firth_beta) {
+    #   print("WARNING: Note that the Firth correction has not been implemented for Burden test effect sizes when SKAT-O test is conducted. If the corrected Burden test effect sizes is needed, please use r.corr=1 to only conduct Burden test.")
+    #   if (is_single_in_groupTest) {
+    #     print("Firth correction will be used for effect sizes of single variant tests")
+    #   }
+    # }
 
-    print("condition_weights")
-    print(condition_weights)
+    # BetaDist_weight_mat <- matrix(c(0, 0), ncol = 2)
 
-    SAIGE.Region(
-      mu,
-      OutputFile,
-      MACCutoff_to_CollapseUltraRare,
-      groupFile,
-      annotation_in_groupTest,
-      maxMAF_in_groupTest,
-      minMAF_in_groupTest,
-      markers_per_chunk_in_groupTest,
-      genoType,
-      objGeno$markerInfo,
-      traitType,
-      phenotype_name_vec,
-      is_imputed_data,
-      isCondition,
-      condition_weights,
-      groups_per_chunk,
-      r.corr,
-      is_overwrite_output,
-      is_single_in_groupTest,
-      BetaDist_weight_mat,
-      is_equal_weight_in_groupTest,
-      is_output_markerList_in_groupTest,
-      is_SKATO,
-      chrom,
-      is_fastTest,
-      pval_cutoff_for_fastTest,
-      is_output_moreDetails
-    )
+    # if (!is.null(weights.beta)) {
+    #   BetaDist_weight_mat <- NULL
+    #   for (i in 1:length(weights.beta)) {
+    #     weightsbeta_val_vec <- as.numeric(unlist(strsplit(weights.beta[i], split = ",")))
+    #     if (length(weightsbeta_val_vec) == 2) {
+    #       BetaDist_weight_mat <- rbind(BetaDist_weight_mat, weightsbeta_val_vec)
+    #     } else {
+    #       stop("The ", i, "th element in weights.beta does not have 2 elements\n")
+    #     }
+    #   }
+    # }
+
+    # print("condition_weights")
+    # print(condition_weights)
+
+    # SAIGE.Region(
+    #   mu,
+    #   OutputFile,
+    #   MACCutoff_to_CollapseUltraRare,
+    #   groupFile,
+    #   annotation_in_groupTest,
+    #   maxMAF_in_groupTest,
+    #   minMAF_in_groupTest,
+    #   markers_per_chunk_in_groupTest,
+    #   genoType,
+    #   objGeno$markerInfo,
+    #   traitType,
+    #   phenotype_name_vec,
+    #   is_imputed_data,
+    #   isCondition,
+    #   condition_weights,
+    #   groups_per_chunk,
+    #   r.corr,
+    #   is_overwrite_output,
+    #   is_single_in_groupTest,
+    #   BetaDist_weight_mat,
+    #   is_equal_weight_in_groupTest,
+    #   is_output_markerList_in_groupTest,
+    #   is_SKATO,
+    #   chrom,
+    #   is_fastTest,
+    #   pval_cutoff_for_fastTest,
+    #   is_output_moreDetails
+    # )
   }
 }
