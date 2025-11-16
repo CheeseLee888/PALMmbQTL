@@ -60,6 +60,10 @@ option_list <- list(
     type = "character", default = "",
     help = "Path to gds file."
   ),
+  make_option("--inFile",
+    type = "character", default = "",
+    help = "Path to geno file. Support many formats including bed/bim/fam, bgen, gds and txt. If using bed/bim/fam, only go with prefix; Otherwise full file name."
+  ),
   make_option("--AlleleOrder",
     type = "character", default = "alt-first",
     help = "alt-first or ref-first for bgen or PLINK files"
@@ -368,6 +372,7 @@ SPAGMMATtest(
   bimFile = opt$bimFile,
   famFile = opt$famFile,
   gdsFile = opt$gdsFile,
+  inFile = opt$inFile,
   AlleleOrder = opt$AlleleOrder,
   idstoIncludeFile = opt$idstoIncludeFile,
   rangestoIncludeFile = opt$rangestoIncludeFile,

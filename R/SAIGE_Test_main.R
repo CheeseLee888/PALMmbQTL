@@ -72,6 +72,7 @@ SPAGMMATtest <- function(bgenFile = "",
                          bimFile = "",
                          famFile = "",
                          gdsFile = "",
+                         inFile = "",
                          AlleleOrder = "alt-first", # new
                          idstoIncludeFile = "",
                          rangestoIncludeFile = "",
@@ -374,9 +375,10 @@ SPAGMMATtest <- function(bgenFile = "",
     #   setorderv(objGeno$markerInfo, col = c("CHROM", "POS"))
     # }
     
+    cat("Starting glmmscore test...\n")
     GMMAT::glmm.score(
-      modglmm,
-      infile = gdsFile,
+      obj = modglmm,
+      infile = inFile,
       center = T, 
       outfile = OutputFile
       )

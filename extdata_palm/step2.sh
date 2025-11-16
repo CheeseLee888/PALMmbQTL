@@ -14,7 +14,7 @@ step2prefix=./output/${pheno}_allchr_step2
 #     --is_overwrite_output=TRUE
 
 pixi run --manifest-path=../pixi.toml Rscript step2_tests_qtl.R \
-    --gdsFile=./input/stool_bialleic_merged_data.gds \
-    --SAIGEOutputFile=${step2prefix} \
+    --inFile=./input/stool_bialleic_merged_data.gds \
+    --SAIGEOutputFile=${step2prefix}.txt \
     --LOCO=FALSE \
     --GMMATmodelFile=${step1prefix}.rda
