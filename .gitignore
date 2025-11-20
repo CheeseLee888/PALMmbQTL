@@ -28,4 +28,5 @@ extdata/
 *.Rproj*
 extdata_palm/input
 extdata_palm/output
+extdata_palm/run_kirin.R
 .Rproj.user
