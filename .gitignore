@@ -30,3 +30,6 @@ extdata_palm/input
 extdata_palm/output
 extdata_palm/run_kirin.R
 .Rproj.user
+extdata_palm/step0.sh
+extdata_palm/step1.sh
+extdata_palm/step2.sh

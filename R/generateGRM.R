@@ -93,8 +93,7 @@ generateGRM <- function(genoFile = "", grmFile = "") {
       tmp_created <- TRUE
     }
   } else {
-    stop("Unsupported file extension for genoFile. "
-        "\n  - Supported: no extension (PLINK bed/bim/fam) or .gds")
+    stop("Unsupported file extension for genoFile. \n  - Supported: no extension (PLINK bed/bim/fam) or .gds")
   }
 
   ## 2. Compute GRM from SNP GDS -----------------------------------------------
