@@ -19,4 +19,6 @@ pixi run --manifest-path=../pixi.toml Rscript step1_fitNULLGLMM_qtl.R \
     --isCovariateTransform=FALSE \
     --plinkFile=./input/stool_bialleic_merged_data \
     --LOCO=FALSE \
-    --isShrinkModelOutput=FALSE
+    --isShrinkModelOutput=FALSE \
+    --useGRMtoFitNULL=TRUE \
+    --grmFile=./input/stool_bialleic_merged_grm.rds

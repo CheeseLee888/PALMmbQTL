@@ -774,12 +774,14 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
 
     # GRM
     if (useGRMtoFitNULL) {
+      cat("GRM will be used to fit the NULL model\n")
       if (!file.exists(grmFile)) {
         stop("ERROR! grmFile ", grmFile, " does not exsit\n")
       }
       grm_obj <- readRDS(grmFile)
       K       <- grm_obj$K
     } else {
+      cat("Identity matrix will be used to fit the NULL model\n")
       K <- diag(nrow(data))
     }
     rownames(K) <- colnames(K) <- data[[sampleIDColinphenoFile]]
