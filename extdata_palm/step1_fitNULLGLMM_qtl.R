@@ -28,6 +28,10 @@ option_list <- list(
     type = "character", default = "",
     help = "Path to fam file. If plinkFile is specified, 'plinkFile'.fam will be used"
   ),
+  make_option("--grmFile",
+    type = "character", default = "",
+    help = "Path to save the GRM RDS file"
+  ),
   make_option("--phenoFile",
     type = "character", default = "",
     help = "Required. Path to the phenotype file. The file can be either tab or space delimited. The phenotype file has a header and contains at least two columns. One column is for phentoype and the other column is for sample IDs. Additional columns can be included in the phenotype file for covariates in the null model. Please specify the names of the covariates using the argument covarColList and specify categorical covariates using the argument qCovarColList. All categorical covariates must also be included in covarColList."
@@ -301,6 +305,7 @@ fitNULLGLMM_multiV(
   bedFile = opt$bedFile,
   bimFile = opt$bimFile,
   famFile = opt$famFile,
+  grmFile = opt$grmFile,
   useSparseGRMtoFitNULL = opt$useSparseGRMtoFitNULL,
   sparseGRMFile = opt$sparseGRMFile,
   sparseGRMSampleIDFile = opt$sparseGRMSampleIDFile,

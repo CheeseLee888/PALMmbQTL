@@ -55,6 +55,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
                                bedFile = "",
                                bimFile = "",
                                famFile = "",
+                               grmFile = "",
                                phenoFile = "",
                                phenoCol = "",
                                isRemoveZerosinPheno = FALSE,
@@ -771,12 +772,24 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     set_isSparseGRM(useSparseGRMtoFitNULL)
     set_useGRMtoFitNULL(useGRMtoFitNULL)
 
+    # GRM
+    if (useGRMtoFitNULL) {
+      if (!file.exists(grmFile)) {
+        stop("ERROR! grmFile ", grmFile, " does not exsit\n")
+      }
+      grm_obj <- readRDS(grmFile)
+      K       <- grm_obj$K
+    } else {
+      K <- diag(nrow(data))
+    }
+    rownames(K) <- colnames(K) <- data[[sampleIDColinphenoFile]]
+
     # Core step1 for PALM-mbQTL
     if (traitType != "count_nb") {
       system.time(modglmm <- GMMAT::glmmkin(
         formula, 
         data = data,
-        kins = sparseGRM,
+        kins = K,
         id = sampleIDColinphenoFile, 
         family = poisson(link = "log")
         ))
