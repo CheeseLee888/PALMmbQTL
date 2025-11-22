@@ -136,72 +136,17 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     bedFile <- paste0(plinkFile, ".bed")
     famFile <- paste0(plinkFile, ".fam")
   }
-  setgenoNULL()
 
-  if (!useGRMtoFitNULL) {
-    useSparseGRMtoFitNULL <- FALSE
-    useSparseGRMforVarRatio <- FALSE
-    cat("No GRM will be used to fit the NULL model and nThreads is set to 1\n")
-  }
-
-
-  if (useSparseGRMtoFitNULL & bedFile == "") {
-    cat("Sparse GRM is used to fit the null model and plink file is not specified, so variance ratios won't be estimated\n")
-    skipVarianceRatioEstimation <- TRUE
-  }
-
-  if (!skipVarianceRatioEstimation) {
-    SPAGMMATOut <- paste0(outputPrefix, "_", numMarkersForVarRatio, "markers.SAIGE.results.txt")
-
-    if (outputPrefix_varRatio == "") {
-      outputPrefix_varRatio <- outputPrefix
-    }
-    varRatioFile <- paste0(outputPrefix_varRatio, ".varianceRatio.txt")
-
-    if (!file.exists(varRatioFile)) {
-      file.create(varRatioFile, showWarnings = TRUE)
-    } else {
-      if (!IsOverwriteVarianceRatioFile) {
-        stop(
-          "WARNING: The variance ratio file ", varRatioFile,
-          " already exists. The new variance ratios will be output to ",
-          varRatioFile, ". In order to avoid overwriting the file, please remove the ",
-          varRatioFile, " or use the argument outputPrefix_varRatio to specify a different prefix to output the variance ratio(s). Otherwise, specify --IsOverwriteVarianceRatioFile=TRUE so the file will be overwritten with new variance ratio(s)\n"
-        )
-      } else {
-        cat("The variance ratio file ", varRatioFile, " already exists. IsOverwriteVarianceRatioFile=TRUE so the file will be overwritten\n")
-      }
-    }
-  } else {
-    cat("Variance ratio estimation will be skipped\n.")
-    useSparseGRMforVarRatio <- FALSE
-  }
-
-
-  if (useSparseGRMtoFitNULL) {
-    cat("Leave-one-chromosome-out is not applied\n")
-  }
-
-
-
-  if (useSparseGRMtoFitNULL | useSparseGRMforVarRatio) {
-    if (!file.exists(sparseGRMFile)) {
-      stop("sparseGRMFile ", sparseGRMFile, " does not exist!")
-    }
-    if (!file.exists(sparseGRMSampleIDFile)) {
-      stop(
-        "sparseGRMSampleIDFile ", sparseGRMSampleIDFile,
-        " does not exist!"
-      )
-    }
-  }
-
+  # if (!useGRMtoFitNULL) {
+  #   useSparseGRMtoFitNULL <- FALSE
+  #   cat("No GRM will be used to fit the NULL model and nThreads is set to 1\n")
+  # }
 
   if (nThreads > 1) {
     RcppParallel:::setThreadOptions(numThreads = nThreads)
     cat(nThreads, " threads will be used ", "\n")
   }
-  set_g_omp_num_threads(nThreads)
+  # set_g_omp_num_threads(nThreads)
 
   if (FemaleOnly & MaleOnly) {
     stop("Both FemaleOnly and MaleOnly are TRUE. Please specify only one of them as TRUE to run the sex-specific job\n")
@@ -222,47 +167,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
   }
 
 
-  sampleListwithGeno <- NULL
-  if ((!useSparseGRMtoFitNULL & useGRMtoFitNULL) | !skipVarianceRatioEstimation) {
-    if (!file.exists(bedFile)) {
-      stop("ERROR! bed file does not exsit\n")
-    }
-    if (!file.exists(bimFile)) {
-      stop("ERROR! bim file does not exsit\n")
-    }
-
-
-    if (!file.exists(famFile)) {
-      stop("ERROR! fam file does not exsit\n")
-    } else {
-      sampleListwithGenov0 <- data.table::fread(famFile, header = F, colClasses = list(character = 1:4), data.table = FALSE)
-      colnames(sampleListwithGenov0) <- c(
-        "FIDgeno", "IIDgeno",
-        "father", "mother", "sex", "phe"
-      )
-      sampleListwithGeno <- NULL
-      sampleListwithGeno$IIDgeno <- sampleListwithGenov0$IIDgeno
-      sampleListwithGeno <- data.frame(sampleListwithGeno)
-      sampleListwithGeno$IndexGeno <- seq(1, nrow(sampleListwithGeno),
-        by = 1
-      )
-      cat(nrow(sampleListwithGeno), " samples have genotypes\n")
-    }
-  } else {
-    if (useSparseGRMtoFitNULL | useSparseGRMforVarRatio) {
-      sampleListwithGenov0 <- data.table::fread(sparseGRMSampleIDFile,
-        header = F, , colClasses = c("character"), data.table = F
-      )
-      colnames(sampleListwithGenov0) <- c("IIDgeno")
-      sampleListwithGeno <- NULL
-      sampleListwithGeno$IIDgeno <- sampleListwithGenov0$IIDgeno
-      sampleListwithGeno <- data.frame(sampleListwithGeno)
-      sampleListwithGeno$IndexGeno <- seq(1, nrow(sampleListwithGeno),
-        by = 1
-      )
-      cat(nrow(sampleListwithGeno), " samples are in the sparse GRM\n")
-    }
-  }
   if (!file.exists(phenoFile)) {
     stop("ERROR! phenoFile ", phenoFile, " does not exsit\n")
   } else {
@@ -272,20 +176,20 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       checkColList <- c(phenoCol, covarColList, sampleIDColinphenoFile, longlCol)
     }
 
-    if (cellIDColinphenoFile != "") {
-      cat(cellIDColinphenoFile, "is the cell ID column\n")
-      checkColList <- c(checkColList, cellIDColinphenoFile)
-    }
+    # if (cellIDColinphenoFile != "") {
+    #   cat(cellIDColinphenoFile, "is the cell ID column\n")
+    #   checkColList <- c(checkColList, cellIDColinphenoFile)
+    # }
 
     if (length(offsetCol) > 0) {
       cat(offsetCol, "is the offset term\n")
       checkColList <- c(checkColList, offsetCol)
     }
 
-    if (length(varWeightsCol) > 0) {
-      cat(varWeightsCol, " is the weights for variance\n")
-      checkColList <- c(checkColList, varWeightsCol)
-    }
+    # if (length(varWeightsCol) > 0) {
+    #   cat(varWeightsCol, " is the weights for variance\n")
+    #   checkColList <- c(checkColList, varWeightsCol)
+    # }
 
 
     ## check whether the phenotype file is large
@@ -425,9 +329,7 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       }
     }
 
-
-    print("HERERE2")
-
+    # construct the formula
     if (length(covarColList) > 0) {
       formula <- paste0(phenoCol, "~", paste0(covarColList,
         collapse = "+"
@@ -444,333 +346,220 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     
     cat("formula is ", formula, "\n")
     
-    formula.null <- as.formula(formula)
-    mmat <- model.matrix(formula.null, data, na.action = NULL)
-    mmat <- cbind(mmat, data[, which(colnames(data) == phenoCol), drop = F])
-    colnames(mmat)[ncol(mmat)] <- phenoCol
+    # formula.null <- as.formula(formula)
+    # mmat <- model.matrix(formula.null, data, na.action = NULL)
+    # mmat <- cbind(mmat, data[, which(colnames(data) == phenoCol), drop = F])
+    # colnames(mmat)[ncol(mmat)] <- phenoCol
 
-    if (length(sampleCovarCol) > 0) {
-      cat(sampleCovarCol, "are sample-level covariates\n")
-      # check which sample-level covariates are categorical and record the names after factorizing in the data frame
-      if (length(qCovarCol) > 0) {
-        if (any(sampleCovarCol %in% qCovarCol)) {
-          sampleCovarCol_q <- sampleCovarCol[which(sampleCovarCol %in% qCovarCol)]
-          formula_sq <- paste0("~", paste0(sampleCovarCol_q, collapse = "+"))
-          formula_sq.null <- as.formula(formula_sq)
-          mmat_sq <- model.matrix(formula_sq.null, data, na.action = NULL)
-          sampleCovarCol_q_names <- colnames(mmat_sq)[-1]
-          rm(mmat_sq)
-        } else {
-          sampleCovarCol_q_names <- NULL
-        }
-      } else {
-        sampleCovarCol_q_names <- NULL
-      }
-    }
+    # if (length(sampleCovarCol) > 0) {
+    #   cat(sampleCovarCol, "are sample-level covariates\n")
+    #   # check which sample-level covariates are categorical and record the names after factorizing in the data frame
+    #   if (length(qCovarCol) > 0) {
+    #     if (any(sampleCovarCol %in% qCovarCol)) {
+    #       sampleCovarCol_q <- sampleCovarCol[which(sampleCovarCol %in% qCovarCol)]
+    #       formula_sq <- paste0("~", paste0(sampleCovarCol_q, collapse = "+"))
+    #       formula_sq.null <- as.formula(formula_sq)
+    #       mmat_sq <- model.matrix(formula_sq.null, data, na.action = NULL)
+    #       sampleCovarCol_q_names <- colnames(mmat_sq)[-1]
+    #       rm(mmat_sq)
+    #     } else {
+    #       sampleCovarCol_q_names <- NULL
+    #     }
+    #   } else {
+    #     sampleCovarCol_q_names <- NULL
+    #   }
+    # }
 
+    # coln <- 1
+    # if (length(offsetCol) > 0) {
+    #   mmat <- cbind(mmat, data[, which(colnames(data) == offsetCol), drop = F])
+    #   colnames(mmat)[ncol(mmat)] <- offsetCol
+    #   coln <- coln + 1
+    # }
 
+    # if (length(varWeightsCol) > 0) {
+    #   mmat <- cbind(mmat, data[, which(colnames(data) == varWeightsCol), drop = F])
+    #   colnames(mmat)[ncol(mmat)] <- varWeightsCol
 
-    coln <- 1
-    if (length(offsetCol) > 0) {
-      mmat <- cbind(mmat, data[, which(colnames(data) == offsetCol), drop = F])
-      colnames(mmat)[ncol(mmat)] <- offsetCol
-      coln <- coln + 1
-    }
+    #   coln <- coln + 1
+    # }
 
-    if (length(varWeightsCol) > 0) {
-      mmat <- cbind(mmat, data[, which(colnames(data) == varWeightsCol), drop = F])
-      colnames(mmat)[ncol(mmat)] <- varWeightsCol
+    # if (length(covarColList) > 0) {
+    #   if (length(qCovarCol) > 0) {
+    #     covarColList <- colnames(mmat)[2:(ncol(mmat) - coln)]
+    #     formula <- paste0(phenoCol, "~", paste0(covarColList, collapse = "+"))
+    #     formula.null <- as.formula(formula)
+    #   }
+    # }
 
-      coln <- coln + 1
-    }
+    # mmat$IID <- data[, which(sampleIDColinphenoFile == colnames(data))]
+    # if (cellIDColinphenoFile != "") {
+    #   mmat$barcode <- data[, which(cellIDColinphenoFile == colnames(data))]
+    # }
+    # if (longlCol != "") {
+    #   mmat$longlVar <- data[, which(longlCol == colnames(data))]
+    # }
 
+    # mmat_nomissing <- mmat[complete.cases(mmat), ]
+    # mmat_nomissing$IndexPheno <- seq(1, nrow(mmat_nomissing),
+    #   by = 1
+    # )
+    # cat(nrow(mmat_nomissing), " samples have non-missing phenotypes\n")
 
-
-    if (length(covarColList) > 0) {
-      if (length(qCovarCol) > 0) {
-        covarColList <- colnames(mmat)[2:(ncol(mmat) - coln)]
-        formula <- paste0(phenoCol, "~", paste0(covarColList, collapse = "+"))
-        formula.null <- as.formula(formula)
-      }
-    }
-
-    mmat$IID <- data[, which(sampleIDColinphenoFile == colnames(data))]
-    if (cellIDColinphenoFile != "") {
-      mmat$barcode <- data[, which(cellIDColinphenoFile == colnames(data))]
-    }
-    if (longlCol != "") {
-      mmat$longlVar <- data[, which(longlCol == colnames(data))]
-    }
-
-    mmat_nomissing <- mmat[complete.cases(mmat), ]
-    mmat_nomissing$IndexPheno <- seq(1, nrow(mmat_nomissing),
-      by = 1
-    )
-    cat(nrow(mmat_nomissing), " samples have non-missing phenotypes\n")
-
-    if (length(varWeightsCol) > 0) {
-      varWeights <- mmat_nomissing[, which(colnames(mmat_nomissing) == varWeightsCol)]
-    } else {
-      varWeights <- NULL
-    }
-    if (sparseGRMSampleIDFile != "") {
-      sampleListwithGenov0 <- data.table::fread(sparseGRMSampleIDFile,
-        header = F, , colClasses = c("character"), data.table = F
-      )
-      colnames(sampleListwithGenov0) <- c("IIDgeno")
-      cat(length(sampleListwithGenov0$IIDgeno), " samples are in the sparse GRM\n")
-      mmat_nomissing <- mmat_nomissing[which(mmat_nomissing$IID %in% sampleListwithGenov0$IIDgeno), ]
-      cat(nrow(mmat_nomissing), " samples who have non-missing phenotypes are also in the sparse GRM\n")
-    }
+    # if (length(varWeightsCol) > 0) {
+    #   varWeights <- mmat_nomissing[, which(colnames(mmat_nomissing) == varWeightsCol)]
+    # } else {
+    #   varWeights <- NULL
+    # }
+    # if (sparseGRMSampleIDFile != "") {
+    #   sampleListwithGenov0 <- data.table::fread(sparseGRMSampleIDFile,
+    #     header = F, , colClasses = c("character"), data.table = F
+    #   )
+    #   colnames(sampleListwithGenov0) <- c("IIDgeno")
+    #   cat(length(sampleListwithGenov0$IIDgeno), " samples are in the sparse GRM\n")
+    #   mmat_nomissing <- mmat_nomissing[which(mmat_nomissing$IID %in% sampleListwithGenov0$IIDgeno), ]
+    #   cat(nrow(mmat_nomissing), " samples who have non-missing phenotypes are also in the sparse GRM\n")
+    # }
 
 
-    if (longlCol == "") {
-      if (any(duplicated(mmat_nomissing$IID))) {
-        cat("Duplicated sample IDs are detected in the phenotype file. Assuming repeated measurements\n")
-      }
-    } else {
-      cat("Longitudinal variable ", longlCol, " is specified\n")
-      if (!any(duplicated(mmat_nomissing$IID))) {
-        stop("No duplicated sample IDs are detected in the phenotype file\n")
-      }
-    }
+    # if (longlCol == "") {
+    #   if (any(duplicated(mmat_nomissing$IID))) {
+    #     cat("Duplicated sample IDs are detected in the phenotype file. Assuming repeated measurements\n")
+    #   }
+    # } else {
+    #   cat("Longitudinal variable ", longlCol, " is specified\n")
+    #   if (!any(duplicated(mmat_nomissing$IID))) {
+    #     stop("No duplicated sample IDs are detected in the phenotype file\n")
+    #   }
+    # }
 
 
-    if (!is.null(sampleListwithGeno)) {
-      dataMerge <- merge(mmat_nomissing, sampleListwithGeno,
-        by.x = "IID", by.y = "IIDgeno"
-      )
-      dataMerge_sort <- dataMerge[with(dataMerge, order(IndexGeno)), ]
-    } else {
-      dataMerge_sort <- mmat_nomissing
-      dataMerge_sort$IIDgeno <- dataMerge_sort$IID
-    }
+    # if (!is.null(sampleListwithGeno)) {
+    #   dataMerge <- merge(mmat_nomissing, sampleListwithGeno,
+    #     by.x = "IID", by.y = "IIDgeno"
+    #   )
+    #   dataMerge_sort <- dataMerge[with(dataMerge, order(IndexGeno)), ]
+    # } else {
+    #   dataMerge_sort <- mmat_nomissing
+    #   dataMerge_sort$IIDgeno <- dataMerge_sort$IID
+    # }
 
-    print("Test")
-    print(head(dataMerge_sort))
+    # print("Test")
+    # print(head(dataMerge_sort))
 
-    rm(mmat)
-    rm(mmat_nomissing)
-    gc()
-    isSparseGRMIdentity <- FALSE
-    if (useGRMtoFitNULL) {
-      indicatorGenoSamplesWithPheno <- (sampleListwithGeno$IndexGeno %in% dataMerge_sort$IndexGeno)
+    # rm(mmat)
+    # rm(mmat_nomissing)
+    # gc()
+    # isSparseGRMIdentity <- FALSE
+    # if (useGRMtoFitNULL) {
+    #   indicatorGenoSamplesWithPheno <- (sampleListwithGeno$IndexGeno %in% dataMerge_sort$IndexGeno)
 
-      if (length(unique(dataMerge_sort$IIDgeno)) < length(unique(sampleListwithGeno$IIDgeno))) {
-        cat(
-          length(unique(sampleListwithGeno$IIDgeno)) - length(unique(dataMerge_sort$IIDgeno)),
-          " samples in geno file do not have phenotypes\n"
-        )
-      }
-      cat(length(unique(dataMerge_sort$IIDgeno)), " samples will be used for analysis\n")
-    } else {
-      indicatorGenoSamplesWithPheno <- rep(TRUE, nrow(dataMerge_sort))
-    }
+    #   if (length(unique(dataMerge_sort$IIDgeno)) < length(unique(sampleListwithGeno$IIDgeno))) {
+    #     cat(
+    #       length(unique(sampleListwithGeno$IIDgeno)) - length(unique(dataMerge_sort$IIDgeno)),
+    #       " samples in geno file do not have phenotypes\n"
+    #     )
+    #   }
+    #   cat(length(unique(dataMerge_sort$IIDgeno)), " samples will be used for analysis\n")
+    # } else {
+    #   indicatorGenoSamplesWithPheno <- rep(TRUE, nrow(dataMerge_sort))
+    # }
 
-    if (any(duplicated(dataMerge_sort$IID))) {
-      cat(nrow(dataMerge_sort), " observations will be used for analysis\n")
-      set_I_mat_inR(dataMerge_sort$IID)
-      if (longlCol != "") {
-        set_T_mat_inR(dataMerge_sort$IID, dataMerge_sort$longlVar)
-      }
-    } else {
-      if (!useGRMtoFitNULL) {
-        cat("No duplicated IDs are observed in the phenotype file, so the identity matrix will be used as a sparse GRM will be used to fit the null model\n")
-        isSparseGRMIdentity <- TRUE
-        useSparseGRMtoFitNULL <- TRUE
-        useGRMtoFitNULL <- TRUE
-      }
-    }
-    set_useGRMtoFitNULL(useGRMtoFitNULL)
+    # if (any(duplicated(dataMerge_sort$IID))) {
+    #   cat(nrow(dataMerge_sort), " observations will be used for analysis\n")
+    #   set_I_mat_inR(dataMerge_sort$IID)
+    #   if (longlCol != "") {
+    #     set_T_mat_inR(dataMerge_sort$IID, dataMerge_sort$longlVar)
+    #   }
+    # } else {
+    #   if (!useGRMtoFitNULL) {
+    #     cat("No duplicated IDs are observed in the phenotype file, so the identity matrix will be used as a sparse GRM will be used to fit the null model\n")
+    #     isSparseGRMIdentity <- TRUE
+    #     useSparseGRMtoFitNULL <- TRUE
+    #     useGRMtoFitNULL <- TRUE
+    #   }
+    # }
+    # set_useGRMtoFitNULL(useGRMtoFitNULL)
   }
 
 
-
-  print("Test3")
-  print(head(dataMerge_sort))
-
-  if (traitType == "quantitative" & invNormalize) {
-    stop("ERROR: This traitType is not supported in the current version.\n")
-  }
-  print("Test4")
-  print(head(dataMerge_sort))
-  if (traitType == "binary" & (length(covarColList) > 0)) {
-    stop("ERROR: This traitType is not supported in the current version.\n")
-  }
   if (!hasCovariate) {
     print("No covariate is includes so isCovariateOffset = FALSE")
     isCovariateOffset <- FALSE
   }
 
-  if (isCovariateTransform & hasCovariate) {
-    cat("qr transformation has been performed on covariates\n")
-    out.transform <- Covariate_Transform(formula.null, data = dataMerge_sort)
-    formulaNewList <- c(phenoCol, " ~ ", out.transform$Param.transform$X_name[1])
-    if (length(out.transform$Param.transform$X_name) > 1) {
-      for (i in c(2:length(out.transform$Param.transform$X_name))) {
-        formulaNewList <- c(formulaNewList, "+", out.transform$Param.transform$X_name[i])
-      }
-    }
-    formulaNewList <- paste0(formulaNewList, collapse = "")
-    formulaNewList <- paste0(formulaNewList, "-1")
-    formula.new <- as.formula(paste0(formulaNewList, collapse = ""))
-    data.new <- as.data.frame(cbind(out.transform$Y, out.transform$X1))
-    colnames(data.new) <- c(phenoCol, out.transform$Param.transform$X_name)
-    cat("colnames(data.new) is ", colnames(data.new), "\n")
-    cat(
-      "out.transform$Param.transform$qrr: ", dim(out.transform$Param.transform$qrr),
-      "\n"
-    )
+  # if (isCovariateTransform & hasCovariate) {
+  #   cat("qr transformation has been performed on covariates\n")
+  #   out.transform <- Covariate_Transform(formula.null, data = dataMerge_sort)
+  #   formulaNewList <- c(phenoCol, " ~ ", out.transform$Param.transform$X_name[1])
+  #   if (length(out.transform$Param.transform$X_name) > 1) {
+  #     for (i in c(2:length(out.transform$Param.transform$X_name))) {
+  #       formulaNewList <- c(formulaNewList, "+", out.transform$Param.transform$X_name[i])
+  #     }
+  #   }
+  #   formulaNewList <- paste0(formulaNewList, collapse = "")
+  #   formulaNewList <- paste0(formulaNewList, "-1")
+  #   formula.new <- as.formula(paste0(formulaNewList, collapse = ""))
+  #   data.new <- as.data.frame(cbind(out.transform$Y, out.transform$X1))
+  #   colnames(data.new) <- c(phenoCol, out.transform$Param.transform$X_name)
+  #   cat("colnames(data.new) is ", colnames(data.new), "\n")
+  #   cat(
+  #     "out.transform$Param.transform$qrr: ", dim(out.transform$Param.transform$qrr),
+  #     "\n"
+  #   )
 
-    if (length(offsetCol) > 0) {
-      data.new <- cbind(data.new, dataMerge_sort[, which(colnames(dataMerge_sort) == offsetCol)])
-      colnames(data.new)[ncol(data.new)] <- offsetCol
-    }
-  } else {
-    formula.new <- formula.null
-    data.new <- dataMerge_sort
-    out.transform <- NULL
-  }
-
-  if (traitType == "binary") {
-    stop("ERROR: This traitType is not supported in the current version.\n")
-  } else if (traitType == "quantitative") {
-    stop("ERROR: This traitType is not supported in the current version.\n")
-  } else if (traitType == "count") {
-    if (length(offsetCol) == 0) {
-    } else {
-      offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-    }
-  } else if (traitType == "count_nb") {
-    stop("ERROR: This traitType is not supported in the current version.\n")
-  }
-  mmat <- model.matrix(formula.new, data = data.new, na.action = NULL)
-
-  if (isCovariateOffset) {
-    # covoffset <- mmat[, -1, drop = F] %*% modwitcov$coefficients[-1]
-    print("isCovariateOffset=TRUE, so fixed effects coefficnets won't be estimated.")
-    formula.new.withCov <- formula.new
-    formula_nocov <- paste0(phenoCol, "~ 1")
-    formula.new <- as.formula(formula_nocov)
-    hasCovariate <- FALSE
-  } else {
-    covoffset <- rep(0, nrow(data.new))
-  }
-
-  # data.new$covoffset <- covoffset
+  #   if (length(offsetCol) > 0) {
+  #     data.new <- cbind(data.new, dataMerge_sort[, which(colnames(dataMerge_sort) == offsetCol)])
+  #     colnames(data.new)[ncol(data.new)] <- offsetCol
+  #   }
+  # } else {
+  #   formula.new <- formula.null
+  #   data.new <- dataMerge_sort
+  #   out.transform <- NULL
+  # }
 
 
-  if (useSparseGRMtoFitNULL | useSparseGRMforVarRatio) {
-    if (!isSparseGRMIdentity) {
-      getsubGRM_orig(sparseGRMFile, sparseGRMSampleIDFile, relatednessCutoff, dataMerge_sort$IID)
-    } else {
-      sparseGRM <- Matrix:::sparseMatrix(i = as.vector(1:nrow(data)), j = as.vector(1:nrow(data)), x = rep(1, nrow(data)), symmetric = TRUE)
-      rownames(sparseGRM) <- colnames(sparseGRM) <- data[[sampleIDColinphenoFile]]
-    }
-    gc()
-  }
-
-  # allow for multiple variance components
-  set_Vmat_vec_orig(VmatFilelist, VmatSampleFilelist, dataMerge_sort$IID)
+  # if (useSparseGRMtoFitNULL | useSparseGRMforVarRatio) {
+  #   if (!isSparseGRMIdentity) {
+  #     getsubGRM_orig(sparseGRMFile, sparseGRMSampleIDFile, relatednessCutoff, dataMerge_sort$IID)
+  #   } else {
+  #     sparseGRM <- Matrix:::sparseMatrix(i = as.vector(1:nrow(data)), j = as.vector(1:nrow(data)), x = rep(1, nrow(data)), symmetric = TRUE)
+  #     rownames(sparseGRM) <- colnames(sparseGRM) <- data[[sampleIDColinphenoFile]]
+  #   }
+  #   gc()
+  # }
 
 
-  print(dataMerge_sort$IID[1:200])
-  print(any(duplicated(dataMerge_sort$IID)))
-
-  if (any(duplicated(dataMerge_sort$IID))) {
-    print("HERE")
-    if (longlCol == "") {
-      print("HERE1")
-      print(useGRMtoFitNULL)
-      if (useGRMtoFitNULL) {
-        print("HERE2")
-      }
-    }
-  }
+  # print(dataMerge_sort$IID[1:200])
+  # print(any(duplicated(dataMerge_sort$IID)))
 
 
+  # if (longlCol != "") {
+  #   covarianceIdxMat <- set_covarianceidx_Mat()
+  # } else {
+  #   covarianceIdxMat <- NULL
+  # }
 
 
+  # if (traitType == "binary") {
+  #   stop("ERROR: This traitType is not supported in the current version.\n")
+  # } else if (traitType == "quantitative") {
+  #   stop("ERROR: This traitType is not supported in the current version.\n")
+  # } else if (traitType == "count") {
+  #   cat(phenoCol, " is a count trait\n")
+  #   miny <- min(dataMerge_sort[, which(colnames(dataMerge_sort) == phenoCol)])
+  #   if (miny < 0) {
+  #     stop("ERROR! phenotype value needs to be non-negative \n")
+  #   }
+  # } else if (traitType == "count_nb") {
+  #   stop("ERROR: This traitType is not supported in the current version.\n")
+  # }
 
-  if (longlCol != "") {
-    covarianceIdxMat <- set_covarianceidx_Mat()
-  } else {
-    covarianceIdxMat <- NULL
-  }
-
-  if (!skipVarianceRatioEstimation) {
-    isVarianceRatioinGeno <- TRUE
-    if (isCateVarianceRatio) {
-      minMAC_varRatio <- min(cateVarRatioMinMACVecExclude)
-      maxMAC_varRatio <- max(cateVarRatioMaxMACVecInclude)
-      cat("Categorical variance ratios will be estimated. Please make sure there are at least 200 markers in each MAC category.\n")
-    } else {
-      minMAC_varRatio <- 20
-      maxMAC_varRatio <- -1 # will randomly select markers from the plink file and leave them out when constructing GRM
-    }
-    setminMAC_VarianceRatio(minMAC_varRatio, maxMAC_varRatio, isVarianceRatioinGeno)
-  }
-
-  # set up parameters
-  if (minMAFforGRM > 0) {
-    cat(
-      "Markers in the Plink file with MAF < ", minMAFforGRM,
-      " will be removed before constructing GRM\n"
-    )
-  }
-  if (maxMissingRateforGRM > 0) {
-    cat("Markers in the Plink file with missing rate > ", maxMissingRateforGRM, " will be removed before constructing GRM\n")
-  }
-
-  setminMAFforGRM(minMAFforGRM)
-  setmaxMissingRateforGRM(maxMissingRateforGRM)
-
-
-
-  if (traitType == "binary") {
-    stop("ERROR: This traitType is not supported in the current version.\n")
-  } else if (traitType == "quantitative") {
-    stop("ERROR: This traitType is not supported in the current version.\n")
-  } else if (traitType == "count") {
-    cat(phenoCol, " is a count trait\n")
-    miny <- min(dataMerge_sort[, which(colnames(dataMerge_sort) == phenoCol)])
-    if (miny < 0) {
-      stop("ERROR! phenotype value needs to be non-negative \n")
-    }
-
-    if (!isCovariateOffset) {
-      if (length(offsetCol) == 0) {
-      } else {
-        offsetColVal <- data.new[, which(colnames(data.new) == offsetCol)]
-      }
-      Xorig <- NULL
-    } else {
-      # gc()
-      # if (length(offsetCol) == 0) {
-      # } else {
-      #   offsetTotal <- covoffset + data.new[, which(colnames(data.new) == offsetCol)]
-      # }
-    }
-  } else if (traitType == "count_nb") {
-    stop("ERROR: This traitType is not supported in the current version.\n")
-  }
-
-
-  obj.noK <- NULL
-
-
-  # print("isStoreSigma")
-  # print(isStoreSigma)
 
   if (!skipModelFitting) {
     cat("Start fitting the NULL GLMM\n")
     t_begin <- proc.time()
     print(t_begin)
-
-
-
-    set_isSparseGRM(useSparseGRMtoFitNULL)
-    set_useGRMtoFitNULL(useGRMtoFitNULL)
 
     # GRM
     if (useGRMtoFitNULL) {
@@ -801,23 +590,23 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     }
 
     
-    if (length(eCovarCol) > 0) {
-      cat(eCovarCol, "are environmental covariates\n")
-      modglmm$eMat <- data.new[, which(colnames(data.new) %in% eCovarCol), drop = F]
-      for (em in 1:ncol(modglmm$eMat)) {
-        modglmm$eMat[, em] <- (modglmm$eMat[, em] - mean(modglmm$eMat[, em])) / (sd(modglmm$eMat[, em]))
-      }
-    }
+    # if (length(eCovarCol) > 0) {
+    #   cat(eCovarCol, "are environmental covariates\n")
+    #   modglmm$eMat <- data.new[, which(colnames(data.new) %in% eCovarCol), drop = F]
+    #   for (em in 1:ncol(modglmm$eMat)) {
+    #     modglmm$eMat[, em] <- (modglmm$eMat[, em] - mean(modglmm$eMat[, em])) / (sd(modglmm$eMat[, em]))
+    #   }
+    # }
     
-    if (length(sampleCovarCol) > 0) {
-      cat(sampleCovarCol, "are sample-level covariates\n")
+    # if (length(sampleCovarCol) > 0) {
+    #   cat(sampleCovarCol, "are sample-level covariates\n")
     
-      sampleCovarCol <- c(sampleCovarCol, sampleCovarCol_q_names)
-      modglmm$sampleXMat <- modglmm$X[, which(colnames(modglmm$X) %in% sampleCovarCol), drop = F]
-      modglmm$sampleXMat <- cbind(modglmm$X[, 1], modglmm$sampleXMat)
-      uniqsampleind <- which(!duplicated(modglmm$sampleID))
-      modglmm$sampleXMat <- modglmm$sampleXMat[uniqsampleind, ]
-    }
+    #   sampleCovarCol <- c(sampleCovarCol, sampleCovarCol_q_names)
+    #   modglmm$sampleXMat <- modglmm$X[, which(colnames(modglmm$X) %in% sampleCovarCol), drop = F]
+    #   modglmm$sampleXMat <- cbind(modglmm$X[, 1], modglmm$sampleXMat)
+    #   uniqsampleind <- which(!duplicated(modglmm$sampleID))
+    #   modglmm$sampleXMat <- modglmm$sampleXMat[uniqsampleind, ]
+    # }
 
 
     t_end <- proc.time()
@@ -825,27 +614,11 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     cat("t_end - t_begin, fitting the NULL model took\n")
     print(t_end - t_begin)
 
-
-    if (bedFile != "") {
-      subSampleInGeno <- dataMerge_sort$IndexGeno
-      if (is.null(dataMerge_sort$IndexGeno)) {
-        subSampleInGeno <- dataMerge_sort$IndexPheno
-      }
-    
-      print(subSampleInGeno[1:1000])
-      print(head(dataMerge_sort))
-      print("HEREHRE")
-    
-      subSampleInGeno_unique <- subSampleInGeno[!duplicated(subSampleInGeno)]
-    
-      setgeno(bedFile, bimFile, famFile, subSampleInGeno_unique, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
-    }
   } else {
     cat("Skip fitting the NULL GLMM\n")
     if (!file.exists(modelOut)) {
       stop("skipModelFitting=TRUE but ", modelOut, " does not exist\n")
     }
-    load(modelOut)
   }
 
 
