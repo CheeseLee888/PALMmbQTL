@@ -846,76 +846,11 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
       stop("skipModelFitting=TRUE but ", modelOut, " does not exist\n")
     }
     load(modelOut)
-
-    # need check
-    subSampleInGeno <- dataMerge_sort$IndexGeno
-    if (is.null(dataMerge_sort$IndexGeno)) {
-      subSampleInGeno <- dataMerge_sort$IndexPheno
-    }
-
-    print(subSampleInGeno[1:1000])
-    print(head(dataMerge_sort))
-    print("HEREHRE")
-
-    subSampleInGeno_unique <- subSampleInGeno[!duplicated(subSampleInGeno)]
-
-    setgeno(bedFile, bimFile, famFile, subSampleInGeno_unique, indicatorGenoSamplesWithPheno, memoryChunk, isDiagofKinSetAsOne)
-
-
-
-    if (any(duplicated(modglmm$sampleID))) {
-      set_I_mat_inR(modglmm$sampleID)
-    }
-    set_dup_sample_index(as.numeric(factor(modglmm$sampleID, levels = unique(modglmm$sampleID))))
   }
 
-  if (!skipVarianceRatioEstimation) {
-    cat("Start estimating variance ratios\n")
-    extractVarianceRatio_multiV(
-      obj.glmm.null = modglmm,
-      obj.glm.null = fit0, maxiterPCG = maxiterPCG,
-      tolPCG = tolPCG, numMarkers = numMarkersForVarRatio, varRatioOutFile = varRatioFile,
-      ratioCVcutoff = ratioCVcutoff, testOut = SPAGMMATOut,
-      bedFile = bedFile, bimFile = bimFile, famFile = famFile, chromosomeStartIndexVec = chromosomeStartIndexVec,
-      chromosomeEndIndexVec = chromosomeEndIndexVec,
-      isCateVarianceRatio = isCateVarianceRatio, cateVarRatioIndexVec = cateVarRatioIndexVec,
-      useSparseGRMforVarRatio = useSparseGRMforVarRatio, sparseGRMFile = sparseGRMFile,
-      sparseGRMSampleIDFile = sparseGRMSampleIDFile,
-      numRandomMarkerforSparseKin = numRandomMarkerforSparseKin,
-      relatednessCutoff = relatednessCutoff, useSparseGRMtoFitNULL = useSparseGRMtoFitNULL,
-      nThreads = nThreads, cateVarRatioMinMACVecExclude = cateVarRatioMinMACVecExclude,
-      cateVarRatioMaxMACVecInclude = cateVarRatioMaxMACVecInclude,
-      minMAFforGRM = minMAFforGRM, isDiagofKinSetAsOne = isDiagofKinSetAsOne,
-      includeNonautoMarkersforVarRatio = includeNonautoMarkersforVarRatio, isStoreSigma = isStoreSigma, useGRMtoFitNULL = useGRMtoFitNULL
-    )
-  } else {
-    cat("Skip estimating variance ratios\n")
-  }
+
   closeGenoFile_plink()
 
   fastSave(modglmm, file = modelOut)
 
-  if (isExportResiduals) {
-    b <- as.numeric(factor(modglmm$sampleID, levels = unique(modglmm$sampleID)))
-    I_mat <- 1.0 * Matrix::sparseMatrix(i = seq_along(b), j = b, x = rep(1, length(b)))
-    res_sample <- as.vector(t(I_mat) %*% modglmm$residuals)
-    data.table::fwrite(
-      data.frame(sampleID = unique(modglmm$sampleID), residuals = res_sample),
-      paste0(outputPrefix, ".sample.residuals.txt"),
-      quote = FALSE,
-      sep = "\t",
-      col.names = TRUE,
-      row.names = FALSE,
-      na = "NA"
-    )
-    data.table::fwrite(
-      data.frame(barcode = modglmm$barcode, residuals = modglmm$residuals),
-      paste0(outputPrefix, ".residuals.txt"),
-      quote = FALSE,
-      sep = "\t",
-      col.names = TRUE,
-      row.names = FALSE,
-      na = "NA"
-    )
-  }
 }
