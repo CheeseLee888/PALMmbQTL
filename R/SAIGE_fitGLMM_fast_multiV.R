@@ -561,26 +561,45 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     t_begin <- proc.time()
     print(t_begin)
 
+    pheno_id <- data[[sampleIDColinphenoFile]]
     # GRM
     if (useGRMtoFitNULL) {
       cat("GRM will be used to fit the NULL model\n")
       if (!file.exists(grmFile)) {
-        stop("ERROR! grmFile ", grmFile, " does not exsit\n")
+        stop("ERROR! grmFile ", grmFile, " does not exist\n")
       }
       grm_obj <- readRDS(grmFile)
-      K       <- grm_obj$K
+      grm_K   <- grm_obj$K
+      grm_id  <- grm_obj$sample.id
+
+      cat("grm id:\n")
+      cat(grm_id[1:5])
+      cat("pheno id:\n")
+      cat(pheno_id[1:5])
+
+      if (!setequal(grm_id, pheno_id)) {
+        stop("ERROR! the sample IDs in the GRM file are not the same as those in the phenotype file\n")
+      }else {
+        cat("All sample IDs in the GRM file are the same as those in the phenotype file\n")
+      }
+      if (!all(grm_id == pheno_id)) {
+        cat("GRM ID and phenotype ID are not in the same order; reorder GRM ...\n")
+        idx      <- match(pheno_id, grm_id)
+        grm_K    <- grm_K[idx, idx, drop = FALSE]
+      }
+
     } else {
       cat("Identity matrix will be used to fit the NULL model\n")
-      K <- diag(nrow(data))
+      grm_K <- diag(nrow(data))
     }
-    rownames(K) <- colnames(K) <- data[[sampleIDColinphenoFile]]
+    rownames(grm_K) <- colnames(grm_K) <- pheno_id
 
     # Core step1 for PALM-mbQTL
     if (traitType != "count_nb") {
       system.time(modglmm <- GMMAT::glmmkin(
         formula, 
         data = data,
-        kins = K,
+        kins = grm_K,
         id = sampleIDColinphenoFile, 
         family = poisson(link = "log")
         ))
