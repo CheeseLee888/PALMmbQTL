@@ -12,54 +12,6 @@ library(methods)
 print(sessionInfo())
 
 option_list <- list(
-  make_option("--vcfFile",
-    type = "character", default = "",
-    help = "Path to vcf file."
-  ),
-  make_option("--vcfFileIndex",
-    type = "character", default = "",
-    help = "Path to vcf index file. Indexed by tabix. Path to index for vcf file by tabix, .csi file by tabix -p vcf csi file.vcf.gz"
-  ),
-  make_option("--vcfField",
-    type = "character", default = "DS",
-    help = "DS or GT, [default=DS]"
-  ),
-  make_option("--savFile",
-    type = "character", default = "",
-    help = "Path to the sav file."
-  ),
-  make_option("--savFileIndex",
-    type = "character", default = "",
-    help = "Path to the .s1r file (index of the sav file)."
-  ),
-  make_option("--bgenFile",
-    type = "character", default = "",
-    help = "Path to bgen file. Path to bgen file. Currently version 1.2 with 8 bit compression is supported"
-  ),
-  make_option("--bgenFileIndex",
-    type = "character", default = "",
-    help = "Path to the .bgi file (index of the bgen file)"
-  ),
-  make_option("--sampleFile",
-    type = "character", default = "",
-    help = "Path to the file that contains one column for IDs of samples in the dosage file. For version >= 0.38, this file is only needed for bgen files. "
-  ),
-  make_option("--bedFile",
-    type = "character", default = "",
-    help = "Path to bed file (PLINK)"
-  ),
-  make_option("--bimFile",
-    type = "character", default = "",
-    help = "Path to bim file (PLINK)"
-  ),
-  make_option("--famFile",
-    type = "character", default = "",
-    help = "Path to fam file (PLINK)"
-  ),
-  make_option("--gdsFile",
-    type = "character", default = "",
-    help = "Path to gds file."
-  ),
   make_option("--inFile",
     type = "character", default = "",
     help = "Path to geno file. Support many formats including bed/bim/fam, bgen, gds and txt. If using bed/bim/fam, only go with prefix; Otherwise full file name."
@@ -360,18 +312,6 @@ print(opt$r.corr)
 
 
 SPAGMMATtest(
-  vcfFile = opt$vcfFile,
-  vcfFileIndex = opt$vcfFileIndex,
-  vcfField = opt$vcfField,
-  savFile = opt$savFile,
-  savFileIndex = opt$savFileIndex,
-  bgenFile = opt$bgenFile,
-  bgenFileIndex = opt$bgenFileIndex,
-  sampleFile = opt$sampleFile,
-  bedFile = opt$bedFile,
-  bimFile = opt$bimFile,
-  famFile = opt$famFile,
-  gdsFile = opt$gdsFile,
   inFile = opt$inFile,
   AlleleOrder = opt$AlleleOrder,
   idstoIncludeFile = opt$idstoIncludeFile,
