@@ -60,19 +60,7 @@
 #' @param sampleFile_male character. Path to the file containing one column for IDs of MALE samples in the bgen or vcf file with NO header. Order does not matter
 #' @return SAIGEOutputFile
 #' @export
-SPAGMMATtest <- function(bgenFile = "",
-                         bgenFileIndex = "",
-                         sampleFile = "",
-                         vcfFile = "",
-                         vcfFileIndex = "",
-                         vcfField = "DS",
-                         savFile = "",
-                         savFileIndex = "",
-                         bedFile = "",
-                         bimFile = "",
-                         famFile = "",
-                         gdsFile = "",
-                         inFile = "",
+SPAGMMATtest <- function(inFile = "",
                          AlleleOrder = "alt-first", # new
                          idstoIncludeFile = "",
                          rangestoIncludeFile = "",
@@ -240,10 +228,6 @@ SPAGMMATtest <- function(bgenFile = "",
 
   if (!isGroupTest) {
     OutputFile <- SAIGEOutputFile
-
-    # if (!is.null(objGeno$markerInfo$CHROM)) {
-    #   setorderv(objGeno$markerInfo, col = c("CHROM", "POS"))
-    # }
     
     cat("Starting glmmscore test...\n")
     GMMAT::glmm.score(
@@ -252,26 +236,6 @@ SPAGMMATtest <- function(bgenFile = "",
       center = T, 
       outfile = OutputFile
       )
-    # SAIGE.Marker(
-    #   traitType,
-    #   phenotype_name_vec,
-    #   genoType,
-    #   objGeno$markerInfo$genoIndex_prev,
-    #   objGeno$markerInfo$genoIndex,
-    #   objGeno$markerInfo$CHROM,
-    #   OutputFile,
-    #   OutputFileIndex,
-    #   markers_per_chunk,
-    #   is_output_moreDetails,
-    #   is_imputed_data,
-    #   is_Firth_beta,
-    #   LOCO,
-    #   chrom,
-    #   isCondition,
-    #   is_overwrite_output,
-    #   objGeno$anyInclude,
-    #   isgxe
-    # )
   } else {
     stop("Group-based test is not yet implemented in PALM-mbQTL.\n")
   }
