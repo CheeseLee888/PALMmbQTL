@@ -51,11 +51,7 @@
 #' @param isExportResiduals logical. export a residual vector. By default, FALSE.
 #' @return a file ended with .rda that contains the glmm model information, a file ended with .varianceRatio.txt that contains the variance ratio values, and a file ended with #markers.SPAOut.txt that contains the SPAGMMAT tests results for the markers used for estimating the variance ratio.
 #' @export
-fitNULLGLMM_multiV <- function(plinkFile = "",
-                               bedFile = "",
-                               bimFile = "",
-                               famFile = "",
-                               grmFile = "",
+fitNULLGLMM_multiV <- function(grmFile = "",
                                phenoFile = "",
                                phenoCol = "",
                                isRemoveZerosinPheno = FALSE,
@@ -129,12 +125,6 @@ fitNULLGLMM_multiV <- function(plinkFile = "",
     }
   } else {
     file.create(modelOut, showWarnings = TRUE)
-  }
-
-  if (plinkFile != "") {
-    bimFile <- paste0(plinkFile, ".bim")
-    bedFile <- paste0(plinkFile, ".bed")
-    famFile <- paste0(plinkFile, ".fam")
   }
 
   # if (!useGRMtoFitNULL) {

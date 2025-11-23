@@ -12,22 +12,6 @@ print(sessionInfo())
 
 ## set list of cmd line arguments
 option_list <- list(
-  make_option("--plinkFile",
-    type = "character", default = "",
-    help = "Path to plink file for creating the genetic relationship matrix (GRM). minMAFforGRM can be used to specify the minimum MAF and maxMissingRate can be used to specify the maximum missing rates  of markers in the plink file to be used for constructing GRM. Genetic markers are also randomly selected from the plink file to estimate the variance ratios"
-  ),
-  make_option("--bedFile",
-    type = "character", default = "",
-    help = "Path to bed file. If plinkFile is specified, 'plinkFile'.bed will be used"
-  ),
-  make_option("--bimFile",
-    type = "character", default = "",
-    help = "Path to bim file. If plinkFile is specified, 'plinkFile'.bim will be used"
-  ),
-  make_option("--famFile",
-    type = "character", default = "",
-    help = "Path to fam file. If plinkFile is specified, 'plinkFile'.fam will be used"
-  ),
   make_option("--grmFile",
     type = "character", default = "",
     help = "Path to save the GRM RDS file"
@@ -301,10 +285,6 @@ if (BLASctl_installed) {
 # set seed
 set.seed(1)
 fitNULLGLMM_multiV(
-  plinkFile = opt$plinkFile,
-  bedFile = opt$bedFile,
-  bimFile = opt$bimFile,
-  famFile = opt$famFile,
   grmFile = opt$grmFile,
   useSparseGRMtoFitNULL = opt$useSparseGRMtoFitNULL,
   sparseGRMFile = opt$sparseGRMFile,
@@ -367,108 +347,6 @@ fitNULLGLMM_multiV(
   isExportResiduals = opt$isExportResiduals
 )
 
-if (!opt$isCovariateOffset) {
-  my_env <- new.env()
-  load(paste0(opt$outputPrefix, ".rda"), envir = my_env)
-  modglmm <- my_env$modglmm
-  print(modglmm$theta)
-  if (sum(modglmm$theta[2:length(modglmm$theta)]) <= 0 || sum(modglmm$theta[2:length(modglmm$theta)]) > 1) {
-    cat("All variance component parameter estiamtes are out of bounds, now try including all covariates as offset\n")
-    opt$isCovariateOffset <- TRUE
-    set.seed(1)
-    fitNULLGLMM_multiV(
-      plinkFile = opt$plinkFile,
-      bedFile = opt$bedFile,
-      bimFile = opt$bimFile,
-      famFile = opt$famFile,
-      useSparseGRMtoFitNULL = opt$useSparseGRMtoFitNULL,
-      sparseGRMFile = opt$sparseGRMFile,
-      sparseGRMSampleIDFile = opt$sparseGRMSampleIDFile,
-      phenoFile = opt$phenoFile,
-      phenoCol = opt$phenoCol,
-      isRemoveZerosinPheno = opt$isRemoveZerosinPheno,
-      sampleIDColinphenoFile = opt$sampleIDColinphenoFile,
-      cellIDColinphenoFile = opt$cellIDColinphenoFile,
-      traitType = opt$traitType,
-      outputPrefix = paste0(opt$outputPrefix, ".offset"),
-      isCovariateOffset = opt$isCovariateOffset,
-      nThreads = opt$nThreads,
-      useSparseGRMforVarRatio = opt$useSparseGRMforVarRatio,
-      invNormalize = opt$invNormalize,
-      covarColList = covars,
-      qCovarCol = qcovars,
-      tol = opt$tol,
-      maxiter = opt$maxiter,
-      tolPCG = opt$tolPCG,
-      maxiterPCG = opt$maxiterPCG,
-      SPAcutoff = opt$SPAcutoff,
-      numMarkersForVarRatio = opt$numRandomMarkerforVarianceRatio,
-      skipModelFitting = opt$skipModelFitting,
-      skipVarianceRatioEstimation = opt$skipVarianceRatioEstimation,
-      memoryChunk = opt$memoryChunk,
-      tauInit = tauInit,
-      LOCO = opt$LOCO,
-      isLowMemLOCO = opt$isLowMemLOCO,
-      traceCVcutoff = opt$traceCVcutoff,
-      nrun = opt$nrun,
-      ratioCVcutoff = opt$ratioCVcutoff,
-      outputPrefix_varRatio = opt$outputPrefix_varRatio,
-      IsOverwriteVarianceRatioFile = opt$IsOverwriteVarianceRatioFile,
-      relatednessCutoff = opt$relatednessCutoff,
-      isCateVarianceRatio = opt$isCateVarianceRatio,
-      cateVarRatioMinMACVecExclude = cateVarRatioMinMACVecExclude,
-      cateVarRatioMaxMACVecInclude = cateVarRatioMaxMACVecInclude,
-      isCovariateTransform = opt$isCovariateTransform,
-      isDiagofKinSetAsOne = opt$isDiagofKinSetAsOne,
-      minMAFforGRM = opt$minMAFforGRM,
-      maxMissingRateforGRM = opt$maxMissingRateforGRM,
-      minCovariateCount = opt$minCovariateCount,
-      includeNonautoMarkersforVarRatio = opt$includeNonautoMarkersforVarRatio,
-      sexCol = opt$sexCol,
-      FemaleCode = opt$FemaleCode,
-      FemaleOnly = opt$FemaleOnly,
-      MaleCode = opt$MaleCode,
-      MaleOnly = opt$MaleOnly,
-      SampleIDIncludeFile = opt$SampleIDIncludeFile,
-      VmatFilelist = opt$VmatFilelist,
-      VmatSampleFilelist = opt$VmatSampleFilelist,
-      longlCol = opt$longlCol,
-      useGRMtoFitNULL = opt$useGRMtoFitNULL,
-      offsetCol = opt$offsetCol,
-      varWeightsCol = opt$varWeightsCol,
-      sampleCovarCol = scovars,
-      isStoreSigma = opt$isStoreSigma,
-      isShrinkModelOutput = opt$isShrinkModelOutput,
-      isExportResiduals = opt$isExportResiduals
-    )
-    my_env <- new.env()
-    load(paste0(opt$outputPrefix, ".offset.rda"), envir = my_env)
-    modglmm <- my_env$modglmm
-    print(modglmm$theta)
-    if (sum(modglmm$theta[2:length(modglmm$theta)]) <= 0 || sum(modglmm$theta[2:length(modglmm$theta)]) > 1) {
-      cat("All variance component parameter estiamtes are out of bounds.\n")
-      file.remove(paste0(opt$outputPrefix, ".offset.rda"))
-      if (file.exists(paste0(opt$outputPrefix, ".offset.varianceRatio.txt"))) {
-        file.remove(paste0(opt$outputPrefix, ".offset.varianceRatio.txt"))
-        # Delete file if it exists
-      } else {
-        if (file.exists(paste0(opt$outputPrefix_varRatio, ".offset.varianceRatio.txt"))) {
-          file.remove(paste0(opt$outputPrefix_varRatio, ".offset.varianceRatio.txt"))
-        }
-      }
-    } else {
-      file.rename(paste0(opt$outputPrefix, ".offset.rda"), paste0(opt$outputPrefix, ".rda"))
-      if (file.exists(paste0(opt$outputPrefix, ".offset.varianceRatio.txt"))) {
-        file.rename(paste0(opt$outputPrefix, ".offset.varianceRatio.txt"), paste0(opt$outputPrefix, ".varianceRatio.txt"))
-        # Delete file if it exists
-      } else {
-        if (file.exists(paste0(opt$outputPrefix_varRatio, ".offset.varianceRatio.txt"))) {
-          file.rename(paste0(opt$outputPrefix_varRatio, ".offset.varianceRatio.txt"), paste0(opt$outputPrefix_varRatio, ".varianceRatio.txt"))
-        }
-      }
-    }
-  }
-}
 
 
 if (BLASctl_installed) {
