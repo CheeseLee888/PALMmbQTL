@@ -166,11 +166,6 @@ SPAGMMATtest <- function(inFile = "",
   if (groupFile == "") {
     isGroupTest <- FALSE
     cat("single-variant association test will be performed\n")
-
-    setMarker_GlobalVarsInCPP(
-      is_output_moreDetails,
-      markers_per_chunk
-    )
   } else {
     isGroupTest <- TRUE
     Check_File_Exist(groupFile, "groupFile")

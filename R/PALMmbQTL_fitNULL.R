@@ -630,9 +630,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     }
   }
 
-
-  closeGenoFile_plink()
-
   fastSave(modglmm, file = modelOut)
 
 }
