@@ -33,3 +33,4 @@ extdata_palm/run_kirin.R
 extdata_palm/step0.sh
 extdata_palm/step1.sh
 extdata_palm/step2.sh
+extdata_palm/step0_merge.sh
