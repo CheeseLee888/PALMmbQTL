@@ -19,7 +19,7 @@ extdata/input
 extdata/output
 extdata/run_kirin.R
 .Rproj.user
-extdata/step0.sh
-extdata/step1.sh
-extdata/step2.sh
-extdata/step0_merge.sh
+extdata/*.sh
+extdata/*.sbatch
+*.sif
+*.tar

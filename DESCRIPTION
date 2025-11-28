@@ -1,4 +1,4 @@
-Package: PALMmbQTL
+Package: SAIGEQTL
 Type: Package
 Title: Fast and Reliable Poisson Mixed-Model Method for Microbiome QTL Mapping
 Version: 1.0

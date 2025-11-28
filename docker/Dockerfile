@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 
-LABEL maintainer="wzhou@broadinstitute.org"
+LABEL maintainer="cheese.lee.888@gmail.com"
 
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
@@ -21,25 +21,68 @@ RUN curl -fsSL https://pixi.sh/install.sh | sh && \
     mv /root/.pixi/bin/pixi /bin && pixi install && \
     rm -rf /root/.cache && \
     pixi run Rscript -e 'install.packages("lintools", repos="https://cloud.r-project.org")' && \
-    pixi run Rscript -e 'install.packages("remotes", repos="https://cloud.r-project.org"); remotes::install_github("barkasn/fastSave")'
+    pixi run Rscript -e 'install.packages("remotes", repos="https://cloud.r-project.org"); remotes::install_github("barkasn/fastSave")' && \
+    pixi run Rscript -e 'install.packages(c("GMMAT"), repos="https://cloud.r-project.org")'
 
-#RUN pixi run R CMD INSTALL .
-RUN pixi run Rscript -e 'install.packages(".", repos=NULL, type="source")'
+RUN pixi run Rscript - << 'EOF'
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager", repos = "https://cloud.r-project.org")
+}
+BiocManager::install(
+  c("gdsfmt", "SNPRelate", "SeqArray", "GenomeInfoDbData"),
+  ask        = FALSE,
+  update     = FALSE,
+  dependencies = TRUE
+)
+
+ip <- rownames(installed.packages())
+needed <- c("gdsfmt", "SNPRelate", "SeqArray", "GenomeInfoDbData")
+missing <- setdiff(needed, ip)
+
+if (length(missing)) {
+  stop("Missing Bioconductor packages after install: ",
+       paste(missing, collapse = ", "))
+}
+EOF
+
+# delete any precompiled files to ensure clean build
+RUN rm -f src/*.so src/*.o || true
+
+## 2. Install SAIGEQTL package (key)
+RUN pixi run R CMD INSTALL .
+
+# Check all key packages at once
+RUN pixi run Rscript - << 'EOF'
+ip <- rownames(installed.packages())
+
+needed <- c(
+  "lintools", "remotes", "fastSave", "GMMAT",
+  "gdsfmt", "SNPRelate", "SeqArray", "GenomeInfoDbData",
+  "SAIGEQTL"
+)
+missing <- setdiff(needed, ip)
+if (length(missing)) {
+  stop("Missing required R packages: ", paste(missing, collapse = ", "))
+}
+
+for (pkg in c("SAIGEQTL", "GMMAT", "SNPRelate", "SeqArray")) {
+  message("Testing library(", pkg, ") ...")
+  library(pkg, character.only = TRUE)
+}
+message("All key packages installed and loadable.")
+EOF
 
 # Create Singularity-compatible wrapper scripts
-# Create Singularity-compatible wrapper scripts
-RUN for script in step1_fitNULLGLMM_qtl.R step2_tests_qtl.R step3_gene_pvalue_qtl.R makeGroupFile.R; do \
+RUN for script in step0_generateGRM.R step0_mergePheno.R step1_fitNULL.R step2_scoreTest.R; do \
       echo '#!/bin/bash' > /usr/local/bin/$script && \
       echo 'cd /app' >> /usr/local/bin/$script && \
       echo 'exec pixi run Rscript /app/extdata/'$script' "$@"' >> /usr/local/bin/$script && \
       chmod +x /usr/local/bin/$script; \
-    done && \
-    step1_fitNULLGLMM_qtl.R --help && \
-    step2_tests_qtl.R --help && \
-    step3_gene_pvalue_qtl.R --help && \
-    makeGroupFile.R --help
+    done
+
 
 RUN mv extdata/input/ /usr/local/bin/
 
-RUN rm -r src/
-RUN rm -r R/
+RUN rm -r src/ || true
+RUN rm -r R/   || true
+
