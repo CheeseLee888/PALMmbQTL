@@ -1,0 +1,15 @@
+# Basic site configuration for PALM-mbQTL docs using Just the Docs.
+# Place this file at the root of your repository.
+
+title: PALM-mbQTL
+remote_theme: just-the-docs/just-the-docs
+
+# The docs/ folder will contain all markdown documentation pages.
+source: docs
+
+# Enable built-in search box in the navbar.
+search_enabled: true
+
+# Optional: show link to the GitHub repo in the top-right corner.
+github:
+  repository_url: https://github.com/CheeseLee888/PALMmbQTL  # TODO: replace USERNAME
