@@ -15,6 +15,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+# Include files into docker image
 COPY . .
 
 RUN curl -fsSL https://pixi.sh/install.sh | sh && \
@@ -80,8 +81,6 @@ RUN for script in step0_generateGRM.R step0_mergePheno.R step1_fitNULL.R step2_s
       chmod +x /usr/local/bin/$script; \
     done
 
-
-RUN mv extdata/input/ /usr/local/bin/
 
 RUN rm -r src/ || true
 RUN rm -r R/   || true

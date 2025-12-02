@@ -1,6 +1,19 @@
-.pixi
+# R session cache
 .Rproj.user
 .Rhistory
 .RData
-output
+.Ruserdata
 
+# pixi virtual env
+.pixi
+
+# VSCode settings
+.vscode/
+
+# compiled / temp
+*.sif
+*.tar
+
+# exclude data
+extdata/input/*
+extdata/output/*
