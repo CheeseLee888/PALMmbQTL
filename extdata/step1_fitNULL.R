@@ -28,7 +28,7 @@ option_list <- list(
     type = "logical", default = FALSE,
     help = "Optional. Whether to remove zeros in the phenotype"
   ),
-  make_option("--traitType", type = "character", default = "binary", help = "Required. binary or quantitative [default=binary]"),
+  make_option("--traitType", type = "character", default = "count", help = "Required. binary or quantitative [default=count]"),
   make_option("--invNormalize",
     type = "logical", default = FALSE,
     help = "Optional. Only for quantitative. Whether to perform the inverse normalization for the phenotype [default='FALSE']"
@@ -90,8 +90,8 @@ option_list <- list(
     help = "Optional. Whether to skip model fitting and only to estimate the variance ratio. If TRUE, the file outputPrefix.rda is required [default='FALSE']"
   ),
   make_option("--skipVarianceRatioEstimation",
-    type = "logical", default = FALSE,
-    help = "Optional. Whether to skip model fitting and only to estimate the variance ratio. If TRUE, the file outputPrefix.rda is required [default='FALSE']"
+    type = "logical", default = TRUE,
+    help = "Optional. Whether to skip model fitting and only to estimate the variance ratio. If TRUE, the file outputPrefix.rda is required [default='TRUE']"
   ),
   make_option("--memoryChunk",
     type = "numeric", default = 2,
@@ -102,8 +102,8 @@ option_list <- list(
     help = "Optional. Initial values for tau. [default=0,0]"
   ),
   make_option("--LOCO",
-    type = "logical", default = TRUE,
-    help = "Whether to apply the leave-one-chromosome-out (LOCO) approach when fitting the null model using the full GRM [default=TRUE]."
+    type = "logical", default = FALSE,
+    help = "Whether to apply the leave-one-chromosome-out (LOCO) approach when fitting the null model using the full GRM [default=FALSE]."
   ),
   make_option("--isLowMemLOCO",
     type = "logical", default = FALSE,
@@ -158,8 +158,8 @@ option_list <- list(
     help = "Optional. vector of float. Higher bound for MAC categories. The length equals to the number of MAC categories for variance ratio estimation minus 1. [default='20.5']"
   ),
   make_option("--isCovariateTransform",
-    type = "logical", default = TRUE,
-    help = "Optional. Whether use qr transformation on covariates [default='TRUE']."
+    type = "logical", default = FALSE,
+    help = "Optional. Whether use qr transformation on covariates [default='FALSE']."
   ),
   make_option("--isDiagofKinSetAsOne",
     type = "logical", default = FALSE,
@@ -239,8 +239,8 @@ option_list <- list(
     help = "Optional. Whether to store the inv Sigma matrix. [default, 'TRUE']"
   ),
   make_option("--isShrinkModelOutput",
-    type = "logical", default = TRUE,
-    help = "Optional. Whether to remove unnecessary objects for step2 from the model output. [default, 'TRUE']"
+    type = "logical", default = FALSE,
+    help = "Optional. Whether to remove unnecessary objects for step2 from the model output. [default, 'FALSE']"
   ),
   make_option("--isExportResiduals",
     type = "logical", default = FALSE,
@@ -270,16 +270,13 @@ convertoNumeric <- function(x, stringOutput) {
   return(y)
 }
 
-tauInit <- convertoNumeric(strsplit(opt$tauInit, ",")[[1]], "tauInit")
-cateVarRatioMinMACVecExclude <- convertoNumeric(x = strsplit(opt$cateVarRatioMinMACVecExclude, ",")[[1]], "cateVarRatioMinMACVecExclude")
-cateVarRatioMaxMACVecInclude <- convertoNumeric(x = strsplit(opt$cateVarRatioMaxMACVecInclude, ",")[[1]], "cateVarRatioMaxMACVecInclude")
 
-BLASctl_installed <- require(RhpcBLASctl)
-if (BLASctl_installed) {
-  # Set number of threads for BLAS to 1, this step does not benefit from multithreading or multiprocessing
-  original_num_threads <- blas_get_num_procs()
-  blas_set_num_threads(1)
-}
+# BLASctl_installed <- require(RhpcBLASctl)
+# if (BLASctl_installed) {
+#   # Set number of threads for BLAS to 1, this step does not benefit from multithreading or multiprocessing
+#   original_num_threads <- blas_get_num_procs()
+#   blas_set_num_threads(1)
+# }
 
 
 # set seed
@@ -349,7 +346,7 @@ fitNULLGLMM_multiV(
 
 
 
-if (BLASctl_installed) {
-  # Restore originally configured BLAS thread count
-  blas_set_num_threads(original_num_threads)
-}
+# if (BLASctl_installed) {
+#   # Restore originally configured BLAS thread count
+#   blas_set_num_threads(original_num_threads)
+# }

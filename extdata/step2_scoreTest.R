@@ -61,7 +61,7 @@ option_list <- list(
     help = "Imputation method for missing dosages. best_guess, mean or minor. best_guess: missing dosages imputed as best guessed genotyes round(2*allele frequency). mean: missing dosages are imputed as mean (2*allele frequency). minor: missing dosages are imputed as minor allele homozygotes [default=minor]"
   ),
   make_option("--LOCO",
-    type = "logical", default = TRUE,
+    type = "logical", default = FALSE,
     help = "Whether to apply the leave-one-chromosome-out option. If TRUE, --chrom is required [default=FALSE] "
   ),
   make_option("--GMMATmodelFile",
