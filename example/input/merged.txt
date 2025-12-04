@@ -1,0 +1,6 @@
+IID	SeqDepth	age	sex	PC1	PC2	batch	g_Blautia	g_Roseburia
+S1	19	34	M	0.02	-0.01	A	12	7
+S2	23	29	F	0.01	0.02	A	18	5
+S3	31	40	F	-0.03	0	B	22	9
+S4	12	31	M	0	0.01	A	10	2
+S5	19	38	M	0.02	0.03	B	15	4
