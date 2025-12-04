@@ -25,6 +25,28 @@ RUN curl -fsSL https://pixi.sh/install.sh | sh && \
     pixi run Rscript -e 'install.packages("remotes", repos="https://cloud.r-project.org"); remotes::install_github("barkasn/fastSave")' && \
     pixi run Rscript -e 'install.packages(c("GMMAT"), repos="https://cloud.r-project.org")'
 
+# --- install PALM dependencies ---
+RUN pixi run Rscript - << 'EOF'
+deps <- c("MASS", "metafor", "abess", "dplyr", "brglm2", "Rcpp")
+
+ip <- rownames(installed.packages())
+missing <- setdiff(deps, ip)
+
+if (length(missing)) {
+  message("Installing PALM dependencies from CRAN: ", paste(missing, collapse = ", "))
+  install.packages(missing, repos = "https://cloud.r-project.org")
+}
+
+ip2 <- rownames(installed.packages())
+still_missing <- setdiff(deps, ip2)
+if (length(still_missing)) {
+  stop("Failed to install PALM dependencies: ", paste(still_missing, collapse = ", "))
+} else {
+  message("All PALM dependencies installed: ", paste(deps, collapse = ", "))
+}
+EOF
+
+# --- install PALM-mbQTL dependencies ---
 RUN pixi run Rscript - << 'EOF'
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager", repos = "https://cloud.r-project.org")
@@ -46,6 +68,30 @@ if (length(missing)) {
 }
 EOF
 
+# --- install PALM package itself and perform explicit checks ---
+RUN pixi run Rscript - << 'EOF'
+tarball <- "thirdParty/PALM_0.1.0.tar.gz"
+if (!file.exists(tarball)) {
+  stop("PALM source tarball not found at: ", tarball,
+       ". Please make sure it is included in the repo.")
+}
+
+message("Installing PALM from ", tarball, " ...")
+install.packages(tarball,
+                 repos = NULL,
+                 type = "source",
+                 dependencies = FALSE)
+
+ip <- rownames(installed.packages())
+if (!"PALM" %in% ip) {
+  stop("PALM installation did not succeed: PALM not in installed.packages().")
+}
+
+message("Testing library(PALM) ...")
+library(PALM)
+message("PALM loaded successfully.")
+EOF
+
 # delete any precompiled files to ensure clean build
 RUN rm -f src/*.so src/*.o || true
 
@@ -59,14 +105,17 @@ ip <- rownames(installed.packages())
 needed <- c(
   "lintools", "remotes", "fastSave", "GMMAT",
   "gdsfmt", "SNPRelate", "SeqArray", "GenomeInfoDbData",
-  "SAIGEQTL"
+  "SAIGEQTL",
+  "MASS", "metafor", "abess", "dplyr", "brglm2", "Rcpp",
+  "PALM"
 )
 missing <- setdiff(needed, ip)
 if (length(missing)) {
   stop("Missing required R packages: ", paste(missing, collapse = ", "))
 }
 
-for (pkg in c("SAIGEQTL", "GMMAT", "SNPRelate", "SeqArray")) {
+for (pkg in c("SAIGEQTL", "GMMAT", "SNPRelate", "SeqArray",
+              "PALM", "abess")) {
   message("Testing library(", pkg, ") ...")
   library(pkg, character.only = TRUE)
 }
@@ -81,7 +130,5 @@ RUN for script in step0_generateGRM.R step0_mergePheno.R step1_fitNULL.R step2_s
       chmod +x /usr/local/bin/$script; \
     done
 
-
 RUN rm -r src/ || true
 RUN rm -r R/   || true
-
