@@ -24,6 +24,10 @@ option_list <- list(
     type = "character", default = "",
     help = "Required. Column name for phenotype to be tested in the phenotype file, e.g CAD"
   ),
+  make_option("--covFile",
+    type = "character", default = "",
+    help = "Optional. Path to the covariate file. Only used when covarColList is set to 'all'."
+  ), 
   make_option("--isRemoveZerosinPheno",
     type = "logical", default = FALSE,
     help = "Optional. Whether to remove zeros in the phenotype"
@@ -255,7 +259,31 @@ args <- parse_args(parser, positional_arguments = 0)
 opt <- args$options
 print(opt)
 
-covars <- strsplit(opt$covarColList, ",")[[1]]
+## covariates: if covarColList is ALL, infer from covFile header
+if (opt$covarColList!="all") {
+  covars <- strsplit(opt$covarColList, ",")[[1]]
+} else {
+  cov_header <- colnames(
+    read.table(opt$covFile,
+               header = TRUE,
+               sep = "\t",        # separator
+               nrows = 1,
+               check.names = FALSE)
+  )
+
+  ## Remove ID and offset columns
+  drop_cols <- c(opt$sampleIDColinphenoFile, opt$offsetCol)
+
+  covars <- setdiff(cov_header, drop_cols)
+
+  if (!length(covars)) {
+    stop("No covariate columns found in covFile after removing ID and offset columns. Please set '--covarColList= '(empty) and try again.\n")
+  }
+
+  cat("Using all covariates from covFile header: \n")
+  print(covars)
+}
+
 qcovars <- strsplit(opt$qCovarColList, ",")[[1]]
 scovars <- strsplit(opt$sampleCovarColList, ",")[[1]]
 convertoNumeric <- function(x, stringOutput) {
