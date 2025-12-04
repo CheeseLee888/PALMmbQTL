@@ -17,3 +17,4 @@ extdata/*.sbatch
 *.sif
 *.tar
 *.swp
+thirdParty/*.R
