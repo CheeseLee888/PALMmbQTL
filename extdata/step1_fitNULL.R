@@ -41,10 +41,6 @@ option_list <- list(
     type = "character", default = "",
     help = "List of covariates (comma separated)"
   ),
-  make_option("--sampleCovarColList",
-    type = "character", default = "",
-    help = "List of covariates that are on sample level (comma separated)"
-  ),
   make_option("--longlCol",
     type = "character", default = "",
     help = ""
@@ -285,7 +281,6 @@ if (opt$covarColList!="all") {
 }
 
 qcovars <- strsplit(opt$qCovarColList, ",")[[1]]
-scovars <- strsplit(opt$sampleCovarColList, ",")[[1]]
 convertoNumeric <- function(x, stringOutput) {
   y <- tryCatch(expr = as.numeric(x), warning = function(w) {
     return(NULL)
@@ -366,7 +361,6 @@ fitNULLGLMM_multiV(
   useGRMtoFitNULL = opt$useGRMtoFitNULL,
   offsetCol = opt$offsetCol,
   varWeightsCol = opt$varWeightsCol,
-  sampleCovarCol = scovars,
   isStoreSigma = opt$isStoreSigma,
   isShrinkModelOutput = opt$isShrinkModelOutput,
   isExportResiduals = opt$isExportResiduals

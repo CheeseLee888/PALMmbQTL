@@ -10,7 +10,7 @@ abdFile=./${inputFolder}/abd.tsv
 covFile=./${inputFolder}/cov.tsv
 sampleIDColinabdFile=sample_id
 sampleIDColincovFile=sample_id
-covarColList=age,sex
+covarColList=all
 
 # optional
 mergeOutFile=./${inputFolder}/merged.txt
