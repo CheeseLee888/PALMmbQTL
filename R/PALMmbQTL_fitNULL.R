@@ -1,6 +1,6 @@
 #' Fit the null logistic/linear mixed model and estimate the variance ratios by randomly selected variants
 #'
-#' @param plinkFile character. Path to plink file to be used for calculating elements of the genetic relationship matrix (GRM). minMAFforGRM can be used to specify the minimum MAF of markers in the plink file to be used for constructing GRM. Genetic markers are also randomly selected from the plink file to estimate the variance ratios
+#' @param grmFile character. Path to the GRM file in RDS format. The RDS file contains a list with two elements: sample.id and K. sample.id is a vector of sample IDs. K is the GRM matrix with row and column names as sample IDs. By default, "".
 #' @param phenoFile character. Path to the phenotype file. The file can be either tab or space delimited. The phenotype file has a header and contains at least two columns. One column is for phentoype and the other column is for sample IDs. Additional columns can be included in the phenotype file for covariates in the null model. Please specify the names of the covariates using the argument covarColList and specify categorical covariates using the argument qCovarCol. All categorical covariates must also be included in covarColList.
 #' @param phenoCol character. Column name for the phenotype in phenoFile e.g. "CAD"
 #' @param traitType character. e.g. "binary", "quantitative", "count" or "count_nb". By default, "count".
@@ -12,43 +12,22 @@
 #' @param cellIDColinphenoFile character. Column name for the cell IDs in the phenotype file e.g. "barcode".
 #' @param tol numeric. The tolerance for fitting the null model to converge. By default, 0.02.
 #' @param maxiter integer. The maximum number of iterations used to fit the null GLMMM. By default, 20.
-#' @param tolPCG numeric. The tolerance for PCG to converge. By default, 1e-5.
-#' @param maxiterPCG integer. The maximum number of iterations for PCG. By default, 500.
 #' @param nThreads integer. Number of threads to be used. By default, 1
-#' @param SPAcutoff numeric. The cutoff for the deviation of score test statistics from the mean in the unit of sd to perform SPA. By default, 2.
-#' @param numMarkersForVarRatio integer (>0). Minimum number of markers to be used for estimating the variance ratio. By default, 30
 #' @param skipModelFitting logical.  Whether to skip fitting the null model and only calculating the variance ratio, By default, FALSE. If TURE, the model file ".rda" is needed
 #' @param memoryChunk integer or float. The size (Gb) for each memory chunk. By default, 2
-#' @param tauInit vector of numbers. e.g. c(1,1), Initial values for tau. For binary traits, the first element will be always be set to 1. If the tauInit is 0,0, the second element will be 0.5 for binary traits and the initial tau vector for quantitative traits is 1,0
 #' @param LOCO logical. Whether to apply the leave-one-chromosome-out (LOCO) option. By default, FALSE
-#' @param traceCVcutoff numeric. The threshold for coefficient of variation (CV) for the trace estimator to increase nrun. By default, 0.0025
-#' @param ratioCVcutoff numeric. The threshold for coefficient of variation (CV) for the variance ratio estimate. If ratioCV > ratioCVcutoff. numMarkersForVarRatio will be increased by 10. By default, 0.001
 #' @param outputPrefix character. Path to the output files with prefix.
-#' @param outputPrefix_varRatio character. Path to the output variance ratio file with prefix. variace ratios will be output to outputPrefix_varRatio.varianceRatio.txt. If outputPrefix_varRatio is not specified, outputPrefix_varRatio will be the same as the outputPrefix. By default, ""
-#' @param IsOverwriteVarianceRatioFile logical. Whether to overwrite the variance ratio file if the file exists. By default, FALSE
 #' @param sparseGRMFile character. Path to the pre-calculated sparse GRM file. By default, ""
 #' @param sparseGRMSampleIDFile character. Path to the sample ID file for the pre-calculated sparse GRM. No header is included. The order of sample IDs is corresponding to the order of samples in the sparse GRM. By default, ""
-#' @param numRandomMarkerforSparseKin integer. number of randomly selected markers (MAF >= 0.01) to be used to identify related samples that are included in the sparse GRM. By default, 2000
-#' @param relatednessCutoff float. The threshold for coefficient of relatedness to treat two samples as unrelated in the sparse GRM.
-#' @param cateVarRatioIndexVec vector of integer 0 or 1. The length of cateVarRatioIndexVec is the number of MAC categories for variance ratio estimation. 1 indicates variance ratio in the MAC category is to be estimated, otherwise 0. By default, NULL. If NULL, variance ratios corresponding to all specified MAC categories will be estimated. This argument is only activated when isCateVarianceRatio=TRUE
-#' @param cateVarRatioMinMACVecExclude vector of float. Lower bound of MAC for MAC categories. The length equals to the number of MAC categories for variance ratio estimation. By default, c(10.5,20.5). This argument is only activated when isCateVarianceRatio=TRUE
-#' @param cateVarRatioMaxMACVecInclude vector of float. Higher bound of MAC for MAC categories. The length equals to the number of MAC categories for variance ratio estimation minus 1. By default, c(20.5). This argument is only activated when isCateVarianceRatio=TRUE
 #' @param isCovariateTransform logical. Whether use qr transformation on non-genetic covariates. By default, TRUE
-#' @param isDiagofKinSetAsOne logical. Whether to set the diagnal elements in GRM to be 1. By default, FALSE
 #' @param useSparseGRMtoFitNULL logical. Whether to use sparse GRM to fit the null model. By default, FALSE
-#' @param useSparseGRMforVarRatio logical. Whether to use sparse GRM to estimate the variance Ratios. If TRUE, the variance ratios will be estimated using the full GRM (numerator) and the sparse GRM (denominator). By default, FALSE
-#' @param minCovariateCount integer. If binary covariates have a count less than this, they will be excluded from the model to avoid convergence issues. By default, -1 (no covariates will be excluded)
-#' @param minMAFforGRM numeric. Minimum MAF for markers (in the Plink file) used for construcing the sparse GRM. By default, 0.01
-#' @param includeNonautoMarkersforVarRatio logical. Whether to allow for non-autosomal markers for variance ratio. By default, FALSE
 #' @param FemaleOnly logical. Whether to run Step 1 for females only. If TRUE, sexCol and FemaleCode need to be specified. By default, FALSE
 #' @param MaleOnly logical. Whether to run Step 1 for males only. If TRUE, sexCol and MaleCode need to be specified. By default, FALSE
 #' @param FemaleCode character. Values in the column for sex (sexCol) in the phenotype file are used for females. By default, '1'
 #' @param MaleCode character. Values in the column for sex (sexCol) in the phenotype file are used for males. By default, '0'
 #' @param sexCol character. Coloumn name for sex in the phenotype file, e.g Sex. By default, ''
 #' @param isCovariateOffset logical. Whether to estimate fixed effect coeffciets. By default, FALSE.
-#' @param isStoreSigma logical. Whether to store sigma matrix. By default, FALSE. If number of individuals is greater than 10,000, this option may use large memory
 #' @param isShrinkModelOutput logical. remove unnecessary objects for step2 from the model output. By default, FALSE.
-#' @param isExportResiduals logical. export a residual vector. By default, FALSE.
 #' @return a file ended with .rda that contains the glmm model information, a file ended with .varianceRatio.txt that contains the variance ratio values, and a file ended with #markers.SPAOut.txt that contains the SPAGMMAT tests results for the markers used for estimating the variance ratio.
 #' @export
 fitNULLGLMM_multiV <- function(grmFile = "",
@@ -67,37 +46,15 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                cellIDColinphenoFile = "",
                                tol = 0.02,
                                maxiter = 20,
-                               tolPCG = 1e-5,
-                               maxiterPCG = 500,
                                nThreads = 1,
-                               SPAcutoff = 2,
-                               numMarkersForVarRatio = 30,
                                skipModelFitting = FALSE,
                                memoryChunk = 2,
-                               tauInit = c(0, 0),
                                LOCO = FALSE,
-                               isLowMemLOCO = FALSE,
-                               traceCVcutoff = 0.0025,
-                               ratioCVcutoff = 0.001,
                                outputPrefix = "",
-                               outputPrefix_varRatio = "",
-                               IsOverwriteVarianceRatioFile = FALSE,
                                sparseGRMFile = "",
                                sparseGRMSampleIDFile = "",
-                               numRandomMarkerforSparseKin = 1000,
-                               relatednessCutoff = 0.125,
-                               isCateVarianceRatio = FALSE,
-                               cateVarRatioIndexVec = NULL,
-                               cateVarRatioMinMACVecExclude = c(10, 20.5),
-                               cateVarRatioMaxMACVecInclude = c(20.5),
                                isCovariateTransform = FALSE,
-                               isDiagofKinSetAsOne = FALSE,
-                               minCovariateCount = -1,
-                               minMAFforGRM = 0.01,
-                               maxMissingRateforGRM = 0.15,
                                useSparseGRMtoFitNULL = FALSE,
-                               useSparseGRMforVarRatio = FALSE,
-                               includeNonautoMarkersforVarRatio = FALSE,
                                sexCol = "",
                                FemaleCode = 1,
                                FemaleOnly = FALSE,
@@ -105,16 +62,8 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                MaleOnly = FALSE,
                                SampleIDIncludeFile = "",
                                isCovariateOffset = FALSE,
-                               skipVarianceRatioEstimation = TRUE,
-                               nrun = 30,
-                               VmatFilelist = "",
-                               VmatSampleFilelist = "",
-                               VcellmatFilelist = "",
-                               VcellmatSampleFilelist = "",
                                useGRMtoFitNULL = TRUE,
-                               isStoreSigma = FALSE,
-                               isShrinkModelOutput = FALSE,
-                               isExportResiduals = FALSE) {
+                               isShrinkModelOutput = FALSE) {
   ## set up output files
   modelOut <- paste0(outputPrefix, ".rda")
 
@@ -508,7 +457,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   # }
 
 
-  # if (useSparseGRMtoFitNULL | useSparseGRMforVarRatio) {
+  # if (useSparseGRMtoFitNULL) {
   #   if (!isSparseGRMIdentity) {
   #     getsubGRM_orig(sparseGRMFile, sparseGRMSampleIDFile, relatednessCutoff, dataMerge_sort$IID)
   #   } else {
