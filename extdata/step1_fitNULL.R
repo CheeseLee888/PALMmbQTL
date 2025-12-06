@@ -28,6 +28,10 @@ option_list <- list(
     type = "character", default = "",
     help = "Optional. Path to the covariate file. Only used when covarColList is set to 'all'."
   ), 
+  make_option("--sampleIDColincovFile", # not used in the function
+    type = "character", default = "IID",
+    help = "Column name of sample IDs in the covariate file, e.g. IID"
+  ),
   make_option("--isRemoveZerosinPheno",
     type = "logical", default = FALSE,
     help = "Optional. Whether to remove zeros in the phenotype"
@@ -164,7 +168,7 @@ if (opt$covarColList!="all") {
   )
 
   ## Remove ID and offset columns
-  drop_cols <- c(opt$sampleIDColinphenoFile, opt$offsetCol)
+  drop_cols <- c(opt$sampleIDColincovFile, opt$offsetCol)
 
   covars <- setdiff(cov_header, drop_cols)
 

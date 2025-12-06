@@ -233,10 +233,10 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     }
 
 
-    if (length(sampleCovarCol) > 0) {
-      cat(sampleCovarCol, "are sample-level covariates\n")
-      if (!all(sampleCovarCol %in% covarColList)) {
-        stop("ERROR! all covariates in sampleCovarCol must be in covarColList\n")
+    if (length(covarColList) > 0) {
+      cat(covarColList, "are sample-level covariates\n")
+      if (!all(covarColList %in% covarColList)) {
+        stop("ERROR! all covariates in covarColList must be in covarColList\n")
       }
     }
 
@@ -289,12 +289,12 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     # mmat <- cbind(mmat, data[, which(colnames(data) == phenoCol), drop = F])
     # colnames(mmat)[ncol(mmat)] <- phenoCol
 
-    # if (length(sampleCovarCol) > 0) {
-    #   cat(sampleCovarCol, "are sample-level covariates\n")
+    # if (length(covarColList) > 0) {
+    #   cat(covarColList, "are sample-level covariates\n")
     #   # check which sample-level covariates are categorical and record the names after factorizing in the data frame
     #   if (length(qCovarCol) > 0) {
-    #     if (any(sampleCovarCol %in% qCovarCol)) {
-    #       sampleCovarCol_q <- sampleCovarCol[which(sampleCovarCol %in% qCovarCol)]
+    #     if (any(covarColList %in% qCovarCol)) {
+    #       sampleCovarCol_q <- covarColList[which(covarColList %in% qCovarCol)]
     #       formula_sq <- paste0("~", paste0(sampleCovarCol_q, collapse = "+"))
     #       formula_sq.null <- as.formula(formula_sq)
     #       mmat_sq <- model.matrix(formula_sq.null, data, na.action = NULL)
@@ -555,11 +555,11 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     #   }
     # }
     
-    # if (length(sampleCovarCol) > 0) {
-    #   cat(sampleCovarCol, "are sample-level covariates\n")
+    # if (length(covarColList) > 0) {
+    #   cat(covarColList, "are sample-level covariates\n")
     
-    #   sampleCovarCol <- c(sampleCovarCol, sampleCovarCol_q_names)
-    #   modglmm$sampleXMat <- modglmm$X[, which(colnames(modglmm$X) %in% sampleCovarCol), drop = F]
+    #   covarColList <- c(covarColList, sampleCovarCol_q_names)
+    #   modglmm$sampleXMat <- modglmm$X[, which(colnames(modglmm$X) %in% covarColList), drop = F]
     #   modglmm$sampleXMat <- cbind(modglmm$X[, 1], modglmm$sampleXMat)
     #   uniqsampleind <- which(!duplicated(modglmm$sampleID))
     #   modglmm$sampleXMat <- modglmm$sampleXMat[uniqsampleind, ]

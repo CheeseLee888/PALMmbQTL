@@ -80,10 +80,10 @@ for pheno in "${PHENOS[@]}"; do
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_fitNULL.R \
         --phenoFile=${mergeOutFile} \
         --covFile=${covFile} \
+        --sampleIDColincovFile=${sampleIDColincovFile} \
         --grmFile=${grmFile} \
         --phenoCol=${pheno} \
         --covarColList=${covarColList} \
-        --sampleCovarColList=${covarColList} \
         --offsetCol=${offsetCol} \
         --outputPrefix=./${outputFolder}/${pheno}_step1 \
         --isCovariateOffset=TRUE \
