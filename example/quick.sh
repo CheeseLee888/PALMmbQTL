@@ -3,14 +3,14 @@
 inputFolder=input
 outputFolder=output
 
-phenoCol=all
+phenoCol=g_Blautia
 offsetCol=SeqDepth
 genoFile=./${inputFolder}/geno
 abdFile=./${inputFolder}/abd.tsv
 covFile=./${inputFolder}/cov.tsv
 sampleIDColinabdFile=sample_id
 sampleIDColincovFile=sample_id
-covarColList=all
+covarColList=age,sex
 
 # optional
 mergeOutFile=./${inputFolder}/merged.txt
