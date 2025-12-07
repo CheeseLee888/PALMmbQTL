@@ -1,18 +1,19 @@
-### parameter settings
-# required
+################################# parameter settings below #################################
+######### required below #########
 inputFolder=input
 outputFolder=output
 
-phenoCol=g_Blautia
-offsetCol=SeqDepth
 genoFile=./${inputFolder}/geno
 abdFile=./${inputFolder}/abd.tsv
 covFile=./${inputFolder}/cov.tsv
 sampleIDColinabdFile=sample_id
 sampleIDColincovFile=sample_id
+
+phenoCol=g_Blautia
+offsetCol=SeqDepth
 covarColList=age,sex
 
-# optional
+######### optional below #########
 mergeOutFile=./${inputFolder}/merged.txt
 grmFile=./${inputFolder}/grm.rds
 
@@ -20,7 +21,8 @@ grmFile=./${inputFolder}/grm.rds
 
 
 
-### workflow steps
+################################# workflow below (do not modify) #################################
+mkdir -p "${outputFolder}"
 # step0: generate GRM from genotype data
 echo "Generating GRM from genotype data..."
 pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_generateGRM.R \
