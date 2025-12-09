@@ -3,11 +3,13 @@
 #' @param inFile character. Path to the input file containing the genotype data in PLINK binary format (bed/bim/fam) or VCF format.
 #' @param NULLmodelFile character. Path to the input file containing the glmm model, which is output from previous step. Will be used by load()
 #' @param PALMOutputFile character. Prefix of the output files containing assoc test results
+#' @param minMAF numeric. Minimum minor allele frequency of markers to test. By default 0.05.
 #' @return PALMOutputFile
 #' @export
 SPAGMMATtest <- function(inFile = "",
                          NULLmodelFile = "",
-                         PALMOutputFile = "") {
+                         PALMOutputFile = "",
+                         minMAF = 0.05) {
 
   # checkArgsListBool(
   # )
@@ -45,7 +47,8 @@ SPAGMMATtest <- function(inFile = "",
       obj = modglmm,
       infile = inFile,
       center = T, 
-      outfile = PALMOutputFile
+      outfile = PALMOutputFile,
+      MAF.range = c(minMAF, 0.5)
       )
     cat("glmmscore test finished.\n")
   } else {
