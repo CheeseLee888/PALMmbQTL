@@ -24,7 +24,7 @@ Description: PALMmbQTL provides a scalable Poisson mixed-model framework for
     mbQTL analysis.
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.7), RcppParallel, Matrix, data.table, RcppArmadillo (>= 0.10.7.5), RcppNumerical, furrr, dbplyr, GMMAT, SeqArray, SNPRelate
-Suggests: R.utils, fastSave
+Suggests: R.utils
 LinkingTo: Rcpp, RcppArmadillo (>= 0.10.7.5), RcppParallel, data.table, SPAtest (== 3.1.2),
         RcppEigen, Matrix, methods, BH, optparse, SKAT, MetaSKAT, qlcMatrix, RhpcBLASctl, RSQLite, dplyr, nlme, MASS, RcppEigen, RcppNumerical
 Remotes: cysouw/qlcMatrix, leeshawn/MetaSKAT, barkasn/fastSave

@@ -580,6 +580,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     }
   }
 
-  fastSave(modglmm, file = modelOut)
+  save(modglmm, file = modelOut)
 
 }
