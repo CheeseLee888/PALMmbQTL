@@ -116,7 +116,7 @@ create_resultHeader <- function(traitType,
           "hetN_Allele2_ctrls"
         )
       }
-      write(resultHeader, file = SAIGEOutputFile, ncolumns = length(resultHeader))
+      write(resultHeader, file = PALMOutputFile, ncolumns = length(resultHeader))
     } # if (!isGroupTest) {
   } else if (traitType == "quantitative") {
     adjustCCratioinGroupTest <- FALSE
@@ -135,7 +135,7 @@ create_resultHeader <- function(traitType,
           "BETA_cond", "SE_cond"
         )
       }
-      write(resultHeader, file = SAIGEOutputFile, ncolumns = length(resultHeader))
+      write(resultHeader, file = PALMOutputFile, ncolumns = length(resultHeader))
     }
   } else {
     stop("ERROR! The type of the trait has to be either binary or quantitative\n")
@@ -288,7 +288,7 @@ create_resultHeader <- function(traitType,
     if (IsOutputMAFinCaseCtrlinGroupTest) {
       resultHeader <- c(resultHeader, "MAF_in_cases", "MAF_in_controls")
     }
-    write(resultHeader, file = SAIGEOutputFile, ncolumns = length(resultHeader))
+    write(resultHeader, file = PALMOutputFile, ncolumns = length(resultHeader))
   } # if(isGroupTest)
 }
 

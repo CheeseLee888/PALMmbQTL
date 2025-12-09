@@ -99,6 +99,6 @@ for pheno in "${PHENOS[@]}"; do
     echo "Performing score test for ${pheno}..."
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \
-        --SAIGEOutputFile=${step2prefix}.txt \
-        --GMMATmodelFile=${step1prefix}.rda
+        --PALMOutputFile=${step2prefix}.txt \
+        --NULLmodelFile=${step1prefix}.rda
 done

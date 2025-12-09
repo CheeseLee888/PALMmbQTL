@@ -26,14 +26,14 @@ SPAGMMATtest(
   min_MAF = 0,
   min_Info = 0,
   is_imputed_data = FALSE,
-  GMMATmodelFile = "",
+  NULLmodelFile = "",
   LOCO = TRUE,
   varianceRatioFile = "",
   GMMATmodel_varianceRatio_multiTraits_File = "",
   cateVarRatioMinMACVecExclude = c(10.5, 20.5),
   cateVarRatioMaxMACVecInclude = c(20.5),
   SPAcutoff = 2,
-  SAIGEOutputFile = "",
+  PALMOutputFile = "",
   markers_per_chunk = 10000,
   groups_per_chunk = 100,
   markers_per_chunk_in_groupTest = 100,
@@ -108,7 +108,7 @@ SPAGMMATtest(
 
 \item{is_imputed_data}{logical. Whether the dosages/genotypes imputed are imputed. If TRUE, the program will output the imputed info score. By default, FALSE.}
 
-\item{GMMATmodelFile}{character. Path to the input file containing the glmm model, which is output from previous step. Will be used by load()}
+\item{NULLmodelFile}{character. Path to the input file containing the glmm model, which is output from previous step. Will be used by load()}
 
 \item{LOCO}{logical. Whether to apply the leave-one-chromosome-out option. If TRUE, --chrom is required. By default, TRUE}
 
@@ -122,7 +122,7 @@ SPAGMMATtest(
 
 \item{SPAcutoff}{by default = 2 (SPA test would be used when p value < 0.05 under the normal approximation)}
 
-\item{SAIGEOutputFile}{character. Prefix of the output files containing assoc test results}
+\item{PALMOutputFile}{character. Prefix of the output files containing assoc test results}
 
 \item{markers_per_chunk}{character. Number of markers to be tested and output in each chunk in the single-variant assoc tests. By default, 10000}
 
@@ -191,7 +191,7 @@ SPAGMMATtest(
 \item{sampleFile_male}{character. Path to the file containing one column for IDs of MALE samples in the bgen or vcf file with NO header. Order does not matter}
 }
 \value{
-SAIGEOutputFile
+PALMOutputFile
 }
 \description{
 Run single variant or gene- or region-based score tests with SPA based on the linear/logistic mixed model.

@@ -18,3 +18,5 @@ extdata/*.sbatch
 *.tar
 *.swp
 thirdParty/*.R
+.vscode/
+*.rda

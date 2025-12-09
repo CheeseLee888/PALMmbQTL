@@ -16,11 +16,11 @@ option_list <- list(
     type = "character", default = "",
     help = "Path to geno file. Support many formats including bed/bim/fam, bgen, gds and txt. If using bed/bim/fam, only go with prefix; Otherwise full file name."
   ),
-  make_option("--GMMATmodelFile",
+  make_option("--NULLmodelFile",
     type = "character", default = "",
     help = "Path to the input file containing the glmm model, which is output from previous step. Will be used by load()"
   ),
-  make_option("--SAIGEOutputFile",
+  make_option("--PALMOutputFile",
     type = "character", default = "",
     help = "Path to the output file containing assoc test results"
   )
@@ -36,6 +36,6 @@ print(opt)
 
 SPAGMMATtest(
   inFile = opt$inFile,
-  GMMATmodelFile = opt$GMMATmodelFile,
-  SAIGEOutputFile = opt$SAIGEOutputFile
+  NULLmodelFile = opt$NULLmodelFile,
+  PALMOutputFile = opt$PALMOutputFile
 )
