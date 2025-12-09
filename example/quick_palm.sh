@@ -9,6 +9,7 @@ sampleIDCol=sample_id
 
 covariateInterest=sex
 covariateAdjust="age,PC1,PC2,batch"
+correct=NULL
 
 ######### optional below #########
 outPrefix=./${outputFolder}/PALM_results
@@ -27,6 +28,7 @@ pixi run --manifest-path=../pixi.toml Rscript ../extdata/run_PALM.R \
   --sampleIDCol "${sampleIDCol}" \
   --covariateInterest "${covariateInterest}" \
   --covariateAdjust "${covariateAdjust}" \
-  --outPrefix "${outPrefix}"
+  --outPrefix "${outPrefix}" \
+  --correct "${correct}"
 
 echo "[INFO] Done. Results in ${outPrefix}.rds and ${outPrefix}.tsv"

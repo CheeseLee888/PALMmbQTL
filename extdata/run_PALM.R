@@ -17,7 +17,9 @@ option_list <- list(
   make_option("--covariateAdjust", type = "character", default = NA,
               help = "Comma-separated adjust covariates, e.g. 'age,PC1,PC2,batch'"),
   make_option("--outPrefix", type = "character", default = "output/PALM_result",
-              help = "Output prefix (without extension)")
+              help = "Output prefix (without extension)"),
+  make_option("--correct", type = "character", default = "median",
+              help = "Correction method (e.g. 'median' or 'NULL')")
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -119,7 +121,8 @@ palm.res <- PALM::palm(
   rel.abd            = rel.abd,
   covariate.interest = cov_int,
   covariate.adjust   = cov_adj,
-  prev.filter        = 0
+  prev.filter        = 0,
+  correct            = opt$correct
 )
 
 ## For single study, the return value is a data.frame,
