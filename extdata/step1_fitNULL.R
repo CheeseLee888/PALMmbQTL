@@ -50,7 +50,7 @@ option_list <- list(
     help = "List of categorical covariates (comma separated). All categorical covariates must also be in covarColList"
   ),
   make_option("--offsetCol",
-    type = "character", default = NULL,
+    type = "character", default = "",
     help = "offset column"
   ),
   make_option("--varWeightsCol",

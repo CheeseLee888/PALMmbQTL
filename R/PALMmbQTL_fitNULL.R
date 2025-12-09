@@ -119,9 +119,11 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     #   checkColList <- c(checkColList, cellIDColinphenoFile)
     # }
 
-    if (length(offsetCol) > 0) {
-      cat(offsetCol, "is the offset term\n")
+    if (isCovariateOffset & length(offsetCol) != "") {
+      cat("Use offset term: ", offsetCol, "\n")
       checkColList <- c(checkColList, offsetCol)
+    }else{
+      cat("No offset term is used\n")
     }
 
     # if (length(varWeightsCol) > 0) {
@@ -511,9 +513,9 @@ fitNULLGLMM_multiV <- function(grmFile = "",
       grm_id  <- grm_obj$sample.id
 
       cat("grm id:\n")
-      cat(grm_id[1:5])
+      cat(grm_id[1:5], "\n")
       cat("pheno id:\n")
-      cat(pheno_id[1:5])
+      cat(pheno_id[1:5], "\n")
 
       if (!setequal(grm_id, pheno_id)) {
         stop("ERROR! the sample IDs in the GRM file are not the same as those in the phenotype file\n")
