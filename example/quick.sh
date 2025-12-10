@@ -4,14 +4,14 @@ inputFolder=input
 outputFolder=output
 
 genoFile=./${inputFolder}/geno
-abdFile=./${inputFolder}/abd.tsv
-covFile=./${inputFolder}/cov.tsv
-sampleIDColinabdFile=sample_id
-sampleIDColincovFile=sample_id
+abdFile=./${inputFolder}/abd.txt
+covFile=./${inputFolder}/cov.txt
+sampleIDColinabdFile=IID
+sampleIDColincovFile=IID
 
-phenoCol=g_Blautia
-offsetCol=SeqDepth
-covarColList=age,sex
+phenoCol=all
+# offsetCol=SeqDepth
+covarColList=AGE,SEX
 
 ######### optional below #########
 mergeOutFile=./${inputFolder}/merged.txt
@@ -29,8 +29,8 @@ pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_generateGRM.R \
     --genoFile=${genoFile} \
     --grmFile=${grmFile}
 
-# step0: merge phenotype and covariate data
-echo "Merging phenotype and covariate data..."
+# step0: merge abundance and covariate data
+echo "Merging abundance and covariate data..."
 pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_mergePheno.R \
     --abdFile=${abdFile} \
     --covFile=${covFile} \

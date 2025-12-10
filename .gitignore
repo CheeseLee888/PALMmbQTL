@@ -20,3 +20,4 @@ extdata/*.sbatch
 thirdParty/*.R
 .vscode/
 *.rda
+bin/

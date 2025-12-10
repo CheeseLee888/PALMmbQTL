@@ -1,6 +1,0 @@
-sample_id	SeqDepth	age	sex	PC1	PC2	batch
-S1	19	34	M	0.02	-0.01	A
-S2	23	29	F	0.01	0.02	A
-S3	31	40	F	-0.03	0.00	B
-S4	12	31	M	0.00	0.01	A
-S5	19	38	M	0.02	0.03	B
