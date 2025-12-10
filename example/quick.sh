@@ -100,5 +100,6 @@ for pheno in "${PHENOS[@]}"; do
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \
         --PALMOutputFile=${step2prefix}.txt \
-        --NULLmodelFile=${step1prefix}.rda
+        --NULLmodelFile=${step1prefix}.rda \
+        --minMAF=0
 done

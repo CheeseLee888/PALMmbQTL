@@ -23,6 +23,10 @@ option_list <- list(
   make_option("--PALMOutputFile",
     type = "character", default = "",
     help = "Path to the output file containing assoc test results"
+  ),
+  make_option("--minMAF",
+    type = "numeric", default = 0.05,
+    help = "Minimum minor allele frequency of markers to test. By default 0.05."
   )
 )
 
@@ -37,5 +41,6 @@ print(opt)
 SPAGMMATtest(
   inFile = opt$inFile,
   NULLmodelFile = opt$NULLmodelFile,
-  PALMOutputFile = opt$PALMOutputFile
+  PALMOutputFile = opt$PALMOutputFile,
+  minMAF = opt$minMAF
 )
