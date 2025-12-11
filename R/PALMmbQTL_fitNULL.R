@@ -28,7 +28,7 @@
 #' @param FemaleCode character. Values in the column for sex (sexCol) in the phenotype file are used for females. By default, '1'
 #' @param MaleCode character. Values in the column for sex (sexCol) in the phenotype file are used for males. By default, '0'
 #' @param sexCol character. Coloumn name for sex in the phenotype file, e.g Sex. By default, ''
-#' @param isCovariateOffset logical. Whether to estimate fixed effect coeffciets. By default, FALSE.
+#' @param isCovariateOffset logical. Whether to estimate fixed effect coeffciets. By default, TRUE.
 #' @param isShrinkModelOutput logical. remove unnecessary objects for step2 from the model output. By default, FALSE.
 #' @return a file ended with .rda that contains the glmm model information, a file ended with .varianceRatio.txt that contains the variance ratio values, and a file ended with #markers.SPAOut.txt that contains the SPAGMMAT tests results for the markers used for estimating the variance ratio.
 #' @export
@@ -42,7 +42,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                covarColList = NULL,
                                qCovarCol = NULL,
                                eCovarCol = NULL,
-                               offsetCol = NULL,
+                               offsetCol = "",
                                varWeightsCol = NULL,
                                longlCol = "",
                                sampleIDColinabdFile = "IID",
@@ -65,7 +65,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                MaleCode = 0,
                                MaleOnly = FALSE,
                                SampleIDIncludeFile = "",
-                               isCovariateOffset = FALSE,
+                               isCovariateOffset = TRUE,
                                useGRMtoFitNULL = TRUE,
                                isShrinkModelOutput = FALSE) {
   ## set up output files
@@ -109,19 +109,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   }
 
 
-  if (longlCol == "") {
-    checkColList <- c(phenoCol, covarColList, "IID")
-  } else {
-    checkColList <- c(phenoCol, covarColList, "IID", longlCol)
-  }
-
-  if (isCovariateOffset & length(offsetCol) != "") {
-    cat("Use offset term: ", offsetCol, "\n")
-    checkColList <- c(checkColList, offsetCol)
-  }else{
-    cat("No offset term is used\n")
-  }
-
   ## sanity checks for required files / arguments -------------------------------
   if (abdFile == "" || !file.exists(abdFile)) {
     stop("ERROR: abdFile must be provided and must exist.")
@@ -148,10 +135,57 @@ fitNULLGLMM_multiV <- function(grmFile = "",
         #   stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F, select = checkColList
         # )
 
-  # # select required columns
-  # data <- merged[, checkColList, drop = FALSE]
   data <- merged
   cat("Abundance and covariate files have been merged\n")
+  cat(colnames(data), "\n")
+
+  ## ------------------------------------------------------------------------
+  ## Force the use of SeqDepth as offset：
+  ## - If the user does not specify offsetCol: Generate SeqDepth by summing rows in abd
+  ## - If the user specifies offsetCol: Check if the column exists and is valid
+  ## ------------------------------------------------------------------------
+
+  if (offsetCol == "") {
+    cat("No offset column is specified. Calculate SeqDepth from abundance file...\n")
+
+    # 1) Only calculate sequencing depth from count columns in abd (exclude sample ID column)
+    abd_counts <- abd[, setdiff(colnames(abd), sampleIDColinabdFile), drop = FALSE]
+
+    # Simple sanity check
+    if (any(abd_counts < 0, na.rm = TRUE)) {
+      warning("Abundance table contains negative values; 
+              please make sure abdFile is raw counts when using SeqDepth.")
+    }
+
+    seqdepth <- rowSums(abd_counts, na.rm = TRUE)
+    names(seqdepth) <- abd[[sampleIDColinabdFile]]
+    
+    data$SeqDepth <- seqdepth[match(data$IID, names(seqdepth))]
+
+    # 2) Check for NA and non-positive values
+    if (any(is.na(data$SeqDepth))) {
+      warning("Some samples in merged data do not have SeqDepth (no matching abd).")
+    }
+    if (any(data$SeqDepth <= 0, na.rm = TRUE)) {
+      stop("SeqDepth contains non-positive values. Please check abdFile.")
+    }
+
+    # Set offsetCol to SeqDepth for use in the formula later
+    offsetCol <- "SeqDepth"
+    
+  } else {
+    cat("Offset column", offsetCol, "is specified.\n")
+
+    # Ensure the column exists
+    if (!offsetCol %in% colnames(data)) {
+      stop("Specified offsetCol '", offsetCol, "' not found in merged data.")
+    }
+
+    # Also check if values are > 0
+    if (any(data[[offsetCol]] <= 0, na.rm = TRUE)) {
+      stop("Offset column '", offsetCol, "' contains non-positive values.")
+    }
+  }
   
 
   if (isRemoveZerosinPheno) {
