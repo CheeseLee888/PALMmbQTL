@@ -122,65 +122,12 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     cat("No offset term is used\n")
   }
 
-  ## check whether the phenotype file is large
-  cmd <- paste0("du ", phenoFile, "| awk '{print $1}' > ", outputPrefix, "_", phenoCol, "_size_temp")
-  system(cmd)
-  datasize <- data.table::fread(paste0(outputPrefix, "_", phenoCol, "_size_temp"), header = F, data.table = F)
-  isphenoFileLarge <- FALSE
-  if (grepl(".gz$", phenoFile) | grepl(".bgz$", phenoFile)) {
-    if (datasize[1, 1] > 200000) {
-      isphenoFileLarge <- TRUE
-    }
-  } else {
-    if (datasize[1, 1] > 500000) {
-      isphenoFileLarge <- TRUE
-    }
-  }
 
-  if (isphenoFileLarge) {
-    catcmd <- ifelse(grepl(".gz$", phenoFile) | grepl(".bgz$", phenoFile), "gunzip -c ", "cat ")
-    cmd <- paste0(catcmd, phenoFile, " | head -n 1 | sed 's/[\\t ]/\\n/g' | awk '{print $1\"\\t\"NR}' > ", outputPrefix, "_", phenoCol, "_lineNum_temp")
-    system(cmd)
-
-    checkColListDataFrame <- data.frame(colna = checkColList)
-    phenoFilephenoCol_lineNum <- data.table::fread(paste0(outputPrefix, "_", phenoCol, "_lineNum_temp"), header = F, data.table = F)
-
-    phenoFilephenoCol_lineNum_checkColList <- merge(checkColListDataFrame, phenoFilephenoCol_lineNum, by.x = 1, by.y = 1)
-
-    write.table(phenoFilephenoCol_lineNum_checkColList[, 2], paste0(outputPrefix, "_", phenoCol, "_colnames_subset_temp"), quote = F, col.names = F, row.names = F)
-
-    cmdb <- paste0(catcmd, phenoFile, " | cut -f $(tr '\\n' ',' < ", outputPrefix, "_", phenoCol, "_colnames_subset_temp | sed 's/,$//') > ", outputPrefix, "_", phenoCol, "_subcols_temp")
-    system(cmdb)
-
-    phenoFiletemp <- paste0(outputPrefix, "_", phenoCol, "_subcols_temp")
-
-    data <- data.table::fread(phenoFiletemp,
-      header = T,
-      stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F
-    )
-
-    file.remove(paste0(outputPrefix, "_", phenoCol, "_colnames_subset_temp"))
-    file.remove(paste0(outputPrefix, "_", phenoCol, "_lineNum_temp"))
-    file.remove(paste0(outputPrefix, "_", phenoCol, "_subcols_temp"))
-  } else { # !isphenoFileLarge
-
-    if (grepl(".gz$", phenoFile) | grepl(".bgz$", phenoFile)) {
-      data <- data.table::fread(
-        cmd = paste0(
-          "gunzip -c ",
-          phenoFile
-        ), header = T, stringsAsFactors = FALSE,
-        colClasses = list(character = sampleIDColinphenoFile), data.table = F, select = checkColList
-      )
-    } else {
-      data <- data.table::fread(phenoFile,
-        header = T,
-        stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F, select = checkColList
-      )
-    }
-  }
-
-  file.remove(paste0(outputPrefix, "_", phenoCol, "_size_temp"))
+  data <- data.table::fread(phenoFile,
+    header = T,
+    stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F, select = checkColList
+  )
+  
 
 
   if (isRemoveZerosinPheno) {
