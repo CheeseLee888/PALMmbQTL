@@ -28,7 +28,7 @@
 #' @param FemaleCode character. Values in the column for sex (sexCol) in the phenotype file are used for females. By default, '1'
 #' @param MaleCode character. Values in the column for sex (sexCol) in the phenotype file are used for males. By default, '0'
 #' @param sexCol character. Coloumn name for sex in the phenotype file, e.g Sex. By default, ''
-#' @param isCovariateOffset logical. Whether to estimate fixed effect coeffciets. By default, FALSE.
+#' @param isCovariateOffset logical. Whether to estimate fixed effect coeffciets. By default, TRUE.
 #' @param isShrinkModelOutput logical. remove unnecessary objects for step2 from the model output. By default, FALSE.
 #' @return a file ended with .rda that contains the glmm model information, a file ended with .varianceRatio.txt that contains the variance ratio values, and a file ended with #markers.SPAOut.txt that contains the SPAGMMAT tests results for the markers used for estimating the variance ratio.
 #' @export
@@ -65,7 +65,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                MaleCode = 0,
                                MaleOnly = FALSE,
                                SampleIDIncludeFile = "",
-                               isCovariateOffset = FALSE,
+                               isCovariateOffset = TRUE,
                                useGRMtoFitNULL = TRUE,
                                isShrinkModelOutput = FALSE) {
   ## set up output files

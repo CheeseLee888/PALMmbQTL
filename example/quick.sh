@@ -77,9 +77,7 @@ for pheno in "${PHENOS[@]}"; do
         --grmFile=${grmFile} \
         --phenoCol=${pheno} \
         --covarColList=${covarColList} \
-        --offsetCol=${offsetCol} \
         --outputPrefix=./${outputFolder}/${pheno}_step1 \
-        --isCovariateOffset=TRUE \
         --useGRMtoFitNULL=TRUE \
         --sampleIDColinabdFile=${sampleIDColinabdFile} \
         --sampleIDColincovFile=${sampleIDColincovFile} \
