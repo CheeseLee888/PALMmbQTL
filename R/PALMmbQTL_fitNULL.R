@@ -42,7 +42,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                covarColList = NULL,
                                qCovarCol = NULL,
                                eCovarCol = NULL,
-                               offsetCol = NULL,
+                               offsetCol = "",
                                varWeightsCol = NULL,
                                longlCol = "",
                                sampleIDColinabdFile = "IID",
@@ -152,6 +152,55 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   # data <- merged[, checkColList, drop = FALSE]
   data <- merged
   cat("Abundance and covariate files have been merged\n")
+  cat(colnames(data), "\n")
+
+  ## ------------------------------------------------------------------------
+  ## Force the use of SeqDepth as offset：
+  ## - If the user does not specify offsetCol: Generate SeqDepth by summing rows in abd
+  ## - If the user specifies offsetCol: Check if the column exists and is valid
+  ## ------------------------------------------------------------------------
+
+  if (offsetCol == "") {
+    cat("No offset column is specified. Calculate SeqDepth from abundance file...\n")
+
+    # 1) Only calculate sequencing depth from count columns in abd (exclude sample ID column)
+    abd_counts <- abd[, setdiff(colnames(abd), sampleIDColinabdFile), drop = FALSE]
+
+    # Simple sanity check
+    if (any(abd_counts < 0, na.rm = TRUE)) {
+      warning("Abundance table contains negative values; 
+              please make sure abdFile is raw counts when using SeqDepth.")
+    }
+
+    seqdepth <- rowSums(abd_counts, na.rm = TRUE)
+    names(seqdepth) <- abd[[sampleIDColinabdFile]]
+    
+    data$SeqDepth <- seqdepth[match(data$IID, names(seqdepth))]
+
+    # 2) Check for NA and non-positive values
+    if (any(is.na(data$SeqDepth))) {
+      warning("Some samples in merged data do not have SeqDepth (no matching abd).")
+    }
+    if (any(data$SeqDepth <= 0, na.rm = TRUE)) {
+      stop("SeqDepth contains non-positive values. Please check abdFile.")
+    }
+
+    # Set offsetCol to SeqDepth for use in the formula later
+    offsetCol <- "SeqDepth"
+    
+  } else {
+    cat("Offset column", offsetCol, "is specified.\n")
+
+    # Ensure the column exists
+    if (!offsetCol %in% colnames(data)) {
+      stop("Specified offsetCol '", offsetCol, "' not found in merged data.")
+    }
+
+    # Also check if values are > 0
+    if (any(data[[offsetCol]] <= 0, na.rm = TRUE)) {
+      stop("Offset column '", offsetCol, "' contains non-positive values.")
+    }
+  }
   
 
   if (isRemoveZerosinPheno) {
