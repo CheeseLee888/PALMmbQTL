@@ -1,14 +1,16 @@
 #' Fit the null logistic/linear mixed model and estimate the variance ratios by randomly selected variants
 #'
 #' @param grmFile character. Path to the GRM file in RDS format. The RDS file contains a list with two elements: sample.id and K. sample.id is a vector of sample IDs. K is the GRM matrix with row and column names as sample IDs. By default, "".
-#' @param phenoFile character. Path to the phenotype file. The file can be either tab or space delimited. The phenotype file has a header and contains at least two columns. One column is for phentoype and the other column is for sample IDs. Additional columns can be included in the phenotype file for covariates in the null model. Please specify the names of the covariates using the argument covarColList and specify categorical covariates using the argument qCovarCol. All categorical covariates must also be included in covarColList.
+#' @param abdFile character. Path to the abundance file.
+#' @param covFile character. Path to the covariate file.
 #' @param phenoCol character. Column name for the phenotype in phenoFile e.g. "CAD"
 #' @param traitType character. e.g. "binary", "quantitative", "count" or "count_nb". By default, "count".
 #' @param invNormalize logical. Whether to perform the inverse normalization for the phentoype or not. e.g. TRUE or FALSE. By default, FALSE
 #' @param covarColList vector of characters. Covariates to be used in the null model. e.g c("Sex", "Age")
 #' @param qCovarCol vector of characters. Categorical covariates to be used in the null model. All categorical covariates listed in qCovarCol must be also in covarColList,  e,g c("Sex").
 #' @param eCovarCol vector of characters. Covariates of environmental factors/cell context to be used in the null model. All covariates listed in eCovarCol must be also in covarColList,  e,g c("cellType").
-#' @param sampleIDColinphenoFile character. Column name for the sample IDs in the phenotype file e.g. "IID".
+#' @param sampleIDColinabdFile character. Column name for the sample IDs in the abundance file e.g. "IID".
+#' @param sampleIDColincovFile character. Column name for the sample IDs in the covariate file e.g. "IID".
 #' @param cellIDColinphenoFile character. Column name for the cell IDs in the phenotype file e.g. "barcode".
 #' @param tol numeric. The tolerance for fitting the null model to converge. By default, 0.02.
 #' @param maxiter integer. The maximum number of iterations used to fit the null GLMMM. By default, 20.
@@ -31,7 +33,8 @@
 #' @return a file ended with .rda that contains the glmm model information, a file ended with .varianceRatio.txt that contains the variance ratio values, and a file ended with #markers.SPAOut.txt that contains the SPAGMMAT tests results for the markers used for estimating the variance ratio.
 #' @export
 fitNULLGLMM_multiV <- function(grmFile = "",
-                               phenoFile = "",
+                               abdFile = "",
+                               covFile = "",
                                phenoCol = "",
                                isRemoveZerosinPheno = FALSE,
                                traitType = "count",
@@ -42,7 +45,8 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                offsetCol = NULL,
                                varWeightsCol = NULL,
                                longlCol = "",
-                               sampleIDColinphenoFile = "IID",
+                               sampleIDColinabdFile = "IID",
+                               sampleIDColincovFile = "IID",
                                cellIDColinphenoFile = "",
                                tol = 0.02,
                                maxiter = 20,
@@ -105,14 +109,10 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   }
 
 
-  if (!file.exists(phenoFile)) {
-    stop("ERROR! phenoFile ", phenoFile, " does not exsit\n")
-  }
-
   if (longlCol == "") {
-    checkColList <- c(phenoCol, covarColList, sampleIDColinphenoFile)
+    checkColList <- c(phenoCol, covarColList, "IID")
   } else {
-    checkColList <- c(phenoCol, covarColList, sampleIDColinphenoFile, longlCol)
+    checkColList <- c(phenoCol, covarColList, "IID", longlCol)
   }
 
   if (isCovariateOffset & length(offsetCol) != "") {
@@ -122,33 +122,43 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     cat("No offset term is used\n")
   }
 
+  ## sanity checks for required files / arguments -------------------------------
+  if (abdFile == "" || !file.exists(abdFile)) {
+    stop("ERROR: abdFile must be provided and must exist.")
+  }
 
-  data <- data.table::fread(phenoFile,
-    header = T,
-    stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F, select = checkColList
-  )
+  if (covFile == "" || !file.exists(covFile)) {
+    stop("ERROR: covFile must be provided and must exist.")
+  }
+
+  ## read tables with ID handling -----------------------------------------------
+  abd <- read_table_with_id(abdFile, id_col = sampleIDColinabdFile)
+  cov <- read_table_with_id(covFile, id_col = sampleIDColincovFile)
+  cat("Abundance and covariate files have been read\n")
+
+  ## merge abundance and covariate files ----------------------------------------
+
+  # merge_abd_cov(abd, cov) is assumed to:
+  # - require both tables to contain 'IID'
+  # - merge by 'IID' and keep IID as the first column
+  merged <- merge_abd_cov(abd, cov)
+
+        # data <- data.table::fread(phenoFile,
+        #   header = T,
+        #   stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F, select = checkColList
+        # )
+
+  # # select required columns
+  # data <- merged[, checkColList, drop = FALSE]
+  data <- merged
+  cat("Abundance and covariate files have been merged\n")
   
-
 
   if (isRemoveZerosinPheno) {
     data <- data[which(data[, which(colnames(data) == phenoCol)] > 0), ]
     cat("Removing all zeros in the phenotype\n")
     if (nrow(data) == 0) {
       stop("ERROR: no samples are left after removing zeros in the phenotype\n")
-    }
-  }
-
-
-
-  if (SampleIDIncludeFile != "") {
-    if (!file.exists(SampleIDIncludeFile)) {
-      stop("ERROR! SampleIDIncludeFile ", SampleIDIncludeFile, " does not exsit\n")
-    } else {
-      sampleIDInclude <- data.table::fread(SampleIDIncludeFile, header = F, stringsAsFactors = FALSE, colClasses = c("character"), data.table = F)
-      sampleIDInclude <- as.vector(sampleIDInclude[!duplicated(sampleIDInclude), ])
-      cat(length(sampleIDInclude), " non-duplicated sample IDs were found in SampleIDIncludeFile\n")
-      data <- data[which(as.vector(data[, which(colnames(data) == sampleIDColinphenoFile)]) %in% sampleIDInclude), , drop = F]
-      cat(nrow(data), " samples in sampleIDInclude have non-missing phenotypes and covariates\n")
     }
   }
 
@@ -314,7 +324,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     t_begin <- proc.time()
     print(t_begin)
 
-    pheno_id <- data[[sampleIDColinphenoFile]]
+    pheno_id <- data[["IID"]]
     # GRM
     if (useGRMtoFitNULL) {
       cat("GRM will be used to fit the NULL model\n")
@@ -353,7 +363,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
         formula, 
         data = data,
         kins = grm_K,
-        id = sampleIDColinphenoFile, 
+        id = "IID", 
         family = poisson(link = "log")
         ))
       cat("glmmkin succeed!\n")

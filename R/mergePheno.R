@@ -13,6 +13,7 @@ read_table_with_id <- function(path, id_col = NULL) {
     check.names  = FALSE
   )
   
+  ################## Set id_col=IID for now if user does not specify (keep case B only) ##################
   if (is.null(id_col)) {
     ## Case A: user does NOT specify an ID column
     ## -> use the first column as ID and rename it to IID
