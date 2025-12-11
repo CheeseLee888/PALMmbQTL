@@ -1,14 +1,16 @@
 #' Fit the null logistic/linear mixed model and estimate the variance ratios by randomly selected variants
 #'
 #' @param grmFile character. Path to the GRM file in RDS format. The RDS file contains a list with two elements: sample.id and K. sample.id is a vector of sample IDs. K is the GRM matrix with row and column names as sample IDs. By default, "".
-#' @param phenoFile character. Path to the phenotype file. The file can be either tab or space delimited. The phenotype file has a header and contains at least two columns. One column is for phentoype and the other column is for sample IDs. Additional columns can be included in the phenotype file for covariates in the null model. Please specify the names of the covariates using the argument covarColList and specify categorical covariates using the argument qCovarCol. All categorical covariates must also be included in covarColList.
+#' @param abdFile character. Path to the abundance file.
+#' @param covFile character. Path to the covariate file.
 #' @param phenoCol character. Column name for the phenotype in phenoFile e.g. "CAD"
 #' @param traitType character. e.g. "binary", "quantitative", "count" or "count_nb". By default, "count".
 #' @param invNormalize logical. Whether to perform the inverse normalization for the phentoype or not. e.g. TRUE or FALSE. By default, FALSE
 #' @param covarColList vector of characters. Covariates to be used in the null model. e.g c("Sex", "Age")
 #' @param qCovarCol vector of characters. Categorical covariates to be used in the null model. All categorical covariates listed in qCovarCol must be also in covarColList,  e,g c("Sex").
 #' @param eCovarCol vector of characters. Covariates of environmental factors/cell context to be used in the null model. All covariates listed in eCovarCol must be also in covarColList,  e,g c("cellType").
-#' @param sampleIDColinphenoFile character. Column name for the sample IDs in the phenotype file e.g. "IID".
+#' @param sampleIDColinabdFile character. Column name for the sample IDs in the abundance file e.g. "IID".
+#' @param sampleIDColincovFile character. Column name for the sample IDs in the covariate file e.g. "IID".
 #' @param cellIDColinphenoFile character. Column name for the cell IDs in the phenotype file e.g. "barcode".
 #' @param tol numeric. The tolerance for fitting the null model to converge. By default, 0.02.
 #' @param maxiter integer. The maximum number of iterations used to fit the null GLMMM. By default, 20.
@@ -31,7 +33,8 @@
 #' @return a file ended with .rda that contains the glmm model information, a file ended with .varianceRatio.txt that contains the variance ratio values, and a file ended with #markers.SPAOut.txt that contains the SPAGMMAT tests results for the markers used for estimating the variance ratio.
 #' @export
 fitNULLGLMM_multiV <- function(grmFile = "",
-                               phenoFile = "",
+                               abdFile = "",
+                               covFile = "",
                                phenoCol = "",
                                isRemoveZerosinPheno = FALSE,
                                traitType = "count",
@@ -42,7 +45,8 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                offsetCol = NULL,
                                varWeightsCol = NULL,
                                longlCol = "",
-                               sampleIDColinphenoFile = "IID",
+                               sampleIDColinabdFile = "IID",
+                               sampleIDColincovFile = "IID",
                                cellIDColinphenoFile = "",
                                tol = 0.02,
                                maxiter = 20,
@@ -105,322 +109,141 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   }
 
 
-  if (!file.exists(phenoFile)) {
-    stop("ERROR! phenoFile ", phenoFile, " does not exsit\n")
+  if (longlCol == "") {
+    checkColList <- c(phenoCol, covarColList, "IID")
   } else {
-    if (longlCol == "") {
-      checkColList <- c(phenoCol, covarColList, sampleIDColinphenoFile)
-    } else {
-      checkColList <- c(phenoCol, covarColList, sampleIDColinphenoFile, longlCol)
-    }
-
-    # if (cellIDColinphenoFile != "") {
-    #   cat(cellIDColinphenoFile, "is the cell ID column\n")
-    #   checkColList <- c(checkColList, cellIDColinphenoFile)
-    # }
-
-    if (isCovariateOffset & length(offsetCol) != "") {
-      cat("Use offset term: ", offsetCol, "\n")
-      checkColList <- c(checkColList, offsetCol)
-    }else{
-      cat("No offset term is used\n")
-    }
-
-    # if (length(varWeightsCol) > 0) {
-    #   cat(varWeightsCol, " is the weights for variance\n")
-    #   checkColList <- c(checkColList, varWeightsCol)
-    # }
-
-
-    ## check whether the phenotype file is large
-    cmd <- paste0("du ", phenoFile, "| awk '{print $1}' > ", outputPrefix, "_", phenoCol, "_size_temp")
-    system(cmd)
-    datasize <- data.table::fread(paste0(outputPrefix, "_", phenoCol, "_size_temp"), header = F, data.table = F)
-    isphenoFileLarge <- FALSE
-    if (grepl(".gz$", phenoFile) | grepl(".bgz$", phenoFile)) {
-      if (datasize[1, 1] > 200000) {
-        isphenoFileLarge <- TRUE
-      }
-    } else {
-      if (datasize[1, 1] > 500000) {
-        isphenoFileLarge <- TRUE
-      }
-    }
-
-    if (isphenoFileLarge) {
-      catcmd <- ifelse(grepl(".gz$", phenoFile) | grepl(".bgz$", phenoFile), "gunzip -c ", "cat ")
-      cmd <- paste0(catcmd, phenoFile, " | head -n 1 | sed 's/[\\t ]/\\n/g' | awk '{print $1\"\\t\"NR}' > ", outputPrefix, "_", phenoCol, "_lineNum_temp")
-      system(cmd)
-
-      checkColListDataFrame <- data.frame(colna = checkColList)
-      phenoFilephenoCol_lineNum <- data.table::fread(paste0(outputPrefix, "_", phenoCol, "_lineNum_temp"), header = F, data.table = F)
-
-      phenoFilephenoCol_lineNum_checkColList <- merge(checkColListDataFrame, phenoFilephenoCol_lineNum, by.x = 1, by.y = 1)
-
-      write.table(phenoFilephenoCol_lineNum_checkColList[, 2], paste0(outputPrefix, "_", phenoCol, "_colnames_subset_temp"), quote = F, col.names = F, row.names = F)
-
-      cmdb <- paste0(catcmd, phenoFile, " | cut -f $(tr '\\n' ',' < ", outputPrefix, "_", phenoCol, "_colnames_subset_temp | sed 's/,$//') > ", outputPrefix, "_", phenoCol, "_subcols_temp")
-      system(cmdb)
-
-      phenoFiletemp <- paste0(outputPrefix, "_", phenoCol, "_subcols_temp")
-
-      data <- data.table::fread(phenoFiletemp,
-        header = T,
-        stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F
-      )
-
-      file.remove(paste0(outputPrefix, "_", phenoCol, "_colnames_subset_temp"))
-      file.remove(paste0(outputPrefix, "_", phenoCol, "_lineNum_temp"))
-      file.remove(paste0(outputPrefix, "_", phenoCol, "_subcols_temp"))
-    } else { # !isphenoFileLarge
-
-      if (grepl(".gz$", phenoFile) | grepl(".bgz$", phenoFile)) {
-        data <- data.table::fread(
-          cmd = paste0(
-            "gunzip -c ",
-            phenoFile
-          ), header = T, stringsAsFactors = FALSE,
-          colClasses = list(character = sampleIDColinphenoFile), data.table = F, select = checkColList
-        )
-      } else {
-        data <- data.table::fread(phenoFile,
-          header = T,
-          stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F, select = checkColList
-        )
-      }
-    }
-
-    file.remove(paste0(outputPrefix, "_", phenoCol, "_size_temp"))
-
-
-    if (isRemoveZerosinPheno) {
-      data <- data[which(data[, which(colnames(data) == phenoCol)] > 0), ]
-      cat("Removing all zeros in the phenotype\n")
-      if (nrow(data) == 0) {
-        stop("ERROR: no samples are left after removing zeros in the phenotype\n")
-      }
-    }
-
-
-
-    if (SampleIDIncludeFile != "") {
-      if (!file.exists(SampleIDIncludeFile)) {
-        stop("ERROR! SampleIDIncludeFile ", SampleIDIncludeFile, " does not exsit\n")
-      } else {
-        sampleIDInclude <- data.table::fread(SampleIDIncludeFile, header = F, stringsAsFactors = FALSE, colClasses = c("character"), data.table = F)
-        sampleIDInclude <- as.vector(sampleIDInclude[!duplicated(sampleIDInclude), ])
-        cat(length(sampleIDInclude), " non-duplicated sample IDs were found in SampleIDIncludeFile\n")
-        data <- data[which(as.vector(data[, which(colnames(data) == sampleIDColinphenoFile)]) %in% sampleIDInclude), , drop = F]
-        cat(nrow(data), " samples in sampleIDInclude have non-missing phenotypes and covariates\n")
-      }
-    }
-
-
-    if (length(qCovarCol) > 0) {
-      cat(qCovarCol, "are categorical covariates\n")
-      if (!all(qCovarCol %in% covarColList)) {
-        stop("ERROR! all covariates in qCovarCol must be in covarColList\n")
-      } else {
-        for (q in qCovarCol) {
-          data[, q] <- as.factor(data[, q])
-        }
-      }
-    }
-
-    if (length(eCovarCol) > 0) {
-      cat(eCovarCol, "are environmental covariates\n")
-      if (!all(eCovarCol %in% covarColList)) {
-        stop("ERROR! all covariates in eCovarCol must be in covarColList\n")
-      }
-    }
-
-
-    if (length(covarColList) > 0) {
-      cat(covarColList, "are sample-level covariates\n")
-      if (!all(covarColList %in% covarColList)) {
-        stop("ERROR! all covariates in covarColList must be in covarColList\n")
-      }
-    }
-
-    if (FemaleOnly | MaleOnly) {
-      if (!sexCol %in% colnames(data)) {
-        stop("ERROR! column for sex ", sexCol, " does not exist in the phenoFile \n")
-      } else {
-        if (FemaleOnly) {
-          data <- data[which(data[, which(colnames(data) ==
-            sexCol)] == FemaleCode), ]
-          if (nrow(data) == 0) {
-            stop(
-              "ERROR! no samples in the phenotype are coded as ",
-              FemaleCode, " in the column ", sexCol,
-              "\n"
-            )
-          }
-        } else if (MaleOnly) {
-          data <- data[which(data[, which(colnames(data) ==
-            sexCol)] == MaleCode), ]
-          if (nrow(data) == 0) {
-            stop(
-              "ERROR! no samples in the phenotype are coded as ",
-              MaleCode, " in the column ", sexCol, "\n"
-            )
-          }
-        }
-      }
-    }
-
-    # construct the formula
-    if (length(covarColList) > 0) {
-      formula <- paste0(phenoCol, "~", paste0(covarColList,
-        collapse = "+"
-      ))
-      hasCovariate <- TRUE
-    } else {
-      formula <- paste0(phenoCol, "~ 1")
-      hasCovariate <- FALSE
-    }
-    
-    if(isCovariateOffset & offsetCol != ""){
-      formula <- paste0(formula, "+offset(log(", offsetCol, "))")
-    }
-    
-    cat("formula is ", formula, "\n")
-    
-    # formula.null <- as.formula(formula)
-    # mmat <- model.matrix(formula.null, data, na.action = NULL)
-    # mmat <- cbind(mmat, data[, which(colnames(data) == phenoCol), drop = F])
-    # colnames(mmat)[ncol(mmat)] <- phenoCol
-
-    # if (length(covarColList) > 0) {
-    #   cat(covarColList, "are sample-level covariates\n")
-    #   # check which sample-level covariates are categorical and record the names after factorizing in the data frame
-    #   if (length(qCovarCol) > 0) {
-    #     if (any(covarColList %in% qCovarCol)) {
-    #       sampleCovarCol_q <- covarColList[which(covarColList %in% qCovarCol)]
-    #       formula_sq <- paste0("~", paste0(sampleCovarCol_q, collapse = "+"))
-    #       formula_sq.null <- as.formula(formula_sq)
-    #       mmat_sq <- model.matrix(formula_sq.null, data, na.action = NULL)
-    #       sampleCovarCol_q_names <- colnames(mmat_sq)[-1]
-    #       rm(mmat_sq)
-    #     } else {
-    #       sampleCovarCol_q_names <- NULL
-    #     }
-    #   } else {
-    #     sampleCovarCol_q_names <- NULL
-    #   }
-    # }
-
-    # coln <- 1
-    # if (length(offsetCol) > 0) {
-    #   mmat <- cbind(mmat, data[, which(colnames(data) == offsetCol), drop = F])
-    #   colnames(mmat)[ncol(mmat)] <- offsetCol
-    #   coln <- coln + 1
-    # }
-
-    # if (length(varWeightsCol) > 0) {
-    #   mmat <- cbind(mmat, data[, which(colnames(data) == varWeightsCol), drop = F])
-    #   colnames(mmat)[ncol(mmat)] <- varWeightsCol
-
-    #   coln <- coln + 1
-    # }
-
-    # if (length(covarColList) > 0) {
-    #   if (length(qCovarCol) > 0) {
-    #     covarColList <- colnames(mmat)[2:(ncol(mmat) - coln)]
-    #     formula <- paste0(phenoCol, "~", paste0(covarColList, collapse = "+"))
-    #     formula.null <- as.formula(formula)
-    #   }
-    # }
-
-    # mmat$IID <- data[, which(sampleIDColinphenoFile == colnames(data))]
-    # if (cellIDColinphenoFile != "") {
-    #   mmat$barcode <- data[, which(cellIDColinphenoFile == colnames(data))]
-    # }
-    # if (longlCol != "") {
-    #   mmat$longlVar <- data[, which(longlCol == colnames(data))]
-    # }
-
-    # mmat_nomissing <- mmat[complete.cases(mmat), ]
-    # mmat_nomissing$IndexPheno <- seq(1, nrow(mmat_nomissing),
-    #   by = 1
-    # )
-    # cat(nrow(mmat_nomissing), " samples have non-missing phenotypes\n")
-
-    # if (length(varWeightsCol) > 0) {
-    #   varWeights <- mmat_nomissing[, which(colnames(mmat_nomissing) == varWeightsCol)]
-    # } else {
-    #   varWeights <- NULL
-    # }
-    # if (sparseGRMSampleIDFile != "") {
-    #   sampleListwithGenov0 <- data.table::fread(sparseGRMSampleIDFile,
-    #     header = F, , colClasses = c("character"), data.table = F
-    #   )
-    #   colnames(sampleListwithGenov0) <- c("IIDgeno")
-    #   cat(length(sampleListwithGenov0$IIDgeno), " samples are in the sparse GRM\n")
-    #   mmat_nomissing <- mmat_nomissing[which(mmat_nomissing$IID %in% sampleListwithGenov0$IIDgeno), ]
-    #   cat(nrow(mmat_nomissing), " samples who have non-missing phenotypes are also in the sparse GRM\n")
-    # }
-
-
-    # if (longlCol == "") {
-    #   if (any(duplicated(mmat_nomissing$IID))) {
-    #     cat("Duplicated sample IDs are detected in the phenotype file. Assuming repeated measurements\n")
-    #   }
-    # } else {
-    #   cat("Longitudinal variable ", longlCol, " is specified\n")
-    #   if (!any(duplicated(mmat_nomissing$IID))) {
-    #     stop("No duplicated sample IDs are detected in the phenotype file\n")
-    #   }
-    # }
-
-
-    # if (!is.null(sampleListwithGeno)) {
-    #   dataMerge <- merge(mmat_nomissing, sampleListwithGeno,
-    #     by.x = "IID", by.y = "IIDgeno"
-    #   )
-    #   dataMerge_sort <- dataMerge[with(dataMerge, order(IndexGeno)), ]
-    # } else {
-    #   dataMerge_sort <- mmat_nomissing
-    #   dataMerge_sort$IIDgeno <- dataMerge_sort$IID
-    # }
-
-    # print("Test")
-    # print(head(dataMerge_sort))
-
-    # rm(mmat)
-    # rm(mmat_nomissing)
-    # gc()
-    # isSparseGRMIdentity <- FALSE
-    # if (useGRMtoFitNULL) {
-    #   indicatorGenoSamplesWithPheno <- (sampleListwithGeno$IndexGeno %in% dataMerge_sort$IndexGeno)
-
-    #   if (length(unique(dataMerge_sort$IIDgeno)) < length(unique(sampleListwithGeno$IIDgeno))) {
-    #     cat(
-    #       length(unique(sampleListwithGeno$IIDgeno)) - length(unique(dataMerge_sort$IIDgeno)),
-    #       " samples in geno file do not have phenotypes\n"
-    #     )
-    #   }
-    #   cat(length(unique(dataMerge_sort$IIDgeno)), " samples will be used for analysis\n")
-    # } else {
-    #   indicatorGenoSamplesWithPheno <- rep(TRUE, nrow(dataMerge_sort))
-    # }
-
-    # if (any(duplicated(dataMerge_sort$IID))) {
-    #   cat(nrow(dataMerge_sort), " observations will be used for analysis\n")
-    #   set_I_mat_inR(dataMerge_sort$IID)
-    #   if (longlCol != "") {
-    #     set_T_mat_inR(dataMerge_sort$IID, dataMerge_sort$longlVar)
-    #   }
-    # } else {
-    #   if (!useGRMtoFitNULL) {
-    #     cat("No duplicated IDs are observed in the phenotype file, so the identity matrix will be used as a sparse GRM will be used to fit the null model\n")
-    #     isSparseGRMIdentity <- TRUE
-    #     useSparseGRMtoFitNULL <- TRUE
-    #     useGRMtoFitNULL <- TRUE
-    #   }
-    # }
-    # set_useGRMtoFitNULL(useGRMtoFitNULL)
+    checkColList <- c(phenoCol, covarColList, "IID", longlCol)
   }
+
+  if (isCovariateOffset & length(offsetCol) != "") {
+    cat("Use offset term: ", offsetCol, "\n")
+    checkColList <- c(checkColList, offsetCol)
+  }else{
+    cat("No offset term is used\n")
+  }
+
+  ## sanity checks for required files / arguments -------------------------------
+  if (abdFile == "" || !file.exists(abdFile)) {
+    stop("ERROR: abdFile must be provided and must exist.")
+  }
+
+  if (covFile == "" || !file.exists(covFile)) {
+    stop("ERROR: covFile must be provided and must exist.")
+  }
+
+  ## read tables with ID handling -----------------------------------------------
+  abd <- read_table_with_id(abdFile, id_col = sampleIDColinabdFile)
+  cov <- read_table_with_id(covFile, id_col = sampleIDColincovFile)
+  cat("Abundance and covariate files have been read\n")
+
+  ## merge abundance and covariate files ----------------------------------------
+
+  # merge_abd_cov(abd, cov) is assumed to:
+  # - require both tables to contain 'IID'
+  # - merge by 'IID' and keep IID as the first column
+  merged <- merge_abd_cov(abd, cov)
+
+        # data <- data.table::fread(phenoFile,
+        #   header = T,
+        #   stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F, select = checkColList
+        # )
+
+  # # select required columns
+  # data <- merged[, checkColList, drop = FALSE]
+  data <- merged
+  cat("Abundance and covariate files have been merged\n")
+  
+
+  if (isRemoveZerosinPheno) {
+    data <- data[which(data[, which(colnames(data) == phenoCol)] > 0), ]
+    cat("Removing all zeros in the phenotype\n")
+    if (nrow(data) == 0) {
+      stop("ERROR: no samples are left after removing zeros in the phenotype\n")
+    }
+  }
+
+
+  if (length(qCovarCol) > 0) {
+    cat(qCovarCol, "are categorical covariates\n")
+    if (!all(qCovarCol %in% covarColList)) {
+      stop("ERROR! all covariates in qCovarCol must be in covarColList\n")
+    } else {
+      for (q in qCovarCol) {
+        data[, q] <- as.factor(data[, q])
+      }
+    }
+  }
+
+  if (length(eCovarCol) > 0) {
+    cat(eCovarCol, "are environmental covariates\n")
+    if (!all(eCovarCol %in% covarColList)) {
+      stop("ERROR! all covariates in eCovarCol must be in covarColList\n")
+    }
+  }
+
+
+  if (length(covarColList) > 0) {
+    cat(covarColList, "are sample-level covariates\n")
+    if (!all(covarColList %in% covarColList)) {
+      stop("ERROR! all covariates in covarColList must be in covarColList\n")
+    }
+  }
+
+  if (FemaleOnly | MaleOnly) {
+    if (!sexCol %in% colnames(data)) {
+      stop("ERROR! column for sex ", sexCol, " does not exist in the phenoFile \n")
+    } else {
+      if (FemaleOnly) {
+        data <- data[which(data[, which(colnames(data) ==
+          sexCol)] == FemaleCode), ]
+        if (nrow(data) == 0) {
+          stop(
+            "ERROR! no samples in the phenotype are coded as ",
+            FemaleCode, " in the column ", sexCol,
+            "\n"
+          )
+        }
+      } else if (MaleOnly) {
+        data <- data[which(data[, which(colnames(data) ==
+          sexCol)] == MaleCode), ]
+        if (nrow(data) == 0) {
+          stop(
+            "ERROR! no samples in the phenotype are coded as ",
+            MaleCode, " in the column ", sexCol, "\n"
+          )
+        }
+      }
+    }
+  }
+
+  # construct the formula
+  if (length(covarColList) > 0) {
+    formula <- paste0(phenoCol, "~", paste0(covarColList,
+      collapse = "+"
+    ))
+    hasCovariate <- TRUE
+  } else {
+    formula <- paste0(phenoCol, "~ 1")
+    hasCovariate <- FALSE
+  }
+  
+  if(isCovariateOffset & offsetCol != ""){
+    formula <- paste0(formula, "+offset(log(", offsetCol, "))")
+  }
+  
+  cat("formula is ", formula, "\n")
+  
+
+  # if (!is.null(sampleListwithGeno)) {
+  #   dataMerge <- merge(mmat_nomissing, sampleListwithGeno,
+  #     by.x = "IID", by.y = "IIDgeno"
+  #   )
+  #   dataMerge_sort <- dataMerge[with(dataMerge, order(IndexGeno)), ]
+  # } else {
+  #   dataMerge_sort <- mmat_nomissing
+  #   dataMerge_sort$IIDgeno <- dataMerge_sort$IID
+  # }
+  
 
 
   if (!hasCovariate) {
@@ -501,7 +324,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     t_begin <- proc.time()
     print(t_begin)
 
-    pheno_id <- data[[sampleIDColinphenoFile]]
+    pheno_id <- data[["IID"]]
     # GRM
     if (useGRMtoFitNULL) {
       cat("GRM will be used to fit the NULL model\n")
@@ -540,7 +363,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
         formula, 
         data = data,
         kins = grm_K,
-        id = sampleIDColinphenoFile, 
+        id = "IID", 
         family = poisson(link = "log")
         ))
       cat("glmmkin succeed!\n")

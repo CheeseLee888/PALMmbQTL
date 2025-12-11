@@ -16,21 +16,17 @@ option_list <- list(
     type = "character", default = "",
     help = "Path to save the GRM RDS file"
   ),
-  make_option("--phenoFile",
+  make_option("--abdFile",
     type = "character", default = "",
-    help = "Required. Path to the phenotype file. The file can be either tab or space delimited. The phenotype file has a header and contains at least two columns. One column is for phentoype and the other column is for sample IDs. Additional columns can be included in the phenotype file for covariates in the null model. Please specify the names of the covariates using the argument covarColList and specify categorical covariates using the argument qCovarColList. All categorical covariates must also be included in covarColList."
+    help = "Required. Path to the abundance file."
   ),
+  make_option("--covFile",
+    type = "character", default = "",
+    help = "Required. Path to the covariate file."
+  ), 
   make_option("--phenoCol",
     type = "character", default = "",
     help = "Required. Column name for phenotype to be tested in the phenotype file, e.g CAD"
-  ),
-  make_option("--covFile", # not used in the function
-    type = "character", default = "",
-    help = "Optional. Path to the covariate file. Only used when covarColList is set to 'all'."
-  ), 
-  make_option("--sampleIDColincovFile", # not used in the function
-    type = "character", default = "IID",
-    help = "Column name of sample IDs in the covariate file, e.g. IID"
   ),
   make_option("--isRemoveZerosinPheno",
     type = "logical", default = FALSE,
@@ -61,9 +57,13 @@ option_list <- list(
     type = "character", default = "",
     help = ""
   ),
-  make_option("--sampleIDColinphenoFile",
+  make_option("--sampleIDColinabdFile",
     type = "character", default = "IID",
-    help = "Required. Column name of sample IDs in the phenotype file, e.g. IID"
+    help = "Column name of sample IDs in the abundance file, e.g. IID"
+  ),
+  make_option("--sampleIDColincovFile",
+    type = "character", default = "IID",
+    help = "Column name of sample IDs in the covariate file, e.g. IID"
   ),
   make_option("--cellIDColinphenoFile",
     type = "character", default = "",
@@ -206,7 +206,8 @@ convertoNumeric <- function(x, stringOutput) {
 set.seed(1)
 fitNULLGLMM_multiV(
   grmFile = opt$grmFile,
-  phenoFile = opt$phenoFile,
+  abdFile = opt$abdFile,
+  covFile = opt$covFile,
   phenoCol = opt$phenoCol,
   isRemoveZerosinPheno = opt$isRemoveZerosinPheno,
   traitType = opt$traitType,
@@ -216,7 +217,8 @@ fitNULLGLMM_multiV(
   offsetCol = opt$offsetCol,
   varWeightsCol = opt$varWeightsCol,
   longlCol = opt$longlCol,
-  sampleIDColinphenoFile = opt$sampleIDColinphenoFile,
+  sampleIDColinabdFile = opt$sampleIDColinabdFile,
+  sampleIDColincovFile = opt$sampleIDColincovFile,
   cellIDColinphenoFile = opt$cellIDColinphenoFile,
   tol = opt$tol,
   maxiter = opt$maxiter,

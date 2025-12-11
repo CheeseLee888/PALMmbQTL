@@ -123,7 +123,7 @@ message("All key packages installed and loadable.")
 EOF
 
 # Create Singularity-compatible wrapper scripts
-RUN for script in step0_generateGRM.R step0_mergePheno.R step1_fitNULL.R step2_scoreTest.R run_PALM.R; do \
+RUN for script in step0_generateGRM.R step1_fitNULL.R step2_scoreTest.R run_PALM.R; do \
       echo '#!/bin/bash' > /usr/local/bin/$script && \
       echo 'cd /app' >> /usr/local/bin/$script && \
       echo 'exec pixi run Rscript /app/extdata/'$script' "$@"' >> /usr/local/bin/$script && \

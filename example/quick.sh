@@ -29,15 +29,6 @@ pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_generateGRM.R \
     --genoFile=${genoFile} \
     --grmFile=${grmFile}
 
-# step0: merge abundance and covariate data
-echo "Merging abundance and covariate data..."
-pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_mergePheno.R \
-    --abdFile=${abdFile} \
-    --covFile=${covFile} \
-    --sampleIDColinabdFile=${sampleIDColinabdFile} \
-    --sampleIDColincovFile=${sampleIDColincovFile} \
-    --mergeOutFile=${mergeOutFile}
-
 # step1 & step2: fit null model and score test for one or more phenotypes
 # Support multiple phenotypes separated by commas in `phenoCol`, or phenoCol=all to use all phenos from abdFile
 if [ -z "${phenoCol}" ]; then
@@ -80,7 +71,7 @@ for pheno in "${PHENOS[@]}"; do
     # step1: fit null model
     echo "Fitting null model for ${pheno}..."
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_fitNULL.R \
-        --phenoFile=${mergeOutFile} \
+        --abdFile=${abdFile} \
         --covFile=${covFile} \
         --sampleIDColincovFile=${sampleIDColincovFile} \
         --grmFile=${grmFile} \
@@ -90,7 +81,8 @@ for pheno in "${PHENOS[@]}"; do
         --outputPrefix=./${outputFolder}/${pheno}_step1 \
         --isCovariateOffset=TRUE \
         --useGRMtoFitNULL=TRUE \
-        --sampleIDColinphenoFile=IID \
+        --sampleIDColinabdFile=${sampleIDColinabdFile} \
+        --sampleIDColincovFile=${sampleIDColincovFile} \
         --traitType=count
 
     # step2: score test
