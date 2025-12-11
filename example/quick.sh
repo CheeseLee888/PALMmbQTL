@@ -9,7 +9,7 @@ covFile=./${inputFolder}/cov.txt
 sampleIDColinabdFile=IID
 sampleIDColincovFile=IID
 
-phenoCol=all
+phenoCol=g_1
 # offsetCol=SeqDepth
 covarColList=AGE,SEX
 
