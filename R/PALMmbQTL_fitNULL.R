@@ -109,19 +109,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   }
 
 
-  if (longlCol == "") {
-    checkColList <- c(phenoCol, covarColList, "IID")
-  } else {
-    checkColList <- c(phenoCol, covarColList, "IID", longlCol)
-  }
-
-  if (isCovariateOffset & length(offsetCol) != "") {
-    cat("Use offset term: ", offsetCol, "\n")
-    checkColList <- c(checkColList, offsetCol)
-  }else{
-    cat("No offset term is used\n")
-  }
-
   ## sanity checks for required files / arguments -------------------------------
   if (abdFile == "" || !file.exists(abdFile)) {
     stop("ERROR: abdFile must be provided and must exist.")
@@ -148,8 +135,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
         #   stringsAsFactors = FALSE, colClasses = list(character = sampleIDColinphenoFile), data.table = F, select = checkColList
         # )
 
-  # # select required columns
-  # data <- merged[, checkColList, drop = FALSE]
   data <- merged
   cat("Abundance and covariate files have been merged\n")
   cat(colnames(data), "\n")
