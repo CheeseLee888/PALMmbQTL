@@ -9,6 +9,7 @@ covFile=./${inputFolder}/cov.txt
 sampleIDColinabdFile=IID
 sampleIDColincovFile=IID
 phenoCol=g_1
+chrom=1
 
 # offsetCol=SeqDepth
 covarColList=AGE,SEX
@@ -17,7 +18,8 @@ covarColList=AGE,SEX
 mergeOutFile=./${inputFolder}/merged.txt
 grmFile=./${inputFolder}/grm.rds
 step1_prefix=./${outputFolder}/allpheno_step1
-step2_prefix=./${outputFolder}/${phenoCol}_step2
+step2_prefix=./${outputFolder}/${phenoCol}_step2${chrom:+_chr${chrom}}
+
 
 
 
