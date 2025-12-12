@@ -7,6 +7,7 @@
 #' @return PALMOutputFile
 #' @export
 SPAGMMATtest <- function(inFile = "",
+                         phenoCol = "",
                          NULLmodelFile = "",
                          PALMOutputFile = "",
                          minMAF = 0.05) {
@@ -40,7 +41,27 @@ SPAGMMATtest <- function(inFile = "",
   # }
 
   load(NULLmodelFile)
-  
+
+  ## extract all pheno_name
+  all_pheno_names <- vapply(
+    null_list,
+    function(x) x$pheno_name,
+    FUN.VALUE = character(1L)
+  )
+
+  ## use which to find the corresponding index
+  idx <- which(all_pheno_names == phenoCol)
+
+  if (length(idx) == 0) {
+    stop(sprintf("Phenotype '%s' not found in NULLmodelFile.", phenoCol))
+  }else{
+    cat(sprintf("Phenotype '%s' found in NULLmodelFile at index %d.\n", phenoCol, idx))
+  }
+
+  ## extract the corresponding model based on idx
+  modglmm <- null_list[[idx]]$modglmm
+
+
   if (!isGroupTest) {
     cat("Starting glmmscore test...\n")
     GMMAT::glmm.score(
@@ -50,7 +71,7 @@ SPAGMMATtest <- function(inFile = "",
       outfile = PALMOutputFile,
       MAF.range = c(minMAF, 0.5)
       )
-    cat("glmmscore test finished.\n")
+    cat("glmmscore test for", phenoCol, "finished.\n")
   } else {
     stop("Group-based test is not yet implemented in PALM-mbQTL.\n")
   }

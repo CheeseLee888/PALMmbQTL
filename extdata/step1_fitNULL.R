@@ -24,10 +24,6 @@ option_list <- list(
     type = "character", default = "",
     help = "Required. Path to the covariate file."
   ), 
-  make_option("--phenoCol",
-    type = "character", default = "",
-    help = "Required. Column name for phenotype to be tested in the phenotype file, e.g CAD"
-  ),
   make_option("--isRemoveZerosinPheno",
     type = "logical", default = FALSE,
     help = "Optional. Whether to remove zeros in the phenotype"
@@ -80,10 +76,6 @@ option_list <- list(
   make_option("--nThreads",
     type = "integer", default = 1,
     help = "Optional. Number of threads (CPUs) to use [default=1]."
-  ),
-  make_option("--skipModelFitting",
-    type = "logical", default = FALSE,
-    help = "Optional. Whether to skip model fitting and only to estimate the variance ratio. If TRUE, the file outputPrefix.rda is required [default='FALSE']"
   ),
   make_option("--memoryChunk",
     type = "numeric", default = 2,
@@ -208,7 +200,6 @@ fitNULLGLMM_multiV(
   grmFile = opt$grmFile,
   abdFile = opt$abdFile,
   covFile = opt$covFile,
-  phenoCol = opt$phenoCol,
   isRemoveZerosinPheno = opt$isRemoveZerosinPheno,
   traitType = opt$traitType,
   invNormalize = opt$invNormalize,
@@ -223,7 +214,6 @@ fitNULLGLMM_multiV(
   tol = opt$tol,
   maxiter = opt$maxiter,
   nThreads = opt$nThreads,
-  skipModelFitting = opt$skipModelFitting,
   memoryChunk = opt$memoryChunk,
   LOCO = opt$LOCO,
   outputPrefix = opt$outputPrefix,

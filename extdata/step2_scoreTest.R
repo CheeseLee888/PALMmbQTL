@@ -16,6 +16,10 @@ option_list <- list(
     type = "character", default = "",
     help = "Path to geno file. Support many formats including bed/bim/fam, bgen, gds and txt. If using bed/bim/fam, only go with prefix; Otherwise full file name."
   ),
+  make_option("--phenoCol",
+    type = "character", default = "",
+    help = "Column name for the phenotype to be tested in the NULLmodelFile."
+  ),
   make_option("--NULLmodelFile",
     type = "character", default = "",
     help = "Path to the input file containing the glmm model, which is output from previous step. Will be used by load()"
@@ -40,6 +44,7 @@ print(opt)
 
 SPAGMMATtest(
   inFile = opt$inFile,
+  phenoCol = opt$phenoCol,
   NULLmodelFile = opt$NULLmodelFile,
   PALMOutputFile = opt$PALMOutputFile,
   minMAF = opt$minMAF
