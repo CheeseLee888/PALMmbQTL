@@ -8,6 +8,7 @@ abdFile=./${inputFolder}/abd.txt
 covFile=./${inputFolder}/cov.txt
 sampleIDColinabdFile=IID
 sampleIDColincovFile=IID
+phenoCol=g_1
 
 # offsetCol=SeqDepth
 covarColList=AGE,SEX
@@ -15,8 +16,8 @@ covarColList=AGE,SEX
 ######### optional below #########
 mergeOutFile=./${inputFolder}/merged.txt
 grmFile=./${inputFolder}/grm.rds
-
-
+step1_prefix=./${outputFolder}/allpheno_step1
+step2_prefix=./${outputFolder}/${phenoCol}_step2
 
 
 
@@ -31,27 +32,23 @@ pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_generateGRM.R \
 # step1: fit null model for all phenotypes
 echo "Fitting null model for all phenotypes..."
 pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_fitNULL.R \
---abdFile=${abdFile} \
---covFile=${covFile} \
---sampleIDColincovFile=${sampleIDColincovFile} \
---grmFile=${grmFile} \
---covarColList=${covarColList} \
---outputPrefix=./${outputFolder}/${pheno}_step1 \
---useGRMtoFitNULL=TRUE \
---sampleIDColinabdFile=${sampleIDColinabdFile} \
---sampleIDColincovFile=${sampleIDColincovFile} \
---traitType=count
+    --abdFile=${abdFile} \
+    --covFile=${covFile} \
+    --sampleIDColincovFile=${sampleIDColincovFile} \
+    --grmFile=${grmFile} \
+    --covarColList=${covarColList} \
+    --outputPrefix=${step1_prefix} \
+    --useGRMtoFitNULL=TRUE \
+    --sampleIDColinabdFile=${sampleIDColinabdFile} \
+    --sampleIDColincovFile=${sampleIDColincovFile} \
+    --traitType=count
 
 
-for pheno in "${PHENOS[@]}"; do
-
-    # step2: score test
-    step1prefix=./${outputFolder}/${pheno}_step1
-    step2prefix=./${outputFolder}/${pheno}_step2
-    echo "Performing score test for ${pheno}..."
-    pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
-        --inFile=${genoFile} \
-        --PALMOutputFile=${step2prefix}.txt \
-        --NULLmodelFile=${step1prefix}.rda \
-        --minMAF=0
-done
+# step2: score test for phenoCol
+echo "Performing score test for ${phenoCol}..."
+pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
+    --inFile=${genoFile} \
+    --phenoCol=${phenoCol} \
+    --PALMOutputFile=${step2_prefix}.txt \
+    --NULLmodelFile=${step1_prefix}.rda \
+    --minMAF=0
