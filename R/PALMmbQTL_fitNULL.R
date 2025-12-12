@@ -67,13 +67,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   ## set up output files
   modelOut <- paste0(outputPrefix, ".rda")
 
-  if (skipModelFitting) {
-    if (!file.exists(modelOut)) {
-      stop("skipModelFitting=TRUE but ", modelOut, " does not exist\n")
-    }
-  } else {
-    file.create(modelOut, showWarnings = TRUE)
-  }
+  file.create(modelOut, showWarnings = TRUE)
 
   # if (!useGRMtoFitNULL) {
   #   useSparseGRMtoFitNULL <- FALSE
@@ -119,6 +113,15 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   cov <- read_table_with_id(covFile, id_col = sampleIDColincovFile)
   cat("Abundance and covariate files have been read\n")
 
+  ## read phenotype list ------------------------------------------------------
+  pheno_names <- setdiff(colnames(abd), sampleIDColinabdFile)
+  pheno_list <- abd[, pheno_names, drop = FALSE]
+  # Simple sanity check
+  if (any(pheno_list < 0, na.rm = TRUE)) {
+    warning("Abundance table contains negative values; 
+            please make sure abdFile is raw counts when using SeqDepth.")
+  }
+
   ## merge abundance and covariate files ----------------------------------------
 
   # merge_abd_cov(abd, cov) is assumed to:
@@ -144,21 +147,12 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   if (offsetCol == "") {
     cat("No offset column is specified. Calculate SeqDepth from abundance file...\n")
 
-    # 1) Only calculate sequencing depth from count columns in abd (exclude sample ID column)
-    pheno_list <- abd[, setdiff(colnames(abd), sampleIDColinabdFile), drop = FALSE]
-
-    # Simple sanity check
-    if (any(pheno_list < 0, na.rm = TRUE)) {
-      warning("Abundance table contains negative values; 
-              please make sure abdFile is raw counts when using SeqDepth.")
-    }
-
     seqdepth <- rowSums(pheno_list, na.rm = TRUE)
     names(seqdepth) <- abd[[sampleIDColinabdFile]]
     
     data$SeqDepth <- seqdepth[match(data$IID, names(seqdepth))]
 
-    # 2) Check for NA and non-positive values
+    # Check for NA and non-positive values
     if (any(is.na(data$SeqDepth))) {
       warning("Some samples in merged data do not have SeqDepth (no matching abd).")
     }
@@ -366,9 +360,10 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   # Core step1 for PALM-mbQTL
   null_list <- list()
 
-  for (i in seq_along(pheno_list)) {
+  for (i in seq_along(pheno_names)) {
     pheno_id   <- i
-    pheno_name <- pheno_list[i]
+    pheno_name <- pheno_names[i]
+    cat("[", i, "/", length(pheno_names), "] Fitting NULL GLMM for pheno: ", pheno_name, "\n")
 
     # construct the formula
     if (length(covarColList) > 0) {
