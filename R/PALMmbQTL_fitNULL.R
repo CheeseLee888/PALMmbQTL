@@ -248,22 +248,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     }
   }
 
-  # construct the formula
-  if (length(covarColList) > 0) {
-    formula <- paste0(phenoCol, "~", paste0(covarColList,
-      collapse = "+"
-    ))
-    hasCovariate <- TRUE
-  } else {
-    formula <- paste0(phenoCol, "~ 1")
-    hasCovariate <- FALSE
-  }
-  
-  if(isCovariateOffset & offsetCol != ""){
-    formula <- paste0(formula, "+offset(log(", offsetCol, "))")
-  }
-  
-  cat("formula is ", formula, "\n")
   
 
   # if (!is.null(sampleListwithGeno)) {
@@ -275,13 +259,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   #   dataMerge_sort <- mmat_nomissing
   #   dataMerge_sort$IIDgeno <- dataMerge_sort$IID
   # }
-  
-
-
-  if (!hasCovariate) {
-    print("No covariate is includes so isCovariateOffset = FALSE")
-    isCovariateOffset <- FALSE
-  }
 
   # if (isCovariateTransform & hasCovariate) {
   #   cat("qr transformation has been performed on covariates\n")
@@ -389,17 +366,43 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   rownames(grm_K) <- colnames(grm_K) <- pheno_id
 
   # Core step1 for PALM-mbQTL
-  if (traitType != "count_nb") {
+  null_list <- list()
+
+  for (i in seq_along(pheno_list)) {
+    pheno_id   <- i
+    pheno_name <- pheno_list[i]
+
+    # construct the formula
+    if (length(covarColList) > 0) {
+      formula <- paste0(pheno_name, "~", paste0(covarColList,
+        collapse = "+"
+      ))
+    } else {
+      formula <- paste0(pheno_name, "~ 1")
+    }
+    
+    if(isCovariateOffset & offsetCol != ""){
+      formula <- paste0(formula, "+offset(log(", offsetCol, "))")
+    }
+    
+    cat("formula is ", formula, "\n")
+
+    # run glmmkin
     system.time(modglmm <- GMMAT::glmmkin(
       formula, 
       data = data,
       kins = grm_K,
       id = "IID", 
       family = poisson(link = "log")
-      ))
-    cat("glmmkin succeed!\n")
-  } else {
-    stop("ERROR: This traitType is not supported in the current version.\n")
+    ))
+
+    cat("pheno: ", pheno_name, ", glmmkin succeed!\n")
+
+    null_list[[as.character(pheno_id)]] <- list(
+      pheno_id    = pheno_id,
+      pheno_name  = pheno_name,
+      modglmm     = modglmm
+    )
   }
 
   
@@ -428,6 +431,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   print(t_end - t_begin)
 
 
-  save(modglmm, file = modelOut)
+  save(null_list, file = modelOut)
+  cat("NULL model has been saved to ", modelOut, "\n")
 
 }
