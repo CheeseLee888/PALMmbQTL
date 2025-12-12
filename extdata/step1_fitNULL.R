@@ -24,10 +24,6 @@ option_list <- list(
     type = "character", default = "",
     help = "Required. Path to the covariate file."
   ), 
-  make_option("--phenoCol",
-    type = "character", default = "",
-    help = "Required. Column name for phenotype to be tested in the phenotype file, e.g CAD"
-  ),
   make_option("--isRemoveZerosinPheno",
     type = "logical", default = FALSE,
     help = "Optional. Whether to remove zeros in the phenotype"
@@ -204,7 +200,6 @@ fitNULLGLMM_multiV(
   grmFile = opt$grmFile,
   abdFile = opt$abdFile,
   covFile = opt$covFile,
-  phenoCol = opt$phenoCol,
   isRemoveZerosinPheno = opt$isRemoveZerosinPheno,
   traitType = opt$traitType,
   invNormalize = opt$invNormalize,

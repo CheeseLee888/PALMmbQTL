@@ -3,7 +3,6 @@
 #' @param grmFile character. Path to the GRM file in RDS format. The RDS file contains a list with two elements: sample.id and K. sample.id is a vector of sample IDs. K is the GRM matrix with row and column names as sample IDs. By default, "".
 #' @param abdFile character. Path to the abundance file.
 #' @param covFile character. Path to the covariate file.
-#' @param phenoCol character. Column name for the phenotype in phenoFile e.g. "CAD"
 #' @param traitType character. e.g. "binary", "quantitative", "count" or "count_nb". By default, "count".
 #' @param invNormalize logical. Whether to perform the inverse normalization for the phentoype or not. e.g. TRUE or FALSE. By default, FALSE
 #' @param covarColList vector of characters. Covariates to be used in the null model. e.g c("Sex", "Age")
@@ -34,7 +33,6 @@
 fitNULLGLMM_multiV <- function(grmFile = "",
                                abdFile = "",
                                covFile = "",
-                               phenoCol = "",
                                isRemoveZerosinPheno = FALSE,
                                traitType = "count",
                                invNormalize = FALSE,
@@ -186,13 +184,13 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   }
   
 
-  if (isRemoveZerosinPheno) {
-    data <- data[which(data[, which(colnames(data) == phenoCol)] > 0), ]
-    cat("Removing all zeros in the phenotype\n")
-    if (nrow(data) == 0) {
-      stop("ERROR: no samples are left after removing zeros in the phenotype\n")
-    }
-  }
+  # if (isRemoveZerosinPheno) {
+  #   data <- data[which(data[, which(colnames(data) == phenoCol)] > 0), ]
+  #   cat("Removing all zeros in the phenotype\n")
+  #   if (nrow(data) == 0) {
+  #     stop("ERROR: no samples are left after removing zeros in the phenotype\n")
+  #   }
+  # }
 
 
   if (length(qCovarCol) > 0) {
