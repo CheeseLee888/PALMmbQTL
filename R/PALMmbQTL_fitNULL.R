@@ -15,7 +15,6 @@
 #' @param tol numeric. The tolerance for fitting the null model to converge. By default, 0.02.
 #' @param maxiter integer. The maximum number of iterations used to fit the null GLMMM. By default, 20.
 #' @param nThreads integer. Number of threads to be used. By default, 1
-#' @param skipModelFitting logical.  Whether to skip fitting the null model and only calculating the variance ratio, By default, FALSE. If TURE, the model file ".rda" is needed
 #' @param memoryChunk integer or float. The size (Gb) for each memory chunk. By default, 2
 #' @param LOCO logical. Whether to apply the leave-one-chromosome-out (LOCO) option. By default, FALSE
 #' @param outputPrefix character. Path to the output files with prefix.
@@ -51,7 +50,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                tol = 0.02,
                                maxiter = 20,
                                nThreads = 1,
-                               skipModelFitting = FALSE,
                                memoryChunk = 2,
                                LOCO = FALSE,
                                outputPrefix = "",
@@ -149,15 +147,15 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     cat("No offset column is specified. Calculate SeqDepth from abundance file...\n")
 
     # 1) Only calculate sequencing depth from count columns in abd (exclude sample ID column)
-    abd_counts <- abd[, setdiff(colnames(abd), sampleIDColinabdFile), drop = FALSE]
+    pheno_list <- abd[, setdiff(colnames(abd), sampleIDColinabdFile), drop = FALSE]
 
     # Simple sanity check
-    if (any(abd_counts < 0, na.rm = TRUE)) {
+    if (any(pheno_list < 0, na.rm = TRUE)) {
       warning("Abundance table contains negative values; 
               please make sure abdFile is raw counts when using SeqDepth.")
     }
 
-    seqdepth <- rowSums(abd_counts, na.rm = TRUE)
+    seqdepth <- rowSums(pheno_list, na.rm = TRUE)
     names(seqdepth) <- abd[[sampleIDColinabdFile]]
     
     data$SeqDepth <- seqdepth[match(data$IID, names(seqdepth))]
@@ -353,89 +351,82 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   # }
 
 
-  if (!skipModelFitting) {
-    cat("Start fitting the NULL GLMM\n")
-    t_begin <- proc.time()
-    print(t_begin)
+  cat("Start fitting the NULL GLMM\n")
+  t_begin <- proc.time()
+  print(t_begin)
 
-    pheno_id <- data[["IID"]]
-    # GRM
-    if (useGRMtoFitNULL) {
-      cat("GRM will be used to fit the NULL model\n")
-      if (!file.exists(grmFile)) {
-        stop("ERROR! grmFile ", grmFile, " does not exist\n")
-      }
-      grm_obj <- readRDS(grmFile)
-      grm_K   <- grm_obj$K
-      grm_id  <- grm_obj$sample.id
-
-      cat("grm id:\n")
-      cat(grm_id[1:5], "\n")
-      cat("pheno id:\n")
-      cat(pheno_id[1:5], "\n")
-
-      if (!setequal(grm_id, pheno_id)) {
-        stop("ERROR! the sample IDs in the GRM file are not the same as those in the phenotype file\n")
-      }else {
-        cat("All sample IDs in the GRM file are the same as those in the phenotype file\n")
-      }
-      if (!all(grm_id == pheno_id)) {
-        cat("GRM ID and phenotype ID are not in the same order; reorder GRM ...\n")
-        idx      <- match(pheno_id, grm_id)
-        grm_K    <- grm_K[idx, idx, drop = FALSE]
-      }
-
-    } else {
-      cat("Identity matrix will be used to fit the NULL model\n")
-      grm_K <- diag(nrow(data))
+  pheno_id <- data[["IID"]]
+  # GRM
+  if (useGRMtoFitNULL) {
+    cat("GRM will be used to fit the NULL model\n")
+    if (!file.exists(grmFile)) {
+      stop("ERROR! grmFile ", grmFile, " does not exist\n")
     }
-    rownames(grm_K) <- colnames(grm_K) <- pheno_id
+    grm_obj <- readRDS(grmFile)
+    grm_K   <- grm_obj$K
+    grm_id  <- grm_obj$sample.id
 
-    # Core step1 for PALM-mbQTL
-    if (traitType != "count_nb") {
-      system.time(modglmm <- GMMAT::glmmkin(
-        formula, 
-        data = data,
-        kins = grm_K,
-        id = "IID", 
-        family = poisson(link = "log")
-        ))
-      cat("glmmkin succeed!\n")
-    } else {
-      stop("ERROR: This traitType is not supported in the current version.\n")
+    cat("grm id:\n")
+    cat(grm_id[1:5], "\n")
+    cat("pheno id:\n")
+    cat(pheno_id[1:5], "\n")
+
+    if (!setequal(grm_id, pheno_id)) {
+      stop("ERROR! the sample IDs in the GRM file are not the same as those in the phenotype file\n")
+    }else {
+      cat("All sample IDs in the GRM file are the same as those in the phenotype file\n")
     }
-
-    
-    # if (length(eCovarCol) > 0) {
-    #   cat(eCovarCol, "are environmental covariates\n")
-    #   modglmm$eMat <- data.new[, which(colnames(data.new) %in% eCovarCol), drop = F]
-    #   for (em in 1:ncol(modglmm$eMat)) {
-    #     modglmm$eMat[, em] <- (modglmm$eMat[, em] - mean(modglmm$eMat[, em])) / (sd(modglmm$eMat[, em]))
-    #   }
-    # }
-    
-    # if (length(covarColList) > 0) {
-    #   cat(covarColList, "are sample-level covariates\n")
-    
-    #   covarColList <- c(covarColList, sampleCovarCol_q_names)
-    #   modglmm$sampleXMat <- modglmm$X[, which(colnames(modglmm$X) %in% covarColList), drop = F]
-    #   modglmm$sampleXMat <- cbind(modglmm$X[, 1], modglmm$sampleXMat)
-    #   uniqsampleind <- which(!duplicated(modglmm$sampleID))
-    #   modglmm$sampleXMat <- modglmm$sampleXMat[uniqsampleind, ]
-    # }
-
-
-    t_end <- proc.time()
-    print(t_end)
-    cat("t_end - t_begin, fitting the NULL model took\n")
-    print(t_end - t_begin)
+    if (!all(grm_id == pheno_id)) {
+      cat("GRM ID and phenotype ID are not in the same order; reorder GRM ...\n")
+      idx      <- match(pheno_id, grm_id)
+      grm_K    <- grm_K[idx, idx, drop = FALSE]
+    }
 
   } else {
-    cat("Skip fitting the NULL GLMM\n")
-    if (!file.exists(modelOut)) {
-      stop("skipModelFitting=TRUE but ", modelOut, " does not exist\n")
-    }
+    cat("Identity matrix will be used to fit the NULL model\n")
+    grm_K <- diag(nrow(data))
   }
+  rownames(grm_K) <- colnames(grm_K) <- pheno_id
+
+  # Core step1 for PALM-mbQTL
+  if (traitType != "count_nb") {
+    system.time(modglmm <- GMMAT::glmmkin(
+      formula, 
+      data = data,
+      kins = grm_K,
+      id = "IID", 
+      family = poisson(link = "log")
+      ))
+    cat("glmmkin succeed!\n")
+  } else {
+    stop("ERROR: This traitType is not supported in the current version.\n")
+  }
+
+  
+  # if (length(eCovarCol) > 0) {
+  #   cat(eCovarCol, "are environmental covariates\n")
+  #   modglmm$eMat <- data.new[, which(colnames(data.new) %in% eCovarCol), drop = F]
+  #   for (em in 1:ncol(modglmm$eMat)) {
+  #     modglmm$eMat[, em] <- (modglmm$eMat[, em] - mean(modglmm$eMat[, em])) / (sd(modglmm$eMat[, em]))
+  #   }
+  # }
+  
+  # if (length(covarColList) > 0) {
+  #   cat(covarColList, "are sample-level covariates\n")
+  
+  #   covarColList <- c(covarColList, sampleCovarCol_q_names)
+  #   modglmm$sampleXMat <- modglmm$X[, which(colnames(modglmm$X) %in% covarColList), drop = F]
+  #   modglmm$sampleXMat <- cbind(modglmm$X[, 1], modglmm$sampleXMat)
+  #   uniqsampleind <- which(!duplicated(modglmm$sampleID))
+  #   modglmm$sampleXMat <- modglmm$sampleXMat[uniqsampleind, ]
+  # }
+
+
+  t_end <- proc.time()
+  print(t_end)
+  cat("t_end - t_begin, fitting the NULL model took\n")
+  print(t_end - t_begin)
+
 
   save(modglmm, file = modelOut)
 
