@@ -45,9 +45,9 @@ if(${model}=='palm'){
 echo "Fitting null model for all phenotypes..."
 if(${model}=='palm'){
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_palm.R \
-        --rel.abd "${abdFile}" \
-        --covariate.adjust "${covFile}" \
-        --depth "${offsetCol}" \
+        --abdFile=${abdFile} \
+        --covFile=${covFile} \
+        --offsetCol=${offsetCol} \
         --outputPrefix=${step1_prefix_palm}
 }else{
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_fitNULL.R \
@@ -66,9 +66,9 @@ if(${model}=='palm'){
 echo "Performing score test for ${phenoCol}..."
 if(${model}=='palm'){
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_palm.R \
-        --null.obj=${step1_prefix_palm}.rda \
-        --covariate.interest=${genoFile} \
+        --inFile=${genoFile} \
         --correct=NULL \
+        --NULLmodelFile=${step1_prefix}.rda \
         --PALMOutputFile=${step2_prefix_palm}.txt
 }else{
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
