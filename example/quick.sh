@@ -67,20 +67,20 @@ else
         --sampleIDColincovFile=${sampleIDColincovFile}
 fi
 
-# # step2: score test for phenoCol
-# echo "Performing score test for ${phenoCol}..."
-# if [[ "${model}" == "palm" ]]; then
-#     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_palm.R \
-#         --inFile=${genoFile} \
-#         --correct=NULL \
-#         --NULLmodelFile=${step1_prefix}.rda \
-#         --PALMOutputFile=${step2_prefix_palm}.txt
-# else
-#     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
-#         --inFile=${genoFile} \
-#         --phenoCol=${phenoCol} \
-#         --chrom=${chrom} \
-#         --PALMOutputFile=${step2_prefix}.txt \
-#         --NULLmodelFile=${step1_prefix}.rda \
-#         --minMAF=0
-# fi
+# step2: score test for phenoCol
+echo "Performing score test for ${phenoCol}..."
+if [[ "${model}" == "palm" ]]; then
+    pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_palm.R \
+        --inFile=${genoFile} \
+        --correct=NULL \
+        --NULLmodelFile=${step1_prefix_palm}.rda \
+        --PALMOutputFile=${step2_prefix_palm}.txt
+else
+    pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
+        --inFile=${genoFile} \
+        --phenoCol=${phenoCol} \
+        --chrom=${chrom} \
+        --PALMOutputFile=${step2_prefix}.txt \
+        --NULLmodelFile=${step1_prefix}.rda \
+        --minMAF=0
+fi
