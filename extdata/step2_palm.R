@@ -56,12 +56,56 @@ res <- palm.get.summary(
   correct = opt$correct
 )
 
-write.table(
-  res,
-  file = opt$PALMOutputFile,
-  sep = "\t",
-  row.names = TRUE
-)
+# ---------- split by pheno and write {pheno}_step2_palm.txt ----------
+res <- as.data.frame(res, check.names = FALSE)
+
+# Automatically infer the study prefix (usually "Study")
+prefix <- sub("\\.est\\..*$", "", grep("\\.est\\.", colnames(res), value = TRUE)[1])
+if (is.na(prefix) || prefix == "") prefix <- "Study"
+
+est_pat    <- paste0("^", prefix, "\\.est\\.")
+stderr_pat <- paste0("^", prefix, "\\.stderr\\.")
+
+est_cols    <- grep(est_pat, colnames(res), value = TRUE)
+stderr_cols <- grep(stderr_pat, colnames(res), value = TRUE)
+
+if (length(est_cols) == 0 || length(stderr_cols) == 0) {
+  stop("Cannot find est/stderr columns in res. Example colnames(res): ",
+       paste(head(colnames(res), 5), collapse = ", "))
+}
+
+snp_est    <- sub(est_pat,    "", est_cols)
+snp_stderr <- sub(stderr_pat, "", stderr_cols)
+common_snp <- intersect(snp_est, snp_stderr)
+if (length(common_snp) == 0) stop("No matched SNPs between est and stderr columns.")
+
+# keep SNP order as in est columns
+common_snp <- snp_est[snp_est %in% common_snp]
+est_map    <- setNames(est_cols,    snp_est)
+stderr_map <- setNames(stderr_cols, snp_stderr)
+
+if (is.null(rownames(res)) || any(rownames(res) == "")) {
+  stop("res has no rownames (phenotype names). Please ensure rownames(res)=pheno names.")
+}
+
+# opt$PALMOutputFile can be a "directory" or "prefix"; here we treat it as a directory for clarity
+out_dir <- opt$PALMOutputFile
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
+for (pheno in rownames(res)) {
+  out <- data.frame(
+    SNP    = common_snp,
+    est    = as.numeric(res[pheno, est_map[common_snp], drop = TRUE]),
+    stderr = as.numeric(res[pheno, stderr_map[common_snp], drop = TRUE]),
+    check.names = FALSE
+  )
+
+  out_file <- file.path(out_dir, paste0(pheno, "_step2_palm.txt"))
+  write.table(out, file = out_file, sep = "\t",
+              quote = FALSE, row.names = FALSE, col.names = TRUE)
+}
+
+cat("Wrote per-pheno files to: ", out_dir, "\n")
 
 
 

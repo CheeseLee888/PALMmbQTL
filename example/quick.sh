@@ -74,7 +74,7 @@ if [[ "${model}" == "palm" ]]; then
         --inFile=${genoFile} \
         --correct=NULL \
         --NULLmodelFile=${step1_prefix_palm}.rda \
-        --PALMOutputFile=${step2_prefix_palm}.txt
+        --PALMOutputFile=${outputFolder}
 else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \
