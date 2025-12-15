@@ -21,7 +21,7 @@ grmFile=./${inputFolder}/grm.rds
 step1_prefix=./${outputFolder}/allpheno_step1
 step2_prefix=./${outputFolder}/${phenoCol}_step2${chrom:+_chr${chrom}}
 step1_prefix_palm=./${outputFolder}/allpheno_step1_palm
-step2_prefix_palm=./${outputFolder}/${phenoCol}_step2_palm${chrom:+_chr${chrom}}
+step2_prefix_palm=./${outputFolder}/${phenoCol}_step2_palm
 
 
 

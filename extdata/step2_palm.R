@@ -43,12 +43,12 @@ iid <- rownames(G)
 if (is.null(iid)) stop("No rownames (IID) found in genotype matrix from read.plink().")
 
 # Convert to numeric 0/1/2/NA matrix, then to data.frame
-geno_mat <- as(G, "numeric")   # returns matrix with 0/1/2 and NA
-rownames(geno_mat) <- iid
-colnames(geno_mat) <- colnames(G)
+geno <- as(G, "numeric")   # returns matrix with 0/1/2 and NA
+rownames(geno) <- iid
+colnames(geno) <- colnames(G)
 
-geno <- as.matrix(as.data.frame(geno_mat, check.names = FALSE))
 
+geno<-geno[,1:3]
 
 res <- palm.get.summary(
   null.obj = modglmm,
