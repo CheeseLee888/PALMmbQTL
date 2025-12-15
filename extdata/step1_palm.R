@@ -43,6 +43,10 @@ abd <- as.matrix(abd)
 cov <- read_firstcol_as_rownames(opt$covFile)
 
 
-modglmm <- palm.null.model(rel.abd = abd, covariate.adjust = cov)
+modglmm <- palm.null.model(
+    rel.abd = abd,
+    covariate.adjust = cov,
+    prev.filter = 0
+    )
 save(modglmm, file = paste0(opt$outputPrefix, ".rda"))
 
