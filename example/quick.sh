@@ -27,29 +27,35 @@ step2_prefix_palm=./${outputFolder}/${phenoCol}_step2_palm${chrom:+_chr${chrom}}
 
 
 ################################# workflow below (do not modify) #################################
-if(${model}!='palm' and ${model}!='palmmbqtl'){
-    stop("Model must be specified as palm or palmmbqtl.")
-}
+if [[ "${model}" != "palm" && "${model}" != "palmmbqtl" ]]; then
+    echo "Model must be specified as palm or palmmbqtl."
+    exit 1
+fi
+
+if [[ "${model}" == "palm" ]]; then
+    echo "Running PALM model..."
+else
+    echo "Running PALM-mbQTL model..."
+fi
 
 mkdir -p "${outputFolder}"
 
 # step0: generate GRM from genotype data
-if(${model}=='palm'){
+if [[ "${model}" == "palmmbqtl" ]]; then
     echo "Generating GRM from genotype data..."
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_generateGRM.R \
         --genoFile=${genoFile} \
         --grmFile=${grmFile}
-}
+fi
 
 # step1: fit null model for all phenotypes
 echo "Fitting null model for all phenotypes..."
-if(${model}=='palm'){
+if [[ "${model}" == "palm" ]]; then
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_palm.R \
         --abdFile=${abdFile} \
         --covFile=${covFile} \
-        --offsetCol=${offsetCol} \
         --outputPrefix=${step1_prefix_palm}
-}else{
+else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_fitNULL.R \
         --abdFile=${abdFile} \
         --covFile=${covFile} \
@@ -58,24 +64,23 @@ if(${model}=='palm'){
         --outputPrefix=${step1_prefix} \
         --useGRMtoFitNULL=TRUE \
         --sampleIDColinabdFile=${sampleIDColinabdFile} \
-        --sampleIDColincovFile=${sampleIDColincovFile} \
-}
+        --sampleIDColincovFile=${sampleIDColincovFile}
+fi
 
-
-# step2: score test for phenoCol
-echo "Performing score test for ${phenoCol}..."
-if(${model}=='palm'){
-    pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_palm.R \
-        --inFile=${genoFile} \
-        --correct=NULL \
-        --NULLmodelFile=${step1_prefix}.rda \
-        --PALMOutputFile=${step2_prefix_palm}.txt
-}else{
-    pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
-        --inFile=${genoFile} \
-        --phenoCol=${phenoCol} \
-        --chrom=${chrom} \
-        --PALMOutputFile=${step2_prefix}.txt \
-        --NULLmodelFile=${step1_prefix}.rda \
-        --minMAF=0
-}
+# # step2: score test for phenoCol
+# echo "Performing score test for ${phenoCol}..."
+# if [[ "${model}" == "palm" ]]; then
+#     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_palm.R \
+#         --inFile=${genoFile} \
+#         --correct=NULL \
+#         --NULLmodelFile=${step1_prefix}.rda \
+#         --PALMOutputFile=${step2_prefix_palm}.txt
+# else
+#     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
+#         --inFile=${genoFile} \
+#         --phenoCol=${phenoCol} \
+#         --chrom=${chrom} \
+#         --PALMOutputFile=${step2_prefix}.txt \
+#         --NULLmodelFile=${step1_prefix}.rda \
+#         --minMAF=0
+# fi
