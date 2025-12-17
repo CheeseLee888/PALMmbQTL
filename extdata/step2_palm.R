@@ -22,6 +22,10 @@ option_list <- list(
     make_option("--PALMOutputFile",
         type = "character", default = "",
         help = ""
+    ),
+    make_option("--chrom",
+        type = "character", default = "",
+        help = ""
     )
 )
 
@@ -47,9 +51,28 @@ geno <- as(G, "numeric")   # returns matrix with 0/1/2 and NA
 rownames(geno) <- iid
 colnames(geno) <- colnames(G)
 
+# Subset for quick testing (every 10th SNP)
+# geno <- geno[, seq(1, ncol(geno), by = 10), drop = FALSE]
 
-geno<-geno[,1:3]
+# --------------------------
+# Subset by chromosome if specified
+# --------------------------
+if (!is.null(opt$chrom) && nzchar(opt$chrom)) {
+    message("Subsetting genotype data for chromosome: ", opt$chrom)
+    chrom <- opt$chrom
+    chrom <- sub("^chr", "", chrom, ignore.case = TRUE)
 
+    chr_vec <- sub("^chr([0-9]+).*", "\\1", colnames(geno))  # abstract chr from SNP IDs
+    keep <- which(chr_vec == chrom)
+
+    if (length(keep) == 0L) stop("No SNPs found for --chrom=", opt$chrom)
+    geno <- geno[, keep, drop = FALSE]
+}
+
+# normalize correct from optparse (character) to R NULL
+if (is.null(opt$correct) || !nzchar(opt$correct) || toupper(opt$correct) == "NULL") {
+  opt$correct <- NULL
+}
 res <- palm.get.summary(
   null.obj = modglmm,
   covariate.interest = geno,
@@ -57,7 +80,38 @@ res <- palm.get.summary(
 )
 
 # ---------- split by pheno and write {pheno}_step2_palm.txt ----------
-res <- as.data.frame(res, check.names = FALSE)
+# res <- as.data.frame(res, check.names = FALSE)
+# res is list returned by palm.get.summary()
+
+stopifnot(length(res) >= 1)
+study_names <- names(res)
+if (is.null(study_names) || any(study_names == "")) study_names <- paste0("Study", seq_along(res))
+names(res) <- study_names
+
+res_df_list <- lapply(study_names, function(d) {
+  est_df <- as.data.frame(res[[d]]$est, check.names = FALSE)
+  se_df  <- as.data.frame(res[[d]]$stderr, check.names = FALSE)
+
+  colnames(est_df) <- paste0(d, ".est.", colnames(est_df))
+  colnames(se_df)  <- paste0(d, ".stderr.", colnames(se_df))
+
+  n_df <- data.frame(tmp = res[[d]]$n)
+  colnames(n_df) <- paste0(d, ".n")
+
+  cbind(est_df, se_df, n_df)
+})
+
+res <- res_df_list[[1]]
+if (length(res_df_list) > 1) {
+  for (i in 2:length(res_df_list)) {
+    # feature rows对齐（通常行名是featureID）；不对齐就用 merge by rownames
+    res <- cbind(res, res_df_list[[i]])
+  }
+}
+
+# 继承 rownames（feature IDs）
+rownames(res) <- rownames(res_df_list[[1]])
+
 
 # Automatically infer the study prefix (usually "Study")
 prefix <- sub("\\.est\\..*$", "", grep("\\.est\\.", colnames(res), value = TRUE)[1])
@@ -93,15 +147,26 @@ out_dir <- opt$PALMOutputFile
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 for (pheno in rownames(res)) {
-  out <- data.frame(
-    SNP    = common_snp,
-    est    = as.numeric(res[pheno, est_map[common_snp], drop = TRUE]),
-    stderr = as.numeric(res[pheno, stderr_map[common_snp], drop = TRUE]),
-    check.names = FALSE
-  )
+    out <- data.frame(
+        SNP    = common_snp,
+        est    = as.numeric(res[pheno, est_map[common_snp], drop = TRUE]),
+        stderr = as.numeric(res[pheno, stderr_map[common_snp], drop = TRUE]),
+        check.names = FALSE
+    )
 
-  out_file <- file.path(out_dir, paste0(pheno, "_step2_palm.txt"))
-  write.table(out, file = out_file, sep = "\t",
+    # suffix: add _chr{chrom} only if --chrom is specified
+    chr_suffix <- ""
+    if (!is.null(opt$chrom) && nzchar(opt$chrom)) {
+    chr_clean  <- sub("^chr", "", opt$chrom, ignore.case = TRUE)
+    chr_suffix <- paste0("_chr", chr_clean)
+    }
+
+    out_file <- file.path(
+    out_dir,
+    paste0(pheno, "_step2_palm", chr_suffix, ".txt")
+    )
+
+    write.table(out, file = out_file, sep = "\t",
               quote = FALSE, row.names = FALSE, col.names = TRUE)
 }
 

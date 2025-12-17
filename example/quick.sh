@@ -21,7 +21,8 @@ grmFile=./${inputFolder}/grm.rds
 step1_prefix=./${outputFolder}/allpheno_step1
 step2_prefix=./${outputFolder}/${phenoCol}_step2${chrom:+_chr${chrom}}
 step1_prefix_palm=./${outputFolder}/allpheno_step1_palm
-step2_prefix_palm=./${outputFolder}/${phenoCol}_step2_palm
+# step2_prefix_palm
+
 
 
 
@@ -74,7 +75,8 @@ if [[ "${model}" == "palm" ]]; then
         --inFile=${genoFile} \
         --correct=NULL \
         --NULLmodelFile=${step1_prefix_palm}.rda \
-        --PALMOutputFile=${outputFolder}
+        --PALMOutputFile=${outputFolder} \
+        --chrom=${chrom}
 else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \
