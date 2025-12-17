@@ -1,0 +1,52 @@
+#!/usr/bin/env Rscript
+
+suppressPackageStartupMessages({
+  library(optparse)
+  library(PALM)
+})
+
+option_list <- list(
+    make_option("--abdFile",
+        type = "character", default = "",
+        help = ""
+    ),
+    make_option("--covFile",
+        type = "character", default = "",
+        help = ""
+    ),
+    make_option("--offsetCol",
+        type = "character", default = "",
+        help = ""
+    ),
+    make_option("--outputPrefix",
+        type = "character", default = "",
+        help = ""
+    )
+)
+
+opt <- parse_args(OptionParser(option_list = option_list))
+
+read_firstcol_as_rownames <- function(file) {
+  df <- data.table::fread(
+    file = file,
+    data.table   = FALSE,
+    check.names  = FALSE
+  )
+  id <- as.character(df[[1]])
+  rownames(df) <- id
+  df[[1]] <- NULL
+  return(df)
+}
+
+abd <- read_firstcol_as_rownames(opt$abdFile)
+abd <- as.matrix(abd)
+cov <- read_firstcol_as_rownames(opt$covFile)
+
+
+modglmm <- palm.null.model(
+    rel.abd = abd,
+    covariate.adjust = cov,
+    prev.filter = 0
+    )
+save(modglmm, file = paste0(opt$outputPrefix, ".rda"))
+

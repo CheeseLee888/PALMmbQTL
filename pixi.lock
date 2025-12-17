@@ -23,6 +23,7 @@ environments:
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-s4vectors-0.44.0-r44h3df3fcb_2.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-seqarray-1.46.0-r44he5774e6_0.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-seqvartools-1.44.0-r44hdfd78af_0.tar.bz2
+      - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-snpstats-1.56.0-r44h15a9599_0.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-ucsc.utils-1.2.0-r44h9ee0642_1.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-xvector-0.46.0-r44h15a9599_2.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-zlibbioc-1.52.0-r44h3df3fcb_2.tar.bz2
@@ -361,6 +362,7 @@ environments:
       - conda: https://conda.anaconda.org/bioconda/osx-64/bioconductor-s4vectors-0.44.0-r44h2f393c0_2.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/osx-64/bioconductor-seqarray-1.46.0-r44h35d7169_0.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-seqvartools-1.44.0-r44hdfd78af_0.tar.bz2
+      - conda: https://conda.anaconda.org/bioconda/osx-64/bioconductor-snpstats-1.56.0-r44h2f393c0_0.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/osx-64/bioconductor-ucsc.utils-1.2.0-r44h527b516_1.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/osx-64/bioconductor-xvector-0.46.0-r44h53ed54c_2.tar.bz2
       - conda: https://conda.anaconda.org/bioconda/osx-64/bioconductor-zlibbioc-1.52.0-r44h2f393c0_2.tar.bz2
@@ -1024,6 +1026,40 @@ packages:
   license: GPL-3
   size: 1546717
   timestamp: 1734708685926
+- conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-snpstats-1.56.0-r44h15a9599_0.tar.bz2
+  sha256: 8ef2d8471066a4fd9a1597af626a40aa4cc6f332fb154057680946fcca5316f9
+  md5: d8e9504c939d240c7900d22e72318604
+  depends:
+  - bioconductor-biocgenerics >=0.52.0,<0.53.0
+  - bioconductor-biocgenerics >=0.52.0,<0.53.0a0
+  - bioconductor-zlibbioc >=1.52.0,<1.53.0
+  - bioconductor-zlibbioc >=1.52.0,<1.53.0a0
+  - libblas >=3.9.0,<4.0a0
+  - libgcc >=13
+  - liblapack >=3.9.0,<4.0a0
+  - libzlib >=1.3.1,<2.0a0
+  - r-base >=4.4,<4.5.0a0
+  - r-matrix
+  - r-survival
+  license: GPL-3
+  size: 8962920
+  timestamp: 1734534665621
+- conda: https://conda.anaconda.org/bioconda/osx-64/bioconductor-snpstats-1.56.0-r44h2f393c0_0.tar.bz2
+  sha256: 375be4ca7c253332a46a98ce825389a83ff2d0d3fbf985a3e0c07a2f1e2941d2
+  md5: 78ebc7de6842011a17073e3fa9acf07d
+  depends:
+  - bioconductor-biocgenerics >=0.52.0,<0.53.0
+  - bioconductor-biocgenerics >=0.52.0,<0.53.0a0
+  - bioconductor-zlibbioc >=1.52.0,<1.53.0
+  - bioconductor-zlibbioc >=1.52.0,<1.53.0a0
+  - libblas >=3.9.0,<4.0a0
+  - liblapack >=3.9.0,<4.0a0
+  - r-base >=4.4,<4.5.0a0
+  - r-matrix
+  - r-survival
+  license: GPL-3
+  size: 9026200
+  timestamp: 1734407192705
 - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-ucsc.utils-1.2.0-r44h9ee0642_1.tar.bz2
   sha256: b44c061b88b91fd7666d483f1fa7de46532fb936c74e54e30d31900181f3d18d
   md5: 1653b8e9eb24949cc045e21ad21927b6
