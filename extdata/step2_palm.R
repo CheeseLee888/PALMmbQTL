@@ -26,7 +26,10 @@ option_list <- list(
     make_option("--chrom",
         type = "character", default = "",
         help = ""
-    )
+    ),
+    make_option("--cluster",
+        type = "vector", default = NULL,
+        help = "")
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -38,6 +41,15 @@ bed <- paste0(opt$inFile, ".bed")
 bim <- paste0(opt$inFile, ".bim")
 fam <- paste0(opt$inFile, ".fam")
 for (f in c(bed, bim, fam)) if (!file.exists(f)) stop("Missing PLINK file: ", f)
+
+# read fam to get cluster info (make sure IDs align with abdFile's)
+cat("Reading PLINK .fam file for cluster info. \n")
+fam_data <- read.table(fam, stringsAsFactors = FALSE)
+colnames(fam_data) <- c("FID","IID","PID","MID","SEX","PHENO")
+
+cluster <- fam_data$FID
+names(cluster) <- fam_data$IID
+# ----------------------------
 
 plink <- snpStats::read.plink(bed, bim, fam)
 
@@ -76,7 +88,8 @@ if (is.null(opt$correct) || !nzchar(opt$correct) || toupper(opt$correct) == "NUL
 res <- palm.get.summary(
   null.obj = modglmm,
   covariate.interest = geno,
-  correct = opt$correct
+  correct = opt$correct,
+  cluster = cluster
 )
 
 # ---------- split by pheno and write {pheno}_step2_palm.txt ----------
@@ -104,12 +117,12 @@ res_df_list <- lapply(study_names, function(d) {
 res <- res_df_list[[1]]
 if (length(res_df_list) > 1) {
   for (i in 2:length(res_df_list)) {
-    # feature rows对齐（通常行名是featureID）；不对齐就用 merge by rownames
+    # feature rows align (usually rownames are feature IDs); if not aligned, merge by rownames
     res <- cbind(res, res_df_list[[i]])
   }
 }
 
-# 继承 rownames（feature IDs）
+# inherit rownames（feature IDs）
 rownames(res) <- rownames(res_df_list[[1]])
 
 
