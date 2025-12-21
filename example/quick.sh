@@ -1,6 +1,6 @@
 ################################# parameter settings below #################################
-######### model option ##########
-model=palm # 'palm' or 'palmmbqtl'
+######### PALMmethod option ##########
+PALMmethod=1 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
 
 ######### required below #########
 inputFolder=input
@@ -28,21 +28,21 @@ step1_prefix_palm=./${outputFolder}/allpheno_step1_palm
 
 
 ################################# workflow below (do not modify) #################################
-if [[ "${model}" != "palm" && "${model}" != "palmmbqtl" ]]; then
-    echo "Model must be specified as palm or palmmbqtl."
+if [[ "${PALMmethod}" != 1 && "${PALMmethod}" != 2 ]]; then
+    echo "PALMmethod must be specified as 1 (PALM) or 2 (PALM-mbQTL)."
     exit 1
 fi
 
-if [[ "${model}" == "palm" ]]; then
-    echo "Running PALM model..."
+if [[ "${PALMmethod}" == 1 ]]; then
+    echo "Running PALM method..."
 else
-    echo "Running PALM-mbQTL model..."
+    echo "Running PALM-mbQTL method..."
 fi
 
 mkdir -p "${outputFolder}"
 
 # step0: generate GRM from genotype data
-if [[ "${model}" == "palmmbqtl" ]]; then
+if [[ "${PALMmethod}" == 2 ]]; then
     echo "Generating GRM from genotype data..."
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_generateGRM.R \
         --genoFile=${genoFile} \
@@ -51,7 +51,7 @@ fi
 
 # step1: fit null model for all phenotypes
 echo "Fitting null model for all phenotypes..."
-if [[ "${model}" == "palm" ]]; then
+if [[ "${PALMmethod}" == 1 ]]; then
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_palm.R \
         --abdFile=${abdFile} \
         --covFile=${covFile} \
@@ -69,8 +69,8 @@ else
 fi
 
 # step2: score test for phenoCol
-echo "Performing score test for ${phenoCol}..."
-if [[ "${model}" == "palm" ]]; then
+echo "Performing score test..."
+if [[ "${PALMmethod}" == 1 ]]; then
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_palm.R \
         --inFile=${genoFile} \
         --correct=NULL \
