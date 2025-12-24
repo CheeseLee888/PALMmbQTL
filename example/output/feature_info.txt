@@ -1,0 +1,6 @@
+FeatureID	Prevalence	AvgProportion
+g_1	1	2288.41
+g_2	1	1250.17
+g_3	1	400.69
+Total samples:  100 
+Total families:  1 
