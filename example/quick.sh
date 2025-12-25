@@ -74,17 +74,17 @@ echo "Performing score test..."
 if [[ "${PALMmethod}" == 1 ]]; then
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_palm.R \
         --inFile=${genoFile} \
-        --correct=NULL \
         --NULLmodelFile=${palm1_step1_prefix}.rda \
         --PALMOutputFile=${outputFolder} \
-        --chrom=${chrom}
+        --chrom=${chrom} \
+        --correct=NULL
 else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \
+        --NULLmodelFile=${palm2_step1_prefix}.rda \
+        --PALMOutputFile=${palm2_step2_prefix} \
         --chrom=${chrom} \
         --phenoCol=${phenoCol} \
-        --PALMOutputFile=${palm2_step2_prefix} \
-        --NULLmodelFile=${palm2_step1_prefix}.rda \
         --minMAF=0
 fi
 
