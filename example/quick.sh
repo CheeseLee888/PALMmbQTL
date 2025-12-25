@@ -1,6 +1,6 @@
 ################################# parameter settings below #################################
 ######### PALMmethod option ##########
-PALMmethod=1 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
+PALMmethod=2 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
 
 ######### required below #########
 inputFolder=input
@@ -11,16 +11,17 @@ abdFile=./${inputFolder}/abd.txt
 covFile=./${inputFolder}/cov.txt
 sampleIDColinabdFile=IID
 sampleIDColincovFile=IID
-phenoCol=g_1
+# phenoCol=g_1
 chrom=1
 # offsetCol=SeqDepth
 covarColList=AGE,SEX
 
 ######### optional below #########
 grmFile=./${inputFolder}/grm.rds
-step1_prefix=./${outputFolder}/allpheno_step1
-step2_prefix=./${outputFolder}/${phenoCol}_step2${chrom:+_chr${chrom}}
-step1_prefix_palm=./${outputFolder}/allpheno_step1_palm
+palm1_step1_prefix=./${outputFolder}/palm1_step1_allpheno
+palm2_step1_prefix=./${outputFolder}/palm2_step1_allpheno
+palm2_step2_prefix=./${outputFolder}/palm2_step2${chrom:+_chr${chrom}}
+
 # step2_prefix_palm
 
 
@@ -55,14 +56,14 @@ if [[ "${PALMmethod}" == 1 ]]; then
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_palm.R \
         --abdFile=${abdFile} \
         --covFile=${covFile} \
-        --outputPrefix=${step1_prefix_palm}
+        --outputPrefix=${palm1_step1_prefix}
 else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_fitNULL.R \
         --abdFile=${abdFile} \
         --covFile=${covFile} \
         --grmFile=${grmFile} \
         --covarColList=${covarColList} \
-        --outputPrefix=${step1_prefix} \
+        --outputPrefix=${palm2_step1_prefix} \
         --useGRMtoFitNULL=TRUE \
         --sampleIDColinabdFile=${sampleIDColinabdFile} \
         --sampleIDColincovFile=${sampleIDColincovFile}
@@ -74,16 +75,16 @@ if [[ "${PALMmethod}" == 1 ]]; then
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_palm.R \
         --inFile=${genoFile} \
         --correct=NULL \
-        --NULLmodelFile=${step1_prefix_palm}.rda \
+        --NULLmodelFile=${palm1_step1_prefix}.rda \
         --PALMOutputFile=${outputFolder} \
         --chrom=${chrom}
 else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \
-        --phenoCol=${phenoCol} \
         --chrom=${chrom} \
-        --PALMOutputFile=${step2_prefix}.txt \
-        --NULLmodelFile=${step1_prefix}.rda \
+        --phenoCol=${phenoCol} \
+        --PALMOutputFile=${palm2_step2_prefix} \
+        --NULLmodelFile=${palm2_step1_prefix}.rda \
         --minMAF=0
 fi
 
