@@ -176,7 +176,7 @@ for (pheno in rownames(res)) {
 
     out_file <- file.path(
     out_dir,
-    paste0(pheno, "_step2_palm", chr_suffix, ".txt")
+    paste0("palm1_step2", chr_suffix, "_", pheno, ".txt")
     )
 
     write.table(out, file = out_file, sep = "\t",
