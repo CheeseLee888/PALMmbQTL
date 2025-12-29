@@ -11,9 +11,7 @@ abdFile=./${inputFolder}/abd.txt
 covFile=./${inputFolder}/cov.txt
 sampleIDColinabdFile=IID
 sampleIDColincovFile=IID
-# phenoCol=g_1
 chrom=1
-# offsetCol=SeqDepth
 covarColList=AGE,SEX
 
 ######### optional below #########
@@ -21,8 +19,6 @@ grmFile=./${inputFolder}/grm.rds
 palm1_step1_prefix=./${outputFolder}/palm1_step1_allpheno
 palm2_step1_prefix=./${outputFolder}/palm2_step1_allpheno
 palm2_step2_prefix=./${outputFolder}/palm2_step2${chrom:+_chr${chrom}}
-
-# step2_prefix_palm
 
 
 
@@ -42,12 +38,17 @@ fi
 
 mkdir -p "${outputFolder}"
 
-# step0: generate GRM from genotype data
+# step0: generate GRM from genotype data (only for PALM-mbQTL)
 if [[ "${PALMmethod}" == 2 ]]; then
-    echo "Generating GRM from genotype data..."
-    pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_generateGRM.R \
-        --genoFile=${genoFile} \
-        --grmFile=${grmFile}
+    if [[ -f "${grmFile}" ]]; then
+        echo "GRM already exists at: ${grmFile}"
+        echo "Skip generating GRM and reuse the existing GRM."
+    else
+        echo "Generating GRM from genotype data..."
+        pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_generateGRM.R \
+            --genoFile=${genoFile} \
+            --grmFile=${grmFile}
+    fi
 fi
 
 # step1: fit null model for all phenotypes
