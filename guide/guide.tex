@@ -15,26 +15,26 @@
 \begin{document}
 \maketitle
 
-\section{Overview}
+% \section{Overview}
 
-PALM-mbQTL implements a Poisson mixed-effect model for microbiome QTL
-analysis. For each microbial feature (e.g.\ genus abundance), the
-pipeline
+% PALM-mbQTL implements a Poisson mixed-effect model for microbiome QTL
+% analysis. For each microbial feature (e.g.\ genus abundance), the
+% pipeline
 
-\begin{enumerate}[nosep]
-  \item builds a genetic relationship matrix (GRM) from SNP genotypes;
-  \item merges microbiome abundance with sample-level covariates;
-  \item fits a null Poisson GLMM with random genetic effect; and
-  \item performs single-variant score tests across the genome.
-\end{enumerate}
+% \begin{enumerate}[nosep]
+%   \item builds a genetic relationship matrix (GRM) from SNP genotypes;
+%   \item merges microbiome abundance with sample-level covariates;
+%   \item fits a null Poisson GLMM with random genetic effect; and
+%   \item performs single-variant score tests across the genome.
+% \end{enumerate}
 
-This document describes the minimal Docker-based installation and the
-example workflow in \texttt{example/}, which is driven by the shell
-script \texttt{example/quick.sh}.  The same interface can be used on
-real data by editing the parameter block at the top of
-\texttt{quick.sh}.
+% This document describes the minimal Docker-based installation and the
+% example workflow in \texttt{example/}, which is driven by the shell
+% script \texttt{example/quick.sh}.  The same interface can be used on
+% real data by editing the parameter block at the top of
+% \texttt{quick.sh}.
 
-An additional PALM mode based on our own implementation is also provided; a brief usage example is given below, while full details are documented in a separate PALM manual (PDF).
+% An additional PALM mode based on our own implementation is also provided; a brief usage example is given below, while full details are documented in a separate PALM manual (PDF).
 
 
 \section{Installation (Docker only)}
@@ -89,10 +89,10 @@ The example data live in \texttt{example/input/}:
 
 \subsection{\texttt{abd.txt}: microbiome abundance}
 
-A minimal example:
+Example:
 
 \begin{verbatim}
-IID	g_1	g_2	g_3
+IID	g1	g2	g3
 DKR276	3789	674	728
 DLB658	3404	1670	194
 NTY571	1399	1269	184
@@ -104,11 +104,9 @@ Requirements:
   \item Tab-delimited text file (here the extension is `.txt`).
   \item One row per sample.
   \item First column: unique sample identifier (name specified by
-  	exttt{sampleIDColinabdFile}; in the example it is `IID`).
+  	\texttt{sampleIDColinabdFile}; in the example it is `IID`).
   \item Remaining columns: non-negative integer counts for microbial
     features.
-  \item Column names (e.g.\ \texttt{g\_1}) are used in
-    	exttt{phenoCol}.
 \end{itemize}
 
 \subsection{\texttt{cov.txt}: covariates}
@@ -128,12 +126,14 @@ Requirements:
   \item Tab-delimited.
   \item One row per sample; sample ID column must match
     the `IID` column in `abd.txt` (specified by
-  	exttt{sampleIDColincovFile}).
+  	\texttt{sampleIDColincovFile}).
   \item This example does not include a sequencing depth / offset
     column. If you wish to use a log-offset (e.g. sequencing
     depth), add a column (for example `SeqDepth`) and set
-  	exttt{offsetCol} accordingly; the pipeline will use
-    \(\log(\texttt{offsetCol})\) as the Poisson offset.
+  	\texttt{offsetCol} accordingly; the pipeline will use
+    \(\log(\texttt{offsetCol})\) as the Poisson offset. 
+    If \texttt{offsetCol} is not specified, offset will be set to sequence
+    depth, which is calculated from the total counts per sample in \texttt{abd.txt} automatically.
   \item Columns listed in \texttt{covarColList} (for example
     `AGE`, `SEX`, `PC01`, `PC02`, ...) will be included as fixed
     effects in the model.
@@ -141,7 +141,7 @@ Requirements:
 
 \subsection{Genotypes: \texttt{geno.bed/.bim/.fam}}
 
-Standard PLINK 1 binary format:
+Standard PLINK binary format:
 
 \begin{itemize}[nosep]
   \item \texttt{geno.bed}: genotype matrix.
@@ -151,24 +151,28 @@ Standard PLINK 1 binary format:
         microbiome/covariate files.
 \end{itemize}
 
-In the example, there are five samples and three SNPs.
+\subsection{grm.rds}
+Optional precomputed GRM in RDS format.
+If not provided, the pipeline will generate the GRM from the
+genotype files automatically.
 
-\subsection{Example outputs}
+\section{Example output files}
 
 The example runs produce two sets of outputs under \texttt{example/output/}:
 
 \begin{itemize}[nosep]
   \item Files prefixed with \texttt{palm1} correspond to the PALM run, for
     example \texttt{palm1\_step1\_allpheno.rda} and
-  	\texttt{palm1\_step2\_chr1\_g\_1.txt}.
+  	\texttt{palm1\_step2\_chr1\_g1.txt}.
   \item Files prefixed with \texttt{palm2} correspond to the
     PALM-mbQTL run, for example \texttt{palm2\_step1\_allpheno.rda}
-    and \texttt{palm2\_step2\_chr1\_g\_1.txt}.
+    and \texttt{palm2\_step2\_chr1\_g1.txt}.
+  \item Filenames: \texttt{chr1} (chromosome name), \texttt{g1} (phenotype/gene name).
 \end{itemize}
 
 Example output snippets:
 
-\paragraph{PALM (\texttt{palm1})}
+\paragraph{\texttt{palm1\_step2\_chr1\_g1.txt}}
 \begin{verbatim}
 SNP	est	stderr
 chr1.1119172.G.A	-0.0654061415202243	0.0654061379291642
@@ -176,11 +180,10 @@ chr1.1423343.G.T	0.190386805592012	0.190386809336004
 chr1.3522693.A.G	-0.11205843777915	0.112058432554074
 \end{verbatim}
 
-Columns: \texttt{SNP} (variant identifier), \texttt{test} (estimated
-effect for the tested covariate) and \texttt{stderr} (its standard
-error).
+Columns: \texttt{SNP} (variant id), \texttt{est} (score statistic) 
+and \texttt{stderr} (its standard error).
 
-\paragraph{PALM-mbQTL (\texttt{palm2})}
+\paragraph{\texttt{palm2\_step2\_chr1\_g1.txt}}
 \begin{verbatim}
 CHR	SNP	cM	POS	A1	A2	N	AF	SCORE	VAR	PVAL
 1	chr1:1119172:G:A	0	1119172	A	G	100	0.91	-1.24601	4.16174	0.541347
@@ -188,7 +191,7 @@ CHR	SNP	cM	POS	A1	A2	N	AF	SCORE	VAR	PVAL
 1	chr1:3522693:A:G	0	3522693	G	A	100	0.925	1.97883	5.00944	0.376629
 \end{verbatim}
 
-Columns: \texttt{CHR}, \texttt{SNP} (variant id), \texttt{POS} (bp
+Columns: \texttt{CHR} (chromosome), \texttt{SNP} (variant id), \texttt{POS} (bp
 position), \texttt{A1}/\texttt{A2} (alleles), \texttt{N} (sample
   size), \texttt{AF} (allele frequency for \texttt{A1}), \texttt{SCORE}
   (score statistic), \texttt{VAR} (variance of the score), and
@@ -198,15 +201,21 @@ position), \texttt{A1}/\texttt{A2} (alleles), \texttt{N} (sample
 
 The script \texttt{example/quick.sh} is the main user interface.  At
 the top of the file there is a small block where all user-facing
-parameters are defined:
+parameters are defined. Generally, by running \texttt{bash quick.sh}
+inside the Docker container, the entire pipeline will be executed with
+all phenotypes/features and can be parallelized by chromosome. 
+In example, we have g1, g2 and g3 in abd.txt, and we set chrom=1,
+then we will get results for g1, g2 and g3 on chromosome 1, with filenames
+like \texttt{palm1\_step2\_chr1\_g1.txt}, \texttt{palm1\_step2\_chr1\_g2.txt} 
+and \texttt{palm1\_step2\_chr1\_g3.txt}.
 
 \subsection*{Required parameters}
 
 \begin{description}[style=unboxed,leftmargin=0cm]
   \item[\texttt{PALMmethod}] Which workflow to run.
     \begin{itemize}[nosep]
-      \item \texttt{1}: run the \texttt{PALM} workflow (\texttt{step1\_palm.R} + \texttt{step2\_palm.R});
-      \item \texttt{2}: run the \texttt{PALM-mbQTL} workflow (\texttt{step0\_generateGRM.R} + \texttt{step1\_fitNULL.R} + \texttt{step2\_scoreTest.R}).
+      \item \texttt{1}: run the \texttt{PALM} workflow (\texttt{step1\_palm.R} + \texttt{step2\_palm.R} + \texttt{step3\_info.R});
+      \item \texttt{2}: run the \texttt{PALM-mbQTL} workflow (\texttt{step0\_generateGRM.R} + \texttt{step1\_fitNULL.R} + \texttt{step2\_scoreTest.R} + \texttt{step3\_info.R}).
     \end{itemize}
 
   \item[\texttt{inputFolder}] Path (relative to \texttt{quick.sh})
@@ -238,7 +247,8 @@ parameters are defined:
 \end{description}
 
 \subsection*{Optional parameters}
-
+They are already provided with default values in \texttt{quick.sh}.
+You do not need to change them unless you have specific needs.
 \begin{description}[style=unboxed,leftmargin=0cm]
   \item[\texttt{grmFile}] Path to the GRM RDS file (used only when \texttt{PALMmethod=2}).
     If the file does not exist, step~0 generates it from \texttt{genoFile};
@@ -266,7 +276,7 @@ repository):
 \begin{enumerate}
   \item \textbf{Generate GRM from genotypes}
   (\texttt{step0\_generateGRM.R})\\
-  Takes the PLINK/GDS files defined by \texttt{genoFile} and produces a
+  PALM-mbQTL only. Takes the PLINK/GDS files defined by \texttt{genoFile} and produces a
   GRM saved to \texttt{grmFile}.  This step only needs to be run once
   per genotype dataset.
 
@@ -312,18 +322,9 @@ individually; instead, you:
   \item edit the parameter block at the top of
         \texttt{example/quick.sh};
   \item run \texttt{bash quick.sh} inside the Docker container; and
-  \item inspect the per-phenotype outputs under \texttt{output/}.
+  \item inspect the per-chromosome outputs under \texttt{output/}.
 \end{enumerate}
 
-
-Besides the Poisson mixed-model mbQTL pipeline, PALM-mbQTL also provides
-a built-in \texttt{PALM} mode, implemented in this project, for testing
-associations between microbial features (e.g.\ genus-level abundances)
-and sample-level covariates without using genotype data. This mode is
-driven by \texttt{example/quick\_palm.sh}, which calls the internal R
-function \texttt{palm()} and outputs a table of feature–covariate
-association results. A separate document (PALM PDF) describes the PALM
-model, input format, and all available arguments in detail.
 
 
 \section{Notes and extensions}
@@ -334,12 +335,12 @@ model, input format, and all available arguments in detail.
         example input files with your full dataset and adjust the
         parameter block accordingly.
   \item This document focuses on quick-start shell wrappers
-        (\texttt{quick.sh}, \texttt{quick\_palm.sh})
+        (\texttt{quick.sh})
         for running the pipeline end-to-end. If you would like to
-        deploy PALM-mbQTL step by step on an HPC scheduler (e.g. SLURM
+        deploy PALM step by step on an HPC scheduler (e.g. SLURM
         or HTCondor), or integrate it into existing container
         workflows (Docker/Apptainer/Singularity \texttt{.sif} images),
-        please contact the author for assistance.
+        please contact the author for assistance: cheese.lee.888@gmail.com.
 \end{itemize}
 
 
