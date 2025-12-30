@@ -1,21 +1,23 @@
 ################################# parameter settings below #################################
 ######### required below #########
+PALMmethod=1 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
+
 inputFolder=input
 outputFolder=output
 
 genoFile=geno
-abdFile=abd.tsv
-covFile=cov.tsv
-sampleIDColinabdFile=sample_id
-sampleIDColincovFile=sample_id
-
-phenoCol=g_Blautia
-offsetCol=SeqDepth
-covarColList=age,sex
+abdFile=abd.txt
+covFile=cov.txt
+sampleIDColinabdFile=IID
+sampleIDColincovFile=IID
+chrom=1
+covarColList=AGE,SEX
 
 ######### optional below #########
-mergeOutFile=merged.txt
 grmFile=grm.rds
+palm1_step1_prefix=palm1_step1_allpheno
+palm2_step1_prefix=palm2_step1_allpheno
+palm2_step2_prefix=palm2_step2${chrom:+_chr${chrom}}
 
 
 
@@ -28,94 +30,89 @@ outputFolder="${workDir}/${outputFolder}"
 genoFile="${inputFolder}/${genoFile}"
 abdFile="${inputFolder}/${abdFile}"
 covFile="${inputFolder}/${covFile}"
-mergeOutFile="${inputFolder}/${mergeOutFile}"
 grmFile="${inputFolder}/${grmFile}"
+palm1_step1_prefix="${outputFolder}/${palm1_step1_prefix}"
+palm2_step1_prefix="${outputFolder}/${palm2_step1_prefix}"
+palm2_step2_prefix="${outputFolder}/${palm2_step2_prefix}"
 
 echo "[INFO] Using input folder: ${inputFolder}"
 echo "[INFO] Using output folder: ${outputFolder}"
 echo "[INFO] Using genotype file: ${genoFile}"
 echo "[INFO] Using abundance file: ${abdFile}"
 echo "[INFO] Using covariate file: ${covFile}"
-echo "[INFO] Using merged output file: ${mergeOutFile}"
 echo "[INFO] Using GRM file: ${grmFile}"
+
+
+
+
+
 ################################# workflow below (do not modify) #################################
-mkdir -p "${outputFolder}"
-# step0: generate GRM from genotype data
-echo "Generating GRM from genotype data..."
-step0_generateGRM.R \
-    --genoFile=${genoFile} \
-    --grmFile=${grmFile}
-
-# step0: merge phenotype and covariate data
-echo "Merging phenotype and covariate data..."
-step0_mergePheno.R \
-    --abdFile=${abdFile} \
-    --covFile=${covFile} \
-    --sampleIDColinabdFile=${sampleIDColinabdFile} \
-    --sampleIDColincovFile=${sampleIDColincovFile} \
-    --mergeOutFile=${mergeOutFile}
-
-# step1 & step2: fit null model and score test for one or more phenotypes
-# Support multiple phenotypes separated by commas in `phenoCol`, or phenoCol=all to use all phenos from abdFile
-if [ -z "${phenoCol}" ]; then
-    echo "phenoCol is empty. Please set phenoCol to one or more phenotype column names, or phenoCol=all."
+if [[ "${PALMmethod}" != 1 && "${PALMmethod}" != 2 ]]; then
+    echo "PALMmethod must be specified as 1 (PALM) or 2 (PALM-mbQTL)."
     exit 1
 fi
 
-# Check if phenoCol is "all" - if so, extract all phenotype column names from abdFile header
-if [ "${phenoCol}" = "all" ]; then
-    echo "phenoCol is 'all'; extracting all phenotype columns from abdFile header..."
-    # Read first line (header) from abdFile and split by tab
-    header=$(head -n 1 "${abdFile}")
-    # Convert to array by splitting on tab
-    IFS=$'\t' read -ra HEADER_COLS <<< "${header}"
-    
-    # Build PHENOS array, excluding IID and metadata columns
-    PHENOS=()
-    for col in "${HEADER_COLS[@]}"; do
-        # Skip IID, SeqDepth, and other known metadata columns
-        if [[ "${col}" != "${sampleIDColinabdFile}" && "${col}" != "" ]]; then
-            PHENOS+=("${col}")
-        fi
-    done
-    
-    if [ ${#PHENOS[@]} -eq 0 ]; then
-        echo "No phenotype columns found in abdFile (after excluding IID, etc.)"
-        exit 1
-    fi
-    
-    echo "Found ${#PHENOS[@]} phenotype columns: ${PHENOS[*]}"
+if [[ "${PALMmethod}" == 1 ]]; then
+    echo "Running PALM method..."
 else
-    # remove spaces around commas and split into array
-    phenoColClean=$(echo "${phenoCol}" | sed 's/[[:space:]]//g')
-    IFS=',' read -ra PHENOS <<< "${phenoColClean}"
+    echo "Running PALM-mbQTL method..."
 fi
-for pheno in "${PHENOS[@]}"; do
-    if [ -z "${pheno}" ]; then
-        continue
-    fi
-    # step1: fit null model
-    echo "Fitting null model for ${pheno}..."
-    step1_fitNULL.R \
-        --phenoFile=${mergeOutFile} \
-        --covFile=${covFile} \
-        --sampleIDColincovFile=${sampleIDColincovFile} \
-        --grmFile=${grmFile} \
-        --phenoCol=${pheno} \
-        --covarColList=${covarColList} \
-        --offsetCol=${offsetCol} \
-        --outputPrefix=${outputFolder}/${pheno}_step1 \
-        --isCovariateOffset=TRUE \
-        --useGRMtoFitNULL=TRUE \
-        --sampleIDColinphenoFile=IID \
-        --traitType=count
 
-    # step2: score test
-    step1prefix=${outputFolder}/${pheno}_step1
-    step2prefix=${outputFolder}/${pheno}_step2
-    echo "Performing score test for ${pheno}..."
+mkdir -p "${outputFolder}"
+
+# step0: generate GRM from genotype data (only for PALM-mbQTL)
+if [[ "${PALMmethod}" == 2 ]]; then
+    if [[ -f "${grmFile}" ]]; then
+        echo "GRM already exists at: ${grmFile}"
+        echo "Skip generating GRM and reuse the existing GRM."
+    else
+        echo "Generating GRM from genotype data..."
+        step0_generateGRM.R \
+            --genoFile=${genoFile} \
+            --grmFile=${grmFile}
+    fi
+fi
+
+# step1: fit null model for all phenotypes
+echo "Fitting null model for all phenotypes..."
+if [[ "${PALMmethod}" == 1 ]]; then
+    step1_palm.R \
+        --abdFile=${abdFile} \
+        --covFile=${covFile} \
+        --outputPrefix=${palm1_step1_prefix}
+else
+    step1_fitNULL.R \
+        --abdFile=${abdFile} \
+        --covFile=${covFile} \
+        --grmFile=${grmFile} \
+        --covarColList=${covarColList} \
+        --outputPrefix=${palm2_step1_prefix} \
+        --useGRMtoFitNULL=TRUE \
+        --sampleIDColinabdFile=${sampleIDColinabdFile} \
+        --sampleIDColincovFile=${sampleIDColincovFile}
+fi
+
+# step2: score test for phenoCol
+echo "Performing score test..."
+if [[ "${PALMmethod}" == 1 ]]; then
+    step2_palm.R \
+        --inFile=${genoFile} \
+        --NULLmodelFile=${palm1_step1_prefix}.rda \
+        --PALMOutputFile=${outputFolder} \
+        --chrom=${chrom} \
+        --correct=NULL
+else
     step2_scoreTest.R \
         --inFile=${genoFile} \
-        --PALMOutputFile=${step2prefix}.txt \
-        --NULLmodelFile=${step1prefix}.rda
-done
+        --NULLmodelFile=${palm2_step1_prefix}.rda \
+        --PALMOutputFile=${palm2_step2_prefix} \
+        --chrom=${chrom} \
+        --phenoCol=${phenoCol} \
+        --minMAF=0
+fi
+
+# Step 3: Generate feature information
+step3_info.R \
+    --abdFile=${abdFile} \
+    --genoFile=${genoFile} \
+    --outputFile=${outputFolder}/feature_info.txt
