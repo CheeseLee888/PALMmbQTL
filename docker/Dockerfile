@@ -25,6 +25,17 @@ RUN curl -fsSL https://pixi.sh/install.sh | sh && \
     pixi run Rscript -e 'install.packages("remotes", repos="https://cloud.r-project.org"); remotes::install_github("barkasn/fastSave")' && \
     pixi run Rscript -e 'install.packages(c("GMMAT"), repos="https://cloud.r-project.org")'
 
+
+RUN apt-get update -qq && apt-get install -y --no-install-recommends \
+    wget ca-certificates unzip && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install PLINK 1.9
+RUN wget -qO /tmp/plink.zip https://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20230116.zip && \
+    unzip -q /tmp/plink.zip -d /usr/local/bin && \
+    chmod +x /usr/local/bin/plink && \
+    rm -f /tmp/plink.zip
+
 # --- install PALM dependencies ---
 RUN pixi run Rscript - << 'EOF'
 deps <- c("MASS", "metafor", "abess", "dplyr", "brglm2", "Rcpp")
