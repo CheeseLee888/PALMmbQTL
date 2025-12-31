@@ -149,8 +149,10 @@ print(opt)
 
 ## covariates: if covarColList is ALL, infer from covFile header
 if (opt$covarColList!="all") {
+  cat("Using user-specified covariates from --covarColList\n")
   covars <- strsplit(opt$covarColList, ",")[[1]]
 } else {
+  cat("Using all covariates from covFile header\n")
   cov_header <- colnames(
     read.table(opt$covFile,
                header = TRUE,
@@ -167,8 +169,6 @@ if (opt$covarColList!="all") {
   if (!length(covars)) {
     stop("No covariate columns found in covFile after removing ID and offset columns. Please set '--covarColList= '(empty) and try again.\n")
   }
-
-  cat("Using all covariates from covFile header: \n")
   print(covars)
 }
 

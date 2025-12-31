@@ -1,6 +1,6 @@
 ################################# parameter settings below #################################
 ######### required below #########
-PALMmethod=1 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
+PALMmethod=2 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
 
 inputFolder=input
 outputFolder=output
@@ -11,7 +11,6 @@ covFile=./${inputFolder}/cov.txt
 sampleIDColinabdFile=IID
 sampleIDColincovFile=IID
 chrom=1
-covarColList=AGE,SEX
 
 ######### optional below #########
 grmFile=./${inputFolder}/grm.rds
@@ -62,7 +61,7 @@ else
         --abdFile=${abdFile} \
         --covFile=${covFile} \
         --grmFile=${grmFile} \
-        --covarColList=${covarColList} \
+        --covarColList=all \
         --outputPrefix=${palm2_step1_prefix} \
         --useGRMtoFitNULL=TRUE \
         --sampleIDColinabdFile=${sampleIDColinabdFile} \
