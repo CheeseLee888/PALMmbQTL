@@ -64,6 +64,43 @@ SPAGMMATtest <- function(inFile = "",
       MAF.range = c(minMAF, 0.5)
     )
     cat(sprintf("glmmscore test for '%s' finished. Output: %s\n", pheno_name, out_file))
+
+    # --------------------------
+    # Post-process: keep only SNP SCORE VAR PVAL
+    # --------------------------
+    res <- data.table::fread(out_file, data.table = FALSE)
+
+    # Column name compatibility (GMMAT sometimes uses lowercase pval)
+    if (!"PVAL" %in% names(res) && "pval" %in% names(res)) {
+      names(res)[names(res) == "pval"] <- "PVAL"
+    }
+
+    required_cols <- c("SNP", "SCORE", "VAR", "PVAL")
+    missing_cols <- setdiff(required_cols, names(res))
+    if (length(missing_cols) > 0) {
+      stop("Missing required columns in glmm.score output file: ",
+           paste(missing_cols, collapse = ", "),
+           "\nFile: ", out_file)
+    }
+
+    res_out <- res[, required_cols]
+
+    # Basic sanity checks
+    if (any(res_out$VAR <= 0, na.rm = TRUE)) {
+      stop("Non-positive VAR detected in output file: ", out_file)
+    }
+    if (anyDuplicated(res_out$SNP)) {
+      stop("Duplicated SNP IDs detected in output file: ", out_file)
+    }
+
+    data.table::fwrite(
+      res_out,
+      out_file,
+      sep = "\t",
+      quote = FALSE,
+      na = "NA"
+    )
+    cat(sprintf("Post-processed output saved (SNP,SCORE,VAR,PVAL): %s\n", out_file))
   }
 
 }
