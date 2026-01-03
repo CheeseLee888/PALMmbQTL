@@ -8,10 +8,7 @@ outputFolder=output
 genoFile=geno
 abdFile=abd.txt
 covFile=cov.txt
-sampleIDColinabdFile=IID
-sampleIDColincovFile=IID
 chrom=1
-covarColList=AGE,SEX
 
 ######### optional below #########
 grmFile=grm.rds
@@ -85,11 +82,9 @@ else
         --abdFile=${abdFile} \
         --covFile=${covFile} \
         --grmFile=${grmFile} \
-        --covarColList=${covarColList} \
         --outputPrefix=${palm2_step1_prefix} \
-        --useGRMtoFitNULL=TRUE \
-        --sampleIDColinabdFile=${sampleIDColinabdFile} \
-        --sampleIDColincovFile=${sampleIDColincovFile}
+        --covarColList=all \
+        --useGRMtoFitNULL=TRUE
 fi
 
 # step2: score test for phenoCol

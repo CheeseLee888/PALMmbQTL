@@ -26,6 +26,7 @@ read_table_with_id <- function(path, id_col = NULL) {
     colnames(df)[1] <- "IID"
     
   } else {
+    stop("Not supported now. Please skip setting id_col to use the first column as ID.\n")
     ## Case B: user specifies the ID column name
     ## -> find that column; if missing, throw an error
     if (!id_col %in% colnames(df)) {
