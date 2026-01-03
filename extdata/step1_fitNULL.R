@@ -153,13 +153,8 @@ if (opt$covarColList!="all") {
   covars <- strsplit(opt$covarColList, ",")[[1]]
 } else {
   cat("Using all covariates from covFile header\n")
-  cov_header <- colnames(
-    read.table(opt$covFile,
-               header = TRUE,
-               sep = "\t",        # separator
-               nrows = 1,
-               check.names = FALSE)
-  )
+  cov <- read_table_with_id(opt$covFile)
+  cov_header <- colnames(cov)
 
   ## Remove ID and offset columns
   drop_cols <- c(opt$sampleIDColincovFile, opt$offsetCol)

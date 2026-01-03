@@ -109,8 +109,8 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   }
 
   ## read tables with ID handling -----------------------------------------------
-  abd <- read_table_with_id(abdFile, id_col = sampleIDColinabdFile)
-  cov <- read_table_with_id(covFile, id_col = sampleIDColincovFile)
+  abd <- read_table_with_id(abdFile)
+  cov <- read_table_with_id(covFile)
   cat("Abundance and covariate files have been read\n")
 
   ## read phenotype list ------------------------------------------------------

@@ -8,8 +8,6 @@ outputFolder=output
 genoFile=./${inputFolder}/geno
 abdFile=./${inputFolder}/abd.txt
 covFile=./${inputFolder}/cov.txt
-sampleIDColinabdFile=IID
-sampleIDColincovFile=IID
 chrom=1
 
 ######### optional below #########
@@ -61,11 +59,9 @@ else
         --abdFile=${abdFile} \
         --covFile=${covFile} \
         --grmFile=${grmFile} \
-        --covarColList=all \
         --outputPrefix=${palm2_step1_prefix} \
-        --useGRMtoFitNULL=TRUE \
-        --sampleIDColinabdFile=${sampleIDColinabdFile} \
-        --sampleIDColincovFile=${sampleIDColincovFile}
+        --covarColList=all \
+        --useGRMtoFitNULL=TRUE
 fi
 
 # step2: score test for phenoCol
