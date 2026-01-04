@@ -72,7 +72,8 @@ if [[ "${PALMmethod}" == 1 ]]; then
         --NULLmodelFile=${palm1_step1_prefix}.rda \
         --PALMOutputFile=${outputFolder} \
         --chrom=${chrom} \
-        --correct=NULL
+        --correct=NULL \
+        --cluster=
 else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \

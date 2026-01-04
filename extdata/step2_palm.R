@@ -28,7 +28,7 @@ option_list <- list(
         help = ""
     ),
     make_option("--cluster",
-        type = "vector", default = NULL,
+        type = "character", default = NULL,
         help = "")
 )
 
@@ -85,12 +85,27 @@ if (!is.null(opt$chrom) && nzchar(opt$chrom)) {
 if (is.null(opt$correct) || !nzchar(opt$correct) || toupper(opt$correct) == "NULL") {
   opt$correct <- NULL
 }
-res <- palm.get.summary(
-  null.obj = modglmm,
-  covariate.interest = geno,
-  correct = opt$correct,
-  cluster = cluster
-)
+# normalize cluster from optparse to R NULL
+if (is.null(opt$cluster) || !nzchar(opt$cluster) || toupper(opt$cluster) == "NULL") {
+  opt$cluster <- NULL
+}
+
+if (is.null(opt$cluster)) {
+  cat("No cluster provided; running palm.get.summary without cluster.\n")
+  res <- palm.get.summary(
+    null.obj = modglmm,
+    covariate.interest = geno,
+    correct = opt$correct
+  )
+}else{
+  cat("Cluster provided; running palm.get.summary with cluster.\n")
+  res <- palm.get.summary(
+    null.obj = modglmm,
+    covariate.interest = geno,
+    correct = opt$correct,
+    cluster = cluster
+  )
+}
 
 # write.table(res, file = "output/palm1_test.txt", sep = "\t",
 #               quote = FALSE, row.names = FALSE, col.names = TRUE)
