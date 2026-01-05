@@ -84,7 +84,7 @@ The example data live in \texttt{example/input/}:
   \item \texttt{cov.txt}: sample-level covariates.
   \item \texttt{geno.bed}, \texttt{geno.bim}, \texttt{geno.fam}:
         PLINK binary genotype files.
-  \item \texttt{grm.rds} (optional): precomputed GRM in RDS format.
+  \item \texttt{grm.rds} (optional): precomputed GRM in RDS format. PALM-mbQTL only.
 \end{itemize}
 
 \subsection{\texttt{abd.txt}: microbiome abundance}
@@ -103,10 +103,9 @@ Requirements:
 \begin{itemize}[nosep]
   \item Tab-delimited text file (here the extension is `.txt`).
   \item One row per sample.
-  \item First column: unique sample identifier (name specified by
-  	\texttt{sampleIDColinabdFile}; in the example it is `IID`).
-  \item Remaining columns: non-negative integer counts for microbial
-    features.
+  \item First column: unique sample ID (name can be anything; in the example it is `IID`).
+  \item Remaining columns: non-negative integer counts for microbial features. No NAs.
+  The sum of counts per sample is used as sequencing depth by default. Therefore it must be positive for all samples.
 \end{itemize}
 
 \subsection{\texttt{cov.txt}: covariates}
@@ -124,16 +123,15 @@ Requirements:
 
 \begin{itemize}[nosep]
   \item Tab-delimited.
-  \item One row per sample; sample ID column must match
-    the `IID` column in `abd.txt` (specified by
-  	\texttt{sampleIDColincovFile}).
-  \item This example does not include a sequencing depth / offset
+  \item One row per sample.
+  \item First column: unique sample ID (name can be anything; in the example it is `IID`). 
+  Sample ID column must match the `IID` column in `abd.txt`.
+  \item This example does not include a sequencing depth 
     column. If you wish to use a log-offset (e.g. sequencing
     depth), add a column (for example `SeqDepth`) and set
   	\texttt{offsetCol} accordingly; the pipeline will use
     \(\log(\texttt{offsetCol})\) as the Poisson offset. 
-    If \texttt{offsetCol} is not specified, offset will be set to sequence
-    depth, which is calculated from the total counts per sample in \texttt{abd.txt} automatically.
+    If \texttt{offsetCol} is not specified, the pipeline uses automatically calculated sequencing depth.
   \item Columns listed in \texttt{covarColList} (for example
     `AGE`, `SEX`, `PC01`, `PC02`, ...) will be included as fixed
     effects in the model.
@@ -174,28 +172,23 @@ Example output snippets:
 
 \paragraph{\texttt{palm1\_step2\_chr1\_g1.txt}}
 \begin{verbatim}
-SNP	est	stderr
-chr1.1119172.G.A	-0.0654061415202243	0.0654061379291642
-chr1.1423343.G.T	0.190386805592012	0.190386809336004
-chr1.3522693.A.G	-0.11205843777915	0.112058432554074
+SNP	SCORE	VAR	PVAL
+chr1.1119172.G.A	-7.46170816152792	114.082683798442	0.484802231639899
+chr1.1423343.G.T	15.6764456780156	82.3399795446402	0.0840606557169883
+chr1.3522693.A.G	-2.69387870487415	24.0399452130804	0.582711318455373
 \end{verbatim}
-
-Columns: \texttt{SNP} (variant id), \texttt{est} (score statistic) 
-and \texttt{stderr} (its standard error).
 
 \paragraph{\texttt{palm2\_step2\_chr1\_g1.txt}}
 \begin{verbatim}
-CHR	SNP	cM	POS	A1	A2	N	AF	SCORE	VAR	PVAL
-1	chr1:1119172:G:A	0	1119172	A	G	100	0.91	-1.24601	4.16174	0.541347
-1	chr1:1423343:G:T	0	1423343	T	G	100	0.865	-3.73529	5.45663	0.10981
-1	chr1:3522693:A:G	0	3522693	G	A	100	0.925	1.97883	5.00944	0.376629
+SNP	SCORE	VAR	PVAL
+chr1:1119172:G:A	-1.28953	3.62478	0.498206
+chr1:1423343:G:T	-3.46874	4.63856	0.107273
+chr1:3522693:A:G	2.18819	4.6194	0.308628
 \end{verbatim}
 
-Columns: \texttt{CHR} (chromosome), \texttt{SNP} (variant id), \texttt{POS} (bp
-position), \texttt{A1}/\texttt{A2} (alleles), \texttt{N} (sample
-  size), \texttt{AF} (allele frequency for \texttt{A1}), \texttt{SCORE}
-  (score statistic), \texttt{VAR} (variance of the score), and
-  	\texttt{PVAL} (single-variant p-value).
+Columns: \texttt{SNP} (variant id), \texttt{SCORE} (score statistic),
+\texttt{VAR} (variance of the score), and \texttt{PVAL} (single-variant p-value).
+
 
 \section{\texttt{quick.sh}: parameter block}
 
@@ -235,10 +228,6 @@ and \texttt{palm1\_step2\_chr1\_g3.txt}.
   \item[\texttt{abdFile}] Path to the microbiome abundance table (example: \texttt{abd.txt}).
 
   \item[\texttt{covFile}] Path to the covariate file (example: \texttt{cov.txt}).
-
-  \item[\texttt{sampleIDColinabdFile}] Column name of the sample ID in \texttt{abdFile} (example: \texttt{IID}).
-
-  \item[\texttt{sampleIDColincovFile}] Column name of the sample ID in \texttt{covFile} (example: \texttt{IID}).
 
   \item[\texttt{chrom}] Chromosome to analyze in step~2. This value is passed to the step~2 script via \texttt{--chrom=\$\{chrom\}}.
 
