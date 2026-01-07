@@ -70,28 +70,22 @@ SPAGMMATtest <- function(inFile = "",
     # --------------------------
     res <- data.table::fread(out_file, data.table = FALSE)
 
-    # Column name compatibility (GMMAT sometimes uses lowercase pval)
-    if (!"PVAL" %in% names(res) && "pval" %in% names(res)) {
-      names(res)[names(res) == "pval"] <- "PVAL"
+    # normalize column names (only what we need)
+    if (!"SNP" %in% names(res)) {
+      stop("Missing SNP column in file: ", out_file)
+    }
+    if (!"SCORE" %in% names(res) || !"VAR" %in% names(res)) {
+      stop("Missing SCORE or VAR column in file: ", out_file)
     }
 
-    required_cols <- c("SNP", "SCORE", "VAR", "PVAL")
-    missing_cols <- setdiff(required_cols, names(res))
-    if (length(missing_cols) > 0) {
-      stop("Missing required columns in glmm.score output file: ",
-           paste(missing_cols, collapse = ", "),
-           "\nFile: ", out_file)
-    }
+    # compute
+    res$est    <- res$SCORE / res$VAR
+    res$stderr <- sqrt(1 / res$VAR)
+    res$stat  <- res$est / res$stderr
+    res$pval   <- 2 * pnorm(-abs(res$stat))
 
-    res_out <- res[, required_cols]
-
-    # Basic sanity checks
-    if (any(res_out$VAR <= 0, na.rm = TRUE)) {
-      stop("Non-positive VAR detected in output file: ", out_file)
-    }
-    if (anyDuplicated(res_out$SNP)) {
-      stop("Duplicated SNP IDs detected in output file: ", out_file)
-    }
+    # keep only required columns
+    res_out <- res[, c("SNP", "est", "stderr", "stat", "pval")]
 
     data.table::fwrite(
       res_out,

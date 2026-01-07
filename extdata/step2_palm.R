@@ -182,7 +182,8 @@ for (pheno in rownames(res)) {
         check.names = FALSE
     )
     ## compute p-value (Wald Z test)
-    out$pval <- 2 * pnorm(-abs(out$est / out$stderr))
+    out$stat  <- out$est / out$stderr
+    out$pval <- 2 * pnorm(-abs(out$stat))
 
     # suffix: add _chr{chrom} only if --chrom is specified
     chr_suffix <- ""
