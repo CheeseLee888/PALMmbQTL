@@ -107,9 +107,6 @@ if (is.null(opt$cluster)) {
   )
 }
 
-# write.table(res, file = "output/palm1_test.txt", sep = "\t",
-#               quote = FALSE, row.names = FALSE, col.names = TRUE)
-
 # ---------- split by pheno and write {pheno}_step2_palm.txt ----------
 # res <- as.data.frame(res, check.names = FALSE)
 # res is list returned by palm.get.summary()
@@ -178,19 +175,10 @@ out_dir <- opt$PALMOutputFile
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 for (pheno in rownames(res)) {
-
-    beta <- as.numeric(res[pheno, est_map[common_snp], drop = TRUE])
-    se   <- as.numeric(res[pheno, stderr_map[common_snp], drop = TRUE])
-
-    var   <- 1 / (se^2)
-    score <- beta * var
-    pval  <- 2 * pnorm(-abs(beta / se))
-
     out <- data.frame(
-        SNP   = common_snp,
-        SCORE = score,
-        VAR   = var,
-        PVAL  = pval,
+        SNP    = common_snp,
+        est    = as.numeric(res[pheno, est_map[common_snp], drop = TRUE]),
+        stderr = as.numeric(res[pheno, stderr_map[common_snp], drop = TRUE]),
         check.names = FALSE
     )
 
