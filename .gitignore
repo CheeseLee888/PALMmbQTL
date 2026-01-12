@@ -18,6 +18,7 @@ extdata/*.sbatch
 *.tar
 *.swp
 thirdParty/*.R
+thirdParty/*.cpp
 .vscode/
 *.rda
 bin/

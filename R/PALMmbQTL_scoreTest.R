@@ -64,6 +64,39 @@ SPAGMMATtest <- function(inFile = "",
       MAF.range = c(minMAF, 0.5)
     )
     cat(sprintf("glmmscore test for '%s' finished. Output: %s\n", pheno_name, out_file))
+
+    # --------------------------
+    # Post-process: keep only SNP SCORE VAR PVAL
+    # --------------------------
+    res <- data.table::fread(out_file, data.table = FALSE)
+
+    # normalize column names (only what we need)
+    if (!"SNP" %in% names(res)) {
+      stop("Missing SNP column in file: ", out_file)
+    }
+    if (!"SCORE" %in% names(res) || !"VAR" %in% names(res)) {
+      stop("Missing SCORE or VAR column in file: ", out_file)
+    }
+
+    # compute
+    res$est    <- res$SCORE / res$VAR
+    res$stderr <- sqrt(1 / res$VAR)
+    res$stat  <- res$est / res$stderr
+    res$pval   <- 2 * pnorm(-abs(res$stat))
+
+    # keep only required columns
+    res_out <- res[, c("SNP", "est", "stderr", "stat", "pval")]
+    # res_out <- res[, c("SNP", "A1", "A2", "AF", "est", "stderr", "stat", "pval")]
+    # res_out <- res
+
+    data.table::fwrite(
+      res_out,
+      out_file,
+      sep = "\t",
+      quote = FALSE,
+      na = "NA"
+    )
+    cat(sprintf("Post-processed output saved (SNP,SCORE,VAR,PVAL): %s\n", out_file))
   }
 
 }

@@ -1,6 +1,6 @@
 ################################# parameter settings below #################################
 ######### required below #########
-PALMmethod=2 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
+PALMmethod=1 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
 
 inputFolder=input
 outputFolder=output
@@ -72,7 +72,8 @@ if [[ "${PALMmethod}" == 1 ]]; then
         --NULLmodelFile=${palm1_step1_prefix}.rda \
         --PALMOutputFile=${outputFolder} \
         --chrom=${chrom} \
-        --correct=NULL
+        --correct=NULL \
+        --cluster=
 else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \

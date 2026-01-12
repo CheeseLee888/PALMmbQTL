@@ -28,7 +28,7 @@ option_list <- list(
         help = ""
     ),
     make_option("--cluster",
-        type = "vector", default = NULL,
+        type = "character", default = NULL,
         help = "")
 )
 
@@ -85,12 +85,39 @@ if (!is.null(opt$chrom) && nzchar(opt$chrom)) {
 if (is.null(opt$correct) || !nzchar(opt$correct) || toupper(opt$correct) == "NULL") {
   opt$correct <- NULL
 }
-res <- palm.get.summary(
-  null.obj = modglmm,
-  covariate.interest = geno,
-  correct = opt$correct,
-  cluster = cluster
-)
+# normalize cluster from optparse to R NULL
+if (is.null(opt$cluster) || !nzchar(opt$cluster) || toupper(opt$cluster) == "NULL") {
+  opt$cluster <- NULL
+}
+
+# # Save dosage matrix
+# write.table(
+#   geno,
+#   file = file.path(opt$PALMOutputFile, "geno_allele2.txt"),
+#   sep = "\t",
+#   quote = FALSE,
+#   col.names = NA
+# )
+# cat("Wrote full allele.2 dosage matrix to: ",
+#     file.path(opt$PALMOutputFile, "geno_allele2_012_full.txt"), "\n"
+# )
+
+if (is.null(opt$cluster)) {
+  cat("No cluster provided; running palm.get.summary without cluster.\n")
+  res <- palm.get.summary(
+    null.obj = modglmm,
+    covariate.interest = geno,
+    correct = opt$correct
+  )
+}else{
+  cat("Cluster provided; running palm.get.summary with cluster.\n")
+  res <- palm.get.summary(
+    null.obj = modglmm,
+    covariate.interest = geno,
+    correct = opt$correct,
+    cluster = cluster
+  )
+}
 
 # ---------- split by pheno and write {pheno}_step2_palm.txt ----------
 # res <- as.data.frame(res, check.names = FALSE)
@@ -166,6 +193,9 @@ for (pheno in rownames(res)) {
         stderr = as.numeric(res[pheno, stderr_map[common_snp], drop = TRUE]),
         check.names = FALSE
     )
+    ## compute p-value (Wald Z test)
+    out$stat  <- out$est / out$stderr
+    out$pval <- 2 * pnorm(-abs(out$stat))
 
     # suffix: add _chr{chrom} only if --chrom is specified
     chr_suffix <- ""
