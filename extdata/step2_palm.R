@@ -90,6 +90,18 @@ if (is.null(opt$cluster) || !nzchar(opt$cluster) || toupper(opt$cluster) == "NUL
   opt$cluster <- NULL
 }
 
+# # Save dosage matrix
+# write.table(
+#   geno,
+#   file = file.path(opt$PALMOutputFile, "geno_allele2.txt"),
+#   sep = "\t",
+#   quote = FALSE,
+#   col.names = NA
+# )
+# cat("Wrote full allele.2 dosage matrix to: ",
+#     file.path(opt$PALMOutputFile, "geno_allele2_012_full.txt"), "\n"
+# )
+
 if (is.null(opt$cluster)) {
   cat("No cluster provided; running palm.get.summary without cluster.\n")
   res <- palm.get.summary(

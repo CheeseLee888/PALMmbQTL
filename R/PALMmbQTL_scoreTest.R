@@ -86,6 +86,8 @@ SPAGMMATtest <- function(inFile = "",
 
     # keep only required columns
     res_out <- res[, c("SNP", "est", "stderr", "stat", "pval")]
+    # res_out <- res[, c("SNP", "A1", "A2", "AF", "est", "stderr", "stat", "pval")]
+    # res_out <- res
 
     data.table::fwrite(
       res_out,
