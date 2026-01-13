@@ -30,3 +30,5 @@ guide/*.log
 guide/*.out
 guide/*.pdf
 guide/*.synctex.gz
+test*
+*noCov*

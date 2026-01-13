@@ -25,6 +25,10 @@ option_list <- list(
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
+# normalize covFile from optparse (character) to R NULL
+if (is.null(opt$covFile) || !nzchar(opt$covFile) || toupper(opt$covFile) == "NULL") {
+  opt$covFile <- NULL
+}
 
 read_firstcol_as_rownames <- function(file) {
   df <- data.table::fread(
@@ -40,13 +44,21 @@ read_firstcol_as_rownames <- function(file) {
 
 abd <- read_firstcol_as_rownames(opt$abdFile)
 abd <- as.matrix(abd)
-cov <- read_firstcol_as_rownames(opt$covFile)
 
-
-modglmm <- palm.null.model(
+if(is.null(opt$covFile)) {
+  cat("Fitting PALM null model without covariates.\n")
+  modglmm <- palm.null.model(
+    rel.abd = abd,
+    prev.filter = 0
+    )
+}else {
+  cov <- read_firstcol_as_rownames(opt$covFile)
+  modglmm <- palm.null.model(
     rel.abd = abd,
     covariate.adjust = cov,
     prev.filter = 0
     )
+}
+
 save(modglmm, file = paste0(opt$outputPrefix, ".rda"))
 

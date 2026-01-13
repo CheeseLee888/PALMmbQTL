@@ -13,6 +13,7 @@ chrom=1
 ######### optional below #########
 grmFile=./${inputFolder}/grm.rds
 palm1_step1_prefix=./${outputFolder}/palm1_step1_allpheno
+palm1_step2_prefix=./${outputFolder}/palm1_step2${chrom:+_chr${chrom}}
 palm2_step1_prefix=./${outputFolder}/palm2_step1_allpheno
 palm2_step2_prefix=./${outputFolder}/palm2_step2${chrom:+_chr${chrom}}
 
@@ -70,7 +71,7 @@ if [[ "${PALMmethod}" == 1 ]]; then
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_palm.R \
         --inFile=${genoFile} \
         --NULLmodelFile=${palm1_step1_prefix}.rda \
-        --PALMOutputFile=${outputFolder} \
+        --PALMOutputFile=${palm1_step2_prefix} \
         --chrom=${chrom} \
         --correct=NULL \
         --cluster=

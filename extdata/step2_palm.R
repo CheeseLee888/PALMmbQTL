@@ -183,7 +183,7 @@ if (is.null(rownames(res)) || any(rownames(res) == "")) {
 }
 
 # opt$PALMOutputFile can be a "directory" or "prefix"; here we treat it as a directory for clarity
-out_dir <- opt$PALMOutputFile
+out_dir <- dirname(opt$PALMOutputFile)
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 for (pheno in rownames(res)) {
@@ -204,16 +204,12 @@ for (pheno in rownames(res)) {
     chr_suffix <- paste0("_chr", chr_clean)
     }
 
-    out_file <- file.path(
-    out_dir,
-    paste0("palm1_step2", chr_suffix, "_", pheno, ".txt")
-    )
+    out_file <- paste0(opt$PALMOutputFile, "_", pheno, ".txt")
 
     write.table(out, file = out_file, sep = "\t",
               quote = FALSE, row.names = FALSE, col.names = TRUE)
+    cat("Wrote per-pheno files to: ", out_file, "\n")
 }
-
-cat("Wrote per-pheno files to: ", out_dir, "\n")
 
 
 
