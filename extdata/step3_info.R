@@ -31,10 +31,42 @@ if (!file.exists(opt$abdFile)) {
 
 # Summarize microbiome abundance data
 abd_data <- read.table(opt$abdFile, header = TRUE, sep = "\t")
+
+# Calculate prevalence and average proportion for each feature
+# abd_data: data.frame
+# first column is IID, remaining are gene counts
+
+gene_mat <- as.matrix(abd_data[, -1])
+gene_mat <- apply(gene_mat, 2, as.numeric)
+
+n_sample <- nrow(gene_mat)
+
+# -----------------------
+# 1) Prevalence: None zero proportion
+# -----------------------
+prevalence <- colSums(gene_mat > 0, na.rm = TRUE) / n_sample
+
+# -----------------------
+# 2) AvgProportion
+# normalize by row, then column mean
+# -----------------------
+row_sum <- rowSums(gene_mat, na.rm = TRUE)
+
+# Avoid division by zero
+row_sum[row_sum == 0] <- NA
+
+gene_prop <- gene_mat / row_sum
+
+avg_proportion <- colMeans(gene_prop, na.rm = TRUE)
+
+# -----------------------
+# 3) feature_info
+# -----------------------
 feature_info <- data.frame(
-  FeatureID = colnames(abd_data)[-1],
-  Prevalence = colSums(!is.na(abd_data[, -1])) / nrow(abd_data),
-  AvgProportion = colMeans(abd_data[, -1], na.rm = TRUE)
+  FeatureID     = colnames(gene_mat),
+  Prevalence    = prevalence,
+  AvgProportion = avg_proportion,
+  row.names = NULL
 )
 
 # Write feature information to the output file
@@ -58,7 +90,7 @@ total_families <- length(unique(fam_data$FID))
 
 # Append this information to the feature info file
 cat("Total samples: ", total_samples, "\n", file = opt$outputFile, append = TRUE)
-cat("Total families: ", total_families, "\n", file = opt$outputFile, append = TRUE)
+# cat("Total families: ", total_families, "\n", file = opt$outputFile, append = TRUE)
 
 cat("Feature information written to: ", opt$outputFile, "\n")
 cat("Total samples and families information appended to: ", opt$outputFile, "\n")

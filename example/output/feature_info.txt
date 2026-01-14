@@ -1,6 +1,5 @@
 FeatureID	Prevalence	AvgProportion
-g1	1	2288.41
-g2	1	1250.17
-g3	1	400.69
+g1	0.94	0.504046936145114
+g2	0.92	0.375667300339731
+g3	0.59	0.120285763515155
 Total samples:  100 
-Total families:  1 
