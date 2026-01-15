@@ -84,9 +84,3 @@ else
         --phenoCol=${phenoCol} \
         --minMAF=0
 fi
-
-# Step 3: Generate feature information
-pixi run --manifest-path=../pixi.toml Rscript ../extdata/step3_info.R \
-    --abdFile=${abdFile} \
-    --genoFile=${genoFile} \
-    --outputFile=${outputFolder}/feature_info.txt
