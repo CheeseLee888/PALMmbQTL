@@ -81,11 +81,12 @@ SPAGMMATtest <- function(inFile = "",
     # compute
     res$est    <- res$SCORE / res$VAR
     res$stderr <- sqrt(1 / res$VAR)
-    res$stat  <- res$est / res$stderr
-    res$pval   <- 2 * pnorm(-abs(res$stat))
+    # res$stat  <- res$est / res$stderr
+    # res$pval   <- 2 * pnorm(-abs(res$stat))
+    res$pval <- 1 - pchisq((res$est / res$stderr)^2, df = 1)
 
     # keep only required columns
-    res_out <- res[, c("SNP", "est", "stderr", "stat", "pval")]
+    res_out <- res[, c("SNP", "est", "stderr", "pval")]
     # res_out <- res[, c("SNP", "A1", "A2", "AF", "est", "stderr", "stat", "pval")]
     # res_out <- res
 

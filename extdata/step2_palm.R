@@ -193,9 +193,10 @@ for (pheno in rownames(res)) {
         stderr = as.numeric(res[pheno, stderr_map[common_snp], drop = TRUE]),
         check.names = FALSE
     )
-    ## compute p-value (Wald Z test)
-    out$stat  <- out$est / out$stderr
-    out$pval <- 2 * pnorm(-abs(out$stat))
+    ## compute p-value
+    # out$stat  <- out$est / out$stderr
+    # out$pval <- 2 * pnorm(-abs(out$stat))
+    out$pval <- 1 - pchisq((out$est / out$stderr)^2, df = 1)
 
     # suffix: add _chr{chrom} only if --chrom is specified
     chr_suffix <- ""
