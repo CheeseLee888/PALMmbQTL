@@ -37,7 +37,7 @@ if [[ "${PALMmethod}" == 1 ]]; then
         --PALMOutputFile=${palm1_step2_prefix} \
         --chrom=${chrom} \
         --correct=NULL \
-        --cluster=
+        --cluster=NULL
 else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \
