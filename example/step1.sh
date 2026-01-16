@@ -30,6 +30,14 @@ fi
 
 mkdir -p "${outputFolder}"
 
+# step0: check input files
+echo "Checking input files..."
+pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_checkInput.R \
+    --abdFile=${abdFile} \
+    --covFile=${covFile} \
+    --genoFile=${genoFile}
+
+
 # step0: generate GRM from genotype data (only for PALM-mbQTL)
 if [[ "${PALMmethod}" == 2 ]]; then
     if [[ -f "${grmFile}" ]]; then
