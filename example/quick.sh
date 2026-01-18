@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
 ################################# parameter settings below #################################
 ######### required below #########
 PALMmethod=1 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
@@ -35,6 +37,13 @@ fi
 
 mkdir -p "${outputFolder}"
 
+# step0: check input files
+echo "Checking input files..."
+pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_checkInput.R \
+    --abdFile=${abdFile} \
+    --covFile=${covFile} \
+    --genoFile=${genoFile}
+    
 # step0: generate GRM from genotype data (only for PALM-mbQTL)
 if [[ "${PALMmethod}" == 2 ]]; then
     if [[ -f "${grmFile}" ]]; then

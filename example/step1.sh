@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
 ################################# parameter settings below #################################
 ######### required below #########
 PALMmethod=2 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
@@ -37,7 +39,6 @@ pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_checkInput.R \
     --covFile=${covFile} \
     --genoFile=${genoFile}
 
-
 # step0: generate GRM from genotype data (only for PALM-mbQTL)
 if [[ "${PALMmethod}" == 2 ]]; then
     if [[ -f "${grmFile}" ]]; then
@@ -65,5 +66,6 @@ else
         --grmFile=${grmFile} \
         --outputPrefix=${palm2_step1_prefix} \
         --covarColList=all \
-        --useGRMtoFitNULL=TRUE
+        --useGRMtoFitNULL=TRUE \
+        --batch_size=1L
 fi

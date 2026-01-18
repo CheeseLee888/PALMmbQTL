@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
 ################################# parameter settings below #################################
 ######### required below #########
 PALMmethod=2 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
