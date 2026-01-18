@@ -21,7 +21,8 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                sampleIDColincovFile = "IID",
                                outputPrefix = "",
                                isCovariateOffset = TRUE,
-                               useGRMtoFitNULL = TRUE) {
+                               useGRMtoFitNULL = TRUE,
+                               batch_size = 5L) {
   ## set up output files
   modelOut <- paste0(outputPrefix, ".rda")
   # file.create(modelOut, showWarnings = TRUE)
@@ -147,23 +148,28 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   failed_pheno <- character()
   cat("Total phenotypes to be processed: ", length(pheno_names), "\n")
 
+  ## --- add: batch saving settings ---
+  # batch_size <- 5L # defined in function arguments
+  batch_idx  <- 0L
+  batch_dir  <- paste0(outputPrefix, "_batches")
+  if (!dir.exists(batch_dir)) dir.create(batch_dir, recursive = TRUE)
+  ## ---------------------------------
+
   for (i in seq_along(pheno_names)) {
     pheno_name <- pheno_names[i]
     cat("[", i, "/", length(pheno_names), "] Fitting NULL GLMM for pheno: ", pheno_name, "\n")
 
     # construct the formula
     if (length(covarColList) > 0) {
-      formula <- paste0(pheno_name, "~", paste0(covarColList,
-        collapse = "+"
-      ))
+      formula <- paste0(pheno_name, "~", paste0(covarColList, collapse = "+"))
     } else {
       formula <- paste0(pheno_name, "~ 1")
     }
-    
-    if(isCovariateOffset & offsetCol != ""){
+
+    if (isCovariateOffset && offsetCol != "") {
       formula <- paste0(formula, "+offset(log(", offsetCol, "))")
     }
-    if (i == 1){
+    if (i == 1) {
       cat("formula is ", formula, "\n")
     }
 
@@ -184,24 +190,34 @@ fitNULLGLMM_multiV <- function(grmFile = "",
           show = FALSE
         )
       },
-      error = function(e) { 
+      error = function(e) {
         failed_pheno <<- c(failed_pheno, pheno_name)
         cat("pheno: ", pheno_name, ", glmmkin failed.\n")
-        NULL 
+        NULL
       }
     )
 
-    # if failed, skip this phenotype
-    if (is.null(modglmm)) {
-      next
+    if (!is.null(modglmm)) {
+      cat("pheno: ", pheno_name, ", glmmkin succeed.\n")
+      null_list[[pheno_name]] <- list(
+        pheno_name = pheno_name,
+        modglmm    = modglmm
+      )
     }
 
-    cat("pheno: ", pheno_name, ", glmmkin succeed.\n")
+    ## --- add: save every <batch_size> phenotypes OR at the end, then clear null_list ---
+    if (i %% batch_size == 0L || i == length(pheno_names)) {
+      batch_idx <- batch_idx + 1L
+      batch_file <- file.path(batch_dir, sprintf("batch_%04d.rds", batch_idx))
+      saveRDS(null_list, file = batch_file)
+      cat("Saved batch ", batch_idx, " to ", batch_file,
+          " (n=", length(null_list), ")\n", sep = "")
 
-    null_list[[pheno_name]] <- list(
-      pheno_name  = pheno_name,
-      modglmm     = modglmm
-    )
+      # clear in-memory list to reduce memory usage
+      null_list <- list()
+      invisible(gc())
+    }
+    ## ------------------------------------------------------------------------
   }
 
   if (length(failed_pheno) > 0) {
@@ -211,10 +227,31 @@ fitNULLGLMM_multiV <- function(grmFile = "",
       con = paste0(outputPrefix, "_failed_pheno.txt")
     )
     cat("List of failed phenotypes has been saved to ",
-      paste0(outputPrefix, "_failed_pheno.txt"), "\n")
+        paste0(outputPrefix, "_failed_pheno.txt"), "\n")
   }
 
-  save(null_list, file = modelOut)
-  cat("NULL model has been saved to ", modelOut, "\n")
+  ## --- add: merge all batch files into one null_list, then save to modelOut ---
+  batch_files <- list.files(batch_dir, pattern = "^batch_[0-9]{4}\\.rds$", full.names = TRUE)
+  batch_files <- sort(batch_files)
+  if (length(batch_files) == 0) stop("No batch files found in ", batch_dir)
 
+  null_list <- list()
+  for (bf in batch_files) {
+    tmp <- readRDS(bf)
+    if (length(tmp) > 0) {
+      # warn if duplicates (shouldn't happen normally)
+      dup <- intersect(names(null_list), names(tmp))
+      if (length(dup) > 0) warning("Duplicate phenotypes when merging: ", paste(dup, collapse = ", "))
+      null_list <- c(null_list, tmp)
+    }
+  }
+  cat("Merged all batch files.\n")
+
+  save(null_list, file = modelOut)
+  cat("NULL model has been saved to ", modelOut,
+      " (total successful phenotypes: ", length(null_list), ")\n", sep = "")
+
+  ## --- clean up batch files ---
+  unlink(batch_dir, recursive = TRUE, force = TRUE)
+  cat("Temporary batch files have been removed from ", batch_dir, "\n", sep = "")
 }

@@ -48,7 +48,11 @@ option_list <- list(
     type = "logical", default = TRUE,
     help = "Optional. Whether to estimate fixed effect coeffciets. [default, 'TRUE']"
   ),
-  make_option("--useGRMtoFitNULL", type = "logical", default = TRUE, help = "")
+  make_option("--useGRMtoFitNULL", type = "logical", default = TRUE, help = ""),
+  make_option("--batch_size",
+    type = "integer", default = 5L,
+    help = "Number of phenotypes to save in each batch file [default=5]"
+  )
 )
 
 
@@ -100,5 +104,6 @@ fitNULLGLMM_multiV(
   sampleIDColincovFile = opt$sampleIDColincovFile,
   outputPrefix = opt$outputPrefix,
   isCovariateOffset = opt$isCovariateOffset,
-  useGRMtoFitNULL = opt$useGRMtoFitNULL
+  useGRMtoFitNULL = opt$useGRMtoFitNULL,
+  batch_size = opt$batch_size
 )

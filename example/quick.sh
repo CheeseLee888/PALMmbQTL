@@ -62,7 +62,8 @@ else
         --grmFile=${grmFile} \
         --outputPrefix=${palm2_step1_prefix} \
         --covarColList=all \
-        --useGRMtoFitNULL=TRUE
+        --useGRMtoFitNULL=TRUE \
+        --batch_size=1L
 fi
 
 # step2: score test for phenoCol
