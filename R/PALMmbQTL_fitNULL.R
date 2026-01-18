@@ -24,7 +24,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                useGRMtoFitNULL = TRUE) {
   ## set up output files
   modelOut <- paste0(outputPrefix, ".rda")
-  file.create(modelOut, showWarnings = TRUE)
+  # file.create(modelOut, showWarnings = TRUE)
 
   ## sanity checks for required files / arguments -------------------------------
   if (abdFile == "" || !file.exists(abdFile)) {
@@ -108,8 +108,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
 
 
   cat("Start fitting the NULL GLMM\n")
-  t_begin <- proc.time()
-  print(t_begin)
 
   pheno_id <- data[["IID"]]
   # GRM
@@ -146,9 +144,10 @@ fitNULLGLMM_multiV <- function(grmFile = "",
 
   # Core step1 for PALM-mbQTL
   null_list <- list()
+  failed_pheno <- character()
+  cat("Total phenotypes to be processed: ", length(pheno_names), "\n")
 
   for (i in seq_along(pheno_names)) {
-    pheno_id   <- i
     pheno_name <- pheno_names[i]
     cat("[", i, "/", length(pheno_names), "] Fitting NULL GLMM for pheno: ", pheno_name, "\n")
 
@@ -164,33 +163,53 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     if(isCovariateOffset & offsetCol != ""){
       formula <- paste0(formula, "+offset(log(", offsetCol, "))")
     }
-    
     cat("formula is ", formula, "\n")
 
-    # run glmmkin
-    system.time(modglmm <- GMMAT::glmmkin(
-      formula, 
-      data = data,
-      kins = grm_K,
-      id = "IID", 
-      family = poisson(link = "log")
-    ))
+    # run glmmkin (skip failed phenotypes)
+    modglmm <- tryCatch(
+      {
+        callr::r(
+          func = function(formula, data, grm_K) {
+            GMMAT::glmmkin(
+              formula,
+              data   = data,
+              kins   = grm_K,
+              id     = "IID",
+              family = poisson(link = "log")
+            )
+          },
+          args = list(formula = as.formula(formula), data = data, grm_K = grm_K),
+          show = FALSE
+        )
+      },
+      error = function(e) {
+        failed_pheno <<- c(failed_pheno, pheno_name)
+        NULL
+      }
+    )
 
-    cat("pheno: ", pheno_name, ", glmmkin succeed!\n")
+    # if failed, skip this phenotype
+    if (is.null(modglmm)) {
+      next
+    }
 
-    null_list[[as.character(pheno_id)]] <- list(
-      pheno_id    = pheno_id,
+    cat("pheno: ", pheno_name, ", glmmkin succeed.\n")
+
+    null_list[[pheno_name]] <- list(
       pheno_name  = pheno_name,
       modglmm     = modglmm
     )
   }
 
-
-  t_end <- proc.time()
-  print(t_end)
-  cat("t_end - t_begin, fitting the NULL model took\n")
-  print(t_end - t_begin)
-
+  if (length(failed_pheno) > 0) {
+    cat("Total failed phenotypes:", length(failed_pheno), "\n")
+    writeLines(
+      failed_pheno,
+      con = paste0(outPrefix, "_failed_pheno.txt")
+    )
+    cat("List of failed phenotypes has been saved to ",
+      paste0(outputPrefix, "_failed_pheno.txt"), "\n")
+  }
 
   save(null_list, file = modelOut)
   cat("NULL model has been saved to ", modelOut, "\n")

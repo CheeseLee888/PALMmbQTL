@@ -12,40 +12,26 @@ SPAGMMATtest <- function(inFile = "",
                          PALMOutputFile = "",
                          minMAF = 0.05) {
 
-  # checkArgsListBool(
-  # )
-  # checkArgsListNumeric(
-  # )
-
-
   load(NULLmodelFile)
-
-  ## extract all pheno_name
-  all_pheno_names <- vapply(
-    null_list,
-    function(x) x$pheno_name,
-    FUN.VALUE = character(1L)
-  )
+  if (!exists("null_list")) stop("NULLmodelFile does not contain object 'null_list'.")
+  if (length(null_list) == 0) stop("null_list is empty in NULLmodelFile (no phenotype models available).")
 
   ## If phenoCol is empty, run all phenotypes
-  if (identical(phenoCol, "") || is.null(phenoCol)) {
-    cat(sprintf("No phenotype specified — running all %d phenotypes.\n", length(all_pheno_names)))
-    idxs <- seq_along(all_pheno_names)
+  if (is.null(phenoCol) || toupper(phenoCol) %in% c("", "NULL", "ALL")) {
+    pheno_keys <- names(null_list)
+    if (is.null(pheno_keys) || length(pheno_keys) == 0) stop("null_list has no names (pheno keys).")
+    cat(sprintf("No phenotype specified — running all %d phenotypes.\n", length(pheno_keys)))
   } else {
-    ## use which to find the corresponding index
-    idx <- which(all_pheno_names == phenoCol)
-
-    if (length(idx) == 0) {
+    if (!phenoCol %in% names(null_list)) {
       stop(sprintf("Phenotype '%s' not found in NULLmodelFile.", phenoCol))
-    } else {
-      cat(sprintf("Phenotype '%s' found in NULLmodelFile at index %d.\n", phenoCol, idx))
     }
-    idxs <- idx
+    pheno_keys <- phenoCol
+    cat(sprintf("Phenotype '%s' found in NULLmodelFile.\n", phenoCol))
   }
 
-  for (i in idxs) {
-    pheno_name <- all_pheno_names[i]
-    modglmm <- null_list[[i]]$modglmm
+  for (pheno_key in pheno_keys) {
+    pheno_name <- null_list[[pheno_key]]$pheno_name
+    modglmm    <- null_list[[pheno_key]]$modglmm
 
     # construct outfile name: use provided prefix if given, else default prefix
     if (identical(PALMOutputFile, "") || is.null(PALMOutputFile)) {
@@ -55,11 +41,11 @@ SPAGMMATtest <- function(inFile = "",
       out_file <- paste0(PALMOutputFile, "_", pheno_name, ".txt")
     }
 
-    cat(sprintf("Starting glmmscore test for phenotype '%s' (index %d)...\n", pheno_name, i))
+    cat(sprintf("Starting glmmscore test for phenotype '%s' ...\n", pheno_name))
     GMMAT::glmm.score(
       obj = modglmm,
       infile = inFile,
-      center = T,
+      center = TRUE,
       outfile = out_file,
       MAF.range = c(minMAF, 0.5)
     )

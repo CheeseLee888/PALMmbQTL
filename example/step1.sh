@@ -1,6 +1,6 @@
 ################################# parameter settings below #################################
 ######### required below #########
-PALMmethod=1 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
+PALMmethod=2 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
 
 inputFolder=input
 outputFolder=output

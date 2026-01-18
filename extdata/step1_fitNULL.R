@@ -75,7 +75,6 @@ if (opt$covarColList!="all") {
   if (!length(covars)) {
     stop("No covariate columns found in covFile after removing ID and offset columns. Please set '--covarColList= '(empty) and try again.\n")
   }
-  print(covars)
 }
 
 # convertoNumeric <- function(x, stringOutput) {
