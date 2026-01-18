@@ -163,7 +163,9 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     if(isCovariateOffset & offsetCol != ""){
       formula <- paste0(formula, "+offset(log(", offsetCol, "))")
     }
-    cat("formula is ", formula, "\n")
+    if (i == 1){
+      cat("formula is ", formula, "\n")
+    }
 
     # run glmmkin (skip failed phenotypes)
     modglmm <- tryCatch(
@@ -182,9 +184,10 @@ fitNULLGLMM_multiV <- function(grmFile = "",
           show = FALSE
         )
       },
-      error = function(e) {
+      error = function(e) { 
         failed_pheno <<- c(failed_pheno, pheno_name)
-        NULL
+        cat("pheno: ", pheno_name, ", glmmkin failed.\n")
+        NULL 
       }
     )
 
@@ -205,7 +208,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     cat("Total failed phenotypes:", length(failed_pheno), "\n")
     writeLines(
       failed_pheno,
-      con = paste0(outPrefix, "_failed_pheno.txt")
+      con = paste0(outputPrefix, "_failed_pheno.txt")
     )
     cat("List of failed phenotypes has been saved to ",
       paste0(outputPrefix, "_failed_pheno.txt"), "\n")
