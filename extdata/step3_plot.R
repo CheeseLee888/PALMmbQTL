@@ -11,7 +11,7 @@ suppressPackageStartupMessages({
 # ============================
 option_list <- list(
   make_option(
-    "--indir",
+    "--inFile",
     type = "character",
     default = "",
     help = "Input directory containing result files"
@@ -32,23 +32,29 @@ print(opt)
 # ----------------------------
 # Validate options
 # ----------------------------
-if (opt$indir == "" || !dir.exists(opt$indir)) {
-  stop("Invalid --indir: directory does not exist or is empty.")
+if (opt$inFile == "" || (!file.exists(opt$inFile) && !dir.exists(opt$inFile))) {
+  stop("Invalid --inFile: must be an existing file or directory.")
 }
 if (opt$outdir == "") {
   stop("Invalid --outdir: must be provided.")
 }
 
-indir  <- opt$indir
+inFile <- opt$inFile
 outdir <- opt$outdir
 dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
 # ============================
 # Discover input files
 # ============================
-files <- list.files(indir, full.names = TRUE)
+if (file.exists(inFile) && !dir.exists(inFile)) {
+  # single file mode
+  files <- inFile
+} else {
+  # directory mode
+  files <- list.files(inFile, full.names = TRUE)
+}
 if (length(files) == 0) {
-  stop("No files found in --indir.")
+  stop("No files found in --inFile.")
 }
 
 cat("Total files found:", length(files), "\n")
@@ -64,14 +70,7 @@ for (infile in files) {
   cat("\n[Processing]", basename(infile), "\n")
 
   # Try reading file
-  dt <- tryCatch(
-    fread(infile, sep = "\t", header = TRUE, data.table = FALSE, showProgress = FALSE),
-    error = function(e) {
-      message("  ! Skip (read error): ", e$message)
-      return(NULL)
-    }
-  )
-  if (is.null(dt)) next
+  dt <- fread(infile, sep = "\t", header = TRUE, data.table = FALSE, showProgress = FALSE)
 
   # Check required columns
   if (!all(required_cols %in% colnames(dt))) {
