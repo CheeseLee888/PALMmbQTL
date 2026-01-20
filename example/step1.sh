@@ -67,5 +67,5 @@ else
         --outputPrefix=${palm2_step1_prefix} \
         --covarColList=all \
         --useGRMtoFitNULL=TRUE \
-        --batch_size=1L
+        --batch_size=1
 fi
