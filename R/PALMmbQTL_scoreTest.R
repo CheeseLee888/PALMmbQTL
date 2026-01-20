@@ -72,8 +72,8 @@ SPAGMMATtest <- function(inFile = "",
     res$pval <- 1 - pchisq((res$est / res$stderr)^2, df = 1)
 
     # keep only required columns
-    res_out <- res[, c("SNP", "est", "stderr", "pval")]
-    # res_out <- res[, c("SNP", "A1", "A2", "AF", "est", "stderr", "stat", "pval")]
+    # res_out <- res[, c("SNP", "est", "stderr", "pval")]
+    res_out <- res[, c("SNP", "CHR", "POS", "est", "stderr", "pval")]
     # res_out <- res
 
     data.table::fwrite(

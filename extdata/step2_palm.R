@@ -193,17 +193,41 @@ for (pheno in rownames(res)) {
         stderr = as.numeric(res[pheno, stderr_map[common_snp], drop = TRUE]),
         check.names = FALSE
     )
+
     ## compute p-value
     # out$stat  <- out$est / out$stderr
     # out$pval <- 2 * pnorm(-abs(out$stat))
     out$pval <- 1 - pchisq((out$est / out$stderr)^2, df = 1)
 
-    # suffix: add _chr{chrom} only if --chrom is specified
-    chr_suffix <- ""
-    if (!is.null(opt$chrom) && nzchar(opt$chrom)) {
-    chr_clean  <- sub("^chr", "", opt$chrom, ignore.case = TRUE)
-    chr_suffix <- paste0("_chr", chr_clean)
+
+    ## ----------------------------
+    ## Post-process SNP format and derive CHR/POS
+    ## ----------------------------
+
+    # 1) Replace "." with ":" in SNP (e.g., chr1.1119172.G.A -> chr1:1119172:G:A)
+    out$SNP <- gsub("\\.", ":", out$SNP)
+
+    # 2) Parse CHR and POS from SNP (expects chr:pos:...)
+    parts <- data.table::tstrsplit(out$SNP, ":", fixed = TRUE)
+    if (length(parts) < 2) {
+      stop("SNP format invalid after conversion; expected at least chr:pos:... (e.g., chr1:12345:A:G)")
     }
+
+    chr_raw <- parts[[1]]
+    pos_raw <- parts[[2]]
+
+    # 3) Clean chromosome labels and convert to integer codes
+    chr_clean <- sub("^chr", "", chr_raw, ignore.case = TRUE)
+    chr_clean[chr_clean %in% c("X","x")] <- "23"
+    chr_clean[chr_clean %in% c("Y","y")] <- "24"
+    chr_clean[chr_clean %in% c("MT","Mt","mt","M","m")] <- "25"
+
+    out$CHR <- suppressWarnings(as.integer(chr_clean))
+    out$POS <- suppressWarnings(as.integer(pos_raw))
+
+    # (Optional) Reorder columns
+    out <- out[, c("SNP", "CHR", "POS", "est", "stderr", "pval")]
+
 
     out_file <- paste0(opt$PALMOutputFile, "_", pheno, ".txt")
 

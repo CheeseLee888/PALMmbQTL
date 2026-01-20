@@ -72,7 +72,7 @@ else
         --outputPrefix=${palm2_step1_prefix} \
         --covarColList=all \
         --useGRMtoFitNULL=TRUE \
-        --batch_size=1L
+        --batch_size=1
 fi
 
 # step2: score test for phenoCol
@@ -83,14 +83,12 @@ if [[ "${PALMmethod}" == 1 ]]; then
         --NULLmodelFile=${palm1_step1_prefix}.rda \
         --PALMOutputFile=${palm1_step2_prefix} \
         --chrom=${chrom} \
-        --correct=NULL \
-        --cluster=
+        --correct=NULL
 else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \
         --NULLmodelFile=${palm2_step1_prefix}.rda \
         --PALMOutputFile=${palm2_step2_prefix} \
         --chrom=${chrom} \
-        --phenoCol=${phenoCol} \
         --minMAF=0
 fi
