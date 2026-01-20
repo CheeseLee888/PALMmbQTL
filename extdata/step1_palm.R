@@ -61,4 +61,5 @@ if(is.null(opt$covFile)) {
 }
 
 save(modglmm, file = paste0(opt$outputPrefix, ".rda"))
+cat("Done. PALM null model saved to", paste0(opt$outputPrefix, ".rda"), "\n")
 

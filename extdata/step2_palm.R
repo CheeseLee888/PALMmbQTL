@@ -236,5 +236,6 @@ for (pheno in rownames(res)) {
     cat("Wrote per-pheno files to: ", out_file, "\n")
 }
 
+cat("Done. PALM summary results saved to files with prefix:", opt$PALMOutputFile, "\n")
 
 

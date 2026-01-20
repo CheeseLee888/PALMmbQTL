@@ -135,6 +135,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-broom-1.0.10-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-bslib-0.9.0-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-cachem-1.1.0-r44hb1dbf0f_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-calibrate-1.7.7-r44hc72bb7e_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-callr-3.7.6-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-class-7.3_23-r44h2b5f3a1_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-cli-3.6.5-r44h93ab643_0.conda
@@ -248,6 +249,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-ps-1.9.1-r44h2b5f3a1_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-purrr-1.1.0-r44h54b55ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-qlcmatrix-0.9.9-r44hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-qqman-0.1.9-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-r6-2.6.1-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-ragg-1.4.0-r44hdcc764c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rappdirs-0.3.3-r44hb1dbf0f_3.conda
@@ -484,6 +486,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-broom-1.0.10-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-bslib-0.9.0-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-cachem-1.1.0-r44h6b9d099_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-calibrate-1.7.7-r44hc72bb7e_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-callr-3.7.6-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-class-7.3_23-r44h79f565e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-cli-3.6.5-r44h2711daa_0.conda
@@ -597,6 +600,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-ps-1.9.1-r44h79f565e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-purrr-1.1.0-r44h63eaeb5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-qlcmatrix-0.9.9-r44hc72bb7e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/r-qqman-0.1.9-r44hc72bb7e_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-r6-2.6.1-r44hc72bb7e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-ragg-1.4.0-r44hd195363_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/r-rappdirs-0.3.3-r44h6b9d099_3.conda
@@ -3650,6 +3654,16 @@ packages:
   license_family: MIT
   size: 75430
   timestamp: 1719745771726
+- conda: https://conda.anaconda.org/conda-forge/noarch/r-calibrate-1.7.7-r44hc72bb7e_4.conda
+  sha256: 780742b34b77ee4701f956168382358a8c90e7bf3056654af5922371a38cd1d0
+  md5: 41f5816116061e3f8ae17859ffc4650c
+  depends:
+  - r-base >=4.4,<4.5.0a0
+  - r-mass
+  license: GPL-2
+  license_family: GPL2
+  size: 365739
+  timestamp: 1757835586921
 - conda: https://conda.anaconda.org/conda-forge/noarch/r-callr-3.7.6-r44hc72bb7e_2.conda
   sha256: e85f816c249baa83e8bbfd8aa15ef9249151d9aaae69c5010ea209e8d1fa3ff9
   md5: 020dde50545870904c62062ffab4b621
@@ -5812,6 +5826,16 @@ packages:
   license_family: GPL3
   size: 3319993
   timestamp: 1753304493738
+- conda: https://conda.anaconda.org/conda-forge/noarch/r-qqman-0.1.9-r44hc72bb7e_2.conda
+  sha256: eaff6f928f8189d9b4c8dca65fd7a9c00f228a966cddaa7bb97a6750d5c1822a
+  md5: 31decd45761d9d95d0b36a757dd4ab4f
+  depends:
+  - r-base >=4.4,<4.5.0a0
+  - r-calibrate
+  license: GPL-3
+  license_family: GPL3
+  size: 1127375
+  timestamp: 1758732081111
 - conda: https://conda.anaconda.org/conda-forge/noarch/r-r6-2.6.1-r44hc72bb7e_0.conda
   sha256: e29eeb7f6564fd4a0b3ba34fbed3ef1fe68ea84d46a2eb88cd1c472055e04350
   md5: 08d1985cbe6bd96a818e127de51f9905
