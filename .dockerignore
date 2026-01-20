@@ -17,3 +17,6 @@
 # exclude data
 extdata/input/*
 extdata/output/*
+
+# example output
+example/output/*
