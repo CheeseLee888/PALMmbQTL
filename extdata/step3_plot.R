@@ -127,7 +127,7 @@ for (infile in files) {
   # ----------------------------
   # Top hits
   # ----------------------------
-  top <- man[order(man$P), ][seq_len(min(10, nrow(man))), ]
+  top <- dt[order(dt$pval), ][1:min(10, nrow(dt)), ]
   fwrite(
     top,
     file.path(outdir, paste0("top10_", prefix, ".txt")),
