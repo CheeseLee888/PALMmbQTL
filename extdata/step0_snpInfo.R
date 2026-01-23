@@ -89,4 +89,3 @@ out <- info[, c("CHR","SNP","POS","A1","A2","N","AF")]
 
 message("Writing: ", opt$outputFile)
 data.table::fwrite(out, file = opt$outputFile, sep = "\t", quote = FALSE, na = "NA")
-message("Done.")
