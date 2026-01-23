@@ -14,10 +14,6 @@ option_list <- list(
         type = "character", default = "",
         help = ""
     ),
-    make_option("--offsetCol",
-        type = "character", default = "",
-        help = ""
-    ),
     make_option("--outputPrefix",
         type = "character", default = "",
         help = ""
@@ -46,6 +42,7 @@ abd <- read_firstcol_as_rownames(opt$abdFile)
 abd <- as.matrix(abd)
 
 if(is.null(opt$covFile)) {
+  # depth is calculated as the row sums of rel.abd
   cat("Fitting PALM null model without covariates.\n")
   modglmm <- palm.null.model(
     rel.abd = abd,

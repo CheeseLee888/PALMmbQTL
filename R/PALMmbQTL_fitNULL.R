@@ -5,8 +5,6 @@
 #' @param covFile character. Path to the covariate file.
 #' @param covarColList vector of characters. Covariates to be used in the null model. e.g c("Sex", "Age").
 #' @param offsetCol character. Offset column name in the merged data. If not specified, SeqDepth will be calculated from the abundance file and used as the offset.
-#' @param sampleIDColinabdFile character. Column name for the sample IDs in the abundance file e.g. "IID".
-#' @param sampleIDColincovFile character. Column name for the sample IDs in the covariate file e.g. "IID".
 #' @param outputPrefix character. Path to the output files with prefix.
 #' @param isCovariateOffset logical. Whether to estimate fixed effect coeffciets. By default, TRUE.
 #' @param useGRMtoFitNULL logical. Whether to use the GRM to fit the NULL model. If FALSE, an identity matrix will be used. By default, TRUE.
@@ -19,8 +17,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                covFile = "",
                                covarColList = NULL,
                                offsetCol = "",
-                               sampleIDColinabdFile = "IID",
-                               sampleIDColincovFile = "IID",
                                outputPrefix = "",
                                isCovariateOffset = TRUE,
                                useGRMtoFitNULL = TRUE,
@@ -45,7 +41,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   cat("Abundance and covariate files have been read\n")
 
   ## read phenotype list ------------------------------------------------------
-  pheno_names <- setdiff(colnames(abd), sampleIDColinabdFile)
+  pheno_names <- setdiff(colnames(abd), "IID")
   pheno_list <- abd[, pheno_names, drop = FALSE]
   # Simple sanity check
   if (any(pheno_list < 0, na.rm = TRUE)) {
@@ -73,7 +69,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     cat("No offset column is specified. Calculate SeqDepth from abundance file...\n")
 
     seqdepth <- rowSums(pheno_list, na.rm = TRUE)
-    names(seqdepth) <- abd[[sampleIDColinabdFile]]
+    names(seqdepth) <- abd[[ "IID" ]]
     
     data$SeqDepth <- seqdepth[match(data$IID, names(seqdepth))]
 
