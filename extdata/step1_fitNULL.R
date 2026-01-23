@@ -29,8 +29,8 @@ option_list <- list(
     help = "List of covariates (comma separated)"
   ),
   make_option("--outputPrefix",
-    type = "character", default = "~/",
-    help = "Required. Path and prefix of the output files [default='~/']"
+    type = "character", default = "",
+    help = "Required. Path and prefix of the output files [default='']"
   ),
   make_option("--isCovariateOffset",
     type = "logical", default = TRUE,
