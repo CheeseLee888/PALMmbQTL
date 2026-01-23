@@ -28,18 +28,6 @@ option_list <- list(
     type = "character", default = "",
     help = "List of covariates (comma separated)"
   ),
-  make_option("--offsetCol",
-    type = "character", default = "",
-    help = "offset column"
-  ),
-  make_option("--sampleIDColinabdFile",
-    type = "character", default = "IID",
-    help = "Column name of sample IDs in the abundance file, e.g. IID"
-  ),
-  make_option("--sampleIDColincovFile",
-    type = "character", default = "IID",
-    help = "Column name of sample IDs in the covariate file, e.g. IID"
-  ),
   make_option("--outputPrefix",
     type = "character", default = "~/",
     help = "Required. Path and prefix of the output files [default='~/']"
@@ -76,7 +64,7 @@ if (opt$covarColList!="all") {
   cov_header <- colnames(cov)
 
   ## Remove ID and offset columns
-  drop_cols <- c(opt$sampleIDColincovFile, opt$offsetCol)
+  drop_cols <- c("IID")
 
   covars <- setdiff(cov_header, drop_cols)
 
@@ -103,9 +91,6 @@ fitNULLGLMM_multiV(
   abdFile = opt$abdFile,
   covFile = opt$covFile,
   covarColList = covars,
-  offsetCol = opt$offsetCol,
-  sampleIDColinabdFile = opt$sampleIDColinabdFile,
-  sampleIDColincovFile = opt$sampleIDColincovFile,
   outputPrefix = opt$outputPrefix,
   isCovariateOffset = opt$isCovariateOffset,
   useGRMtoFitNULL = opt$useGRMtoFitNULL,
