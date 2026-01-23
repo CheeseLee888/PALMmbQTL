@@ -15,7 +15,7 @@
 fitNULLGLMM_multiV <- function(grmFile = "",
                                abdFile = "",
                                covFile = "",
-                               covarColList = NULL,
+                               covarColList = character(0),
                                offsetCol = "",
                                outputPrefix = "",
                                isCovariateOffset = TRUE,

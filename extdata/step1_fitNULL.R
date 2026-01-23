@@ -25,7 +25,7 @@ option_list <- list(
     help = "Required. Path to the covariate file."
   ), 
   make_option("--covarColList",
-    type = "character", default = "",
+    type = "character", default = "ALL",
     help = "List of covariates (comma separated)"
   ),
   make_option("--outputPrefix",
@@ -54,23 +54,25 @@ args <- parse_args(parser, positional_arguments = 0)
 opt <- args$options
 print(opt)
 
-## covariates: if covarColList is ALL, infer from covFile header
-if (opt$covarColList!="all") {
-  cat("Using user-specified covariates from --covarColList\n")
-  covars <- strsplit(opt$covarColList, ",")[[1]]
-} else {
+## covariates dealing
+if (is.null(opt$covarColList) || length(opt$covarColList) == 0 || toupper(opt$covarColList)=="NULL") {
+  cat("No covariates specified\n")
+  covars <- character(0)
+} else if (toupper(opt$covarColList)=="ALL") {
   cat("Using all covariates from covFile header\n")
   cov <- read_table_with_id(opt$covFile)
   cov_header <- colnames(cov)
-
-  ## Remove ID and offset columns
+  ## Remove ID columns
   drop_cols <- c("IID")
-
   covars <- setdiff(cov_header, drop_cols)
-
   if (!length(covars)) {
-    stop("No covariate columns found in covFile after removing ID and offset columns. Please set '--covarColList= '(empty) and try again.\n")
+    stop("No covariate columns found in covFile after removing ID and offset columns. Please set '--covarColList= NULL' and try again.\n")
   }
+} else {
+  cat("Using user-specified covariates from --covarColList\n")
+  covars <- strsplit(opt$covarColList, ",")[[1]]
+  covars <- trimws(covars)
+  covars <- covars[nzchar(covars)]
 }
 
 # convertoNumeric <- function(x, stringOutput) {
