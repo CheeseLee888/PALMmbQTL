@@ -78,15 +78,16 @@ colnames(geno) <- colnames(G)
 # Subset by chromosome if specified
 # --------------------------
 if (!is.null(opt$chrom) && nzchar(opt$chrom)) {
-    message("Subsetting genotype data for chromosome: ", opt$chrom)
-    chrom <- opt$chrom
-    chrom <- sub("^chr", "", chrom, ignore.case = TRUE)
+  message("Subsetting genotype data for chromosome: ", opt$chrom)
+  chrom <- sub("^chr", "", opt$chrom, ignore.case = TRUE)
 
-    chr_vec <- sub("^chr([0-9]+).*", "\\1", colnames(geno))  # abstract chr from SNP IDs
-    keep <- which(chr_vec == chrom)
-
-    if (length(keep) == 0L) stop("No SNPs found for --chrom=", opt$chrom)
-    geno <- geno[, keep, drop = FALSE]
+  # plink$map has chromosome info from .bim
+  chr_map <- as.character(plink$map$chromosome)
+  chr_map <- sub("^chr", "", chr_map, ignore.case = TRUE)
+  keep <- which(chr_map == chrom)
+  
+  if (length(keep) == 0L) stop("No SNPs found for --chrom=", opt$chrom)
+  geno <- geno[, keep, drop = FALSE]
 }
 
 # normalize correct from optparse (character) to R NULL
