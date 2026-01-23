@@ -10,7 +10,7 @@ SPAGMMATtest <- function(inFile = "",
                          phenoCol = "",
                          NULLmodelFile = "",
                          PALMOutputFile = "",
-                         minMAF = 0.05) {
+                         minMAF = 0) {
 
   load(NULLmodelFile)
   if (!exists("null_list")) stop("NULLmodelFile does not contain object 'null_list'.")

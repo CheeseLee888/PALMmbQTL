@@ -11,10 +11,6 @@ option_list <- list(
         type = "character", default = "",
         help = ""
     ),
-    make_option("--correct",
-        type = "character", default = "NULL",
-        help = ""
-    ),
     make_option("--NULLmodelFile",
         type = "character", default = "",
         help = ""
@@ -25,6 +21,10 @@ option_list <- list(
     ),
     make_option("--chrom",
         type = "character", default = "",
+        help = ""
+    ),
+    make_option("--correct",
+        type = "character", default = "NULL",
         help = ""
     ),
     make_option("--useCluster",

@@ -7,14 +7,14 @@ PALMmethod=2 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
 inputFolder=input
 outputFolder=output
 
-genoFile=./${inputFolder}/geno
+genoFile=${inputFolder}/geno
 chrom=1
 
 ######### optional below #########
-palm1_step1_prefix=./${outputFolder}/palm1_step1_allpheno
-palm1_step2_prefix=./${outputFolder}/palm1_step2${chrom:+_chr${chrom}}
-palm2_step1_prefix=./${outputFolder}/palm2_step1_allpheno
-palm2_step2_prefix=./${outputFolder}/palm2_step2${chrom:+_chr${chrom}}
+palm1_step1_prefix=${outputFolder}/palm1_step1_allpheno
+palm1_step2_prefix=${outputFolder}/palm1_step2${chrom:+_chr${chrom}}
+palm2_step1_prefix=${outputFolder}/palm2_step1_allpheno
+palm2_step2_prefix=${outputFolder}/palm2_step2${chrom:+_chr${chrom}}
 
 
 
@@ -31,20 +31,18 @@ else
 fi
 
 # step2: score test for phenoCol
-echo "Performing score test..."
+echo "Start: Performe score test."
 if [[ "${PALMmethod}" == 1 ]]; then
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_palm.R \
         --inFile=${genoFile} \
         --NULLmodelFile=${palm1_step1_prefix}.rda \
         --PALMOutputFile=${palm1_step2_prefix} \
-        --chrom=${chrom} \
-        --correct=NULL \
-        --useCluster=TRUE
+        --chrom=${chrom}
 else
     pixi run --manifest-path=../pixi.toml Rscript ../extdata/step2_scoreTest.R \
         --inFile=${genoFile} \
         --NULLmodelFile=${palm2_step1_prefix}.rda \
         --PALMOutputFile=${palm2_step2_prefix} \
-        --chrom=${chrom} \
-        --minMAF=0
+        --chrom=${chrom}
 fi
+echo "Finish: Performe score test."

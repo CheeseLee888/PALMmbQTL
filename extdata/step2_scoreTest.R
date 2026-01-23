@@ -16,9 +16,13 @@ option_list <- list(
     type = "character", default = "",
     help = "Path to geno file. Support many formats including bed/bim/fam, bgen, gds and txt. If using bed/bim/fam, only go with prefix; Otherwise full file name."
   ),
-  make_option("--phenoCol",
+  make_option("--NULLmodelFile",
     type = "character", default = "",
-    help = "Column name for the phenotype to be tested in the NULLmodelFile."
+    help = "Path to the input file containing the glmm model, which is output from previous step. Will be used by load()"
+  ),
+  make_option("--PALMOutputFile",
+    type = "character", default = "",
+    help = "Path to the output file containing assoc test results"
   ),
   make_option("--chrom",
     type = "character", default = "",
@@ -28,17 +32,13 @@ option_list <- list(
       "If empty, use all variants in inFile."
     )
   ),
-  make_option("--NULLmodelFile",
+  make_option("--phenoCol",
     type = "character", default = "",
-    help = "Path to the input file containing the glmm model, which is output from previous step. Will be used by load()"
-  ),
-  make_option("--PALMOutputFile",
-    type = "character", default = "",
-    help = "Path to the output file containing assoc test results"
+    help = "Column name for the phenotype to be tested in the NULLmodelFile."
   ),
   make_option("--minMAF",
-    type = "numeric", default = 0.05,
-    help = "Minimum minor allele frequency of markers to test. By default 0.05."
+    type = "numeric", default = 0,
+    help = "Minimum minor allele frequency of markers to test. By default 0."
   )
 )
 
