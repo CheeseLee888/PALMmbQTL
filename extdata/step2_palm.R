@@ -27,8 +27,8 @@ option_list <- list(
         type = "character", default = "",
         help = ""
     ),
-    make_option("--cluster",
-        type = "character", default = NULL,
+    make_option("--useCluster",
+        type = "logical", default = TRUE,
         help = "")
 )
 
@@ -43,12 +43,20 @@ fam <- paste0(opt$inFile, ".fam")
 for (f in c(bed, bim, fam)) if (!file.exists(f)) stop("Missing PLINK file: ", f)
 
 # read fam to get cluster info (make sure IDs align with abdFile's)
-cat("Reading PLINK .fam file for cluster info. \n")
-fam_data <- read.table(fam, stringsAsFactors = FALSE)
-colnames(fam_data) <- c("FID","IID","PID","MID","SEX","PHENO")
-
-cluster <- fam_data$FID
-names(cluster) <- fam_data$IID
+cluster <- NULL
+if (opt$useCluster) {
+  cat("Reading PLINK .fam file for cluster info. \n")
+  fam_data <- read.table(fam, stringsAsFactors = FALSE)
+  colnames(fam_data) <- c("FID","IID","PID","MID","SEX","PHENO")
+  cluster <- fam_data$FID
+  names(cluster) <- fam_data$IID
+  ## Handle FID = 0 case
+  if (all(cluster == 0)) {
+    cat("All FID values are 0. No valid cluster information detected. Setting opt$useCluster = FALSE.\n")
+    opt$useCluster <- FALSE
+    cluster <- NULL
+  }
+}
 # ----------------------------
 
 plink <- snpStats::read.plink(bed, bim, fam)
@@ -85,10 +93,6 @@ if (!is.null(opt$chrom) && nzchar(opt$chrom)) {
 if (is.null(opt$correct) || !nzchar(opt$correct) || toupper(opt$correct) == "NULL") {
   opt$correct <- NULL
 }
-# normalize cluster from optparse to R NULL
-if (is.null(opt$cluster) || !nzchar(opt$cluster) || toupper(opt$cluster) == "NULL") {
-  opt$cluster <- NULL
-}
 
 # # Save dosage matrix
 # write.table(
@@ -102,7 +106,8 @@ if (is.null(opt$cluster) || !nzchar(opt$cluster) || toupper(opt$cluster) == "NUL
 #     file.path(opt$PALMOutputFile, "geno_allele2_012_full.txt"), "\n"
 # )
 
-if (is.null(opt$cluster)) {
+# ---------- run palm.get.summary ----------
+if (!opt$useCluster) {
   cat("No cluster provided; running palm.get.summary without cluster.\n")
   res <- palm.get.summary(
     null.obj = modglmm,
@@ -110,7 +115,22 @@ if (is.null(opt$cluster)) {
     correct = opt$correct
   )
 }else{
-  cat("Cluster provided; running palm.get.summary with cluster.\n")
+  cat("Cluster provided; running palm.get.summary with cluster(FID in plink file).\n")
+  # print some cluster IDs
+  uclust <- unique(cluster)
+  cat("Unique cluster IDs (FID): ", length(uclust), "\n", sep = "")
+  max_print <- 10
+  if (length(uclust) <= max_print) {
+    print(uclust)
+  } else {
+    print(uclust[1:max_print])
+    cat("... (", length(uclust) - max_print, "more clusters omitted)\n", sep = "")
+  }
+
+  tab <- table(cluster)
+  cat("Cluster size (min/median/max): ",
+      min(tab), "/", as.numeric(median(tab)), "/", max(tab), "\n", sep = "")
+
   res <- palm.get.summary(
     null.obj = modglmm,
     covariate.interest = geno,
