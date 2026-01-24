@@ -164,6 +164,10 @@ fitNULLGLMM_multiV <- function(grmFile = "",
       " to ", end_i, "\n", sep = "")
 
   batch_dir  <- paste0(outputPrefix, "_batches")
+  if (batch_idx == 1 && dir.exists(batch_dir)) {
+    cat("batch_idx == 1: cleaning existing batch directory:", batch_dir, "\n")
+    unlink(list.files(batch_dir, full.names = TRUE), recursive = TRUE, force = TRUE)
+  }
   if (!dir.exists(batch_dir)) dir.create(batch_dir, recursive = TRUE)
   ## ---------------------------------
 
