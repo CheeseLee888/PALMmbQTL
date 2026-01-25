@@ -191,12 +191,18 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     if (useGRMtoFitNULL) {
       modglmm <- tryCatch(
         {
-          GMMAT::glmmkin(
-            formula,
-            data   = data,
-            kins   = grm_K,
-            id     = "IID",
-            family = poisson(link = "log")
+          callr::r(
+            func = function(formula, data, grm_K) {
+              GMMAT::glmmkin(
+                formula,
+                data   = data,
+                kins   = grm_K,
+                id     = "IID",
+                family = poisson(link = "log")
+              )
+            },
+            args = list(formula = as.formula(formula), data = data, grm_K = grm_K),
+            show = FALSE
           )
         },
         error = function(e) {
@@ -213,11 +219,17 @@ fitNULLGLMM_multiV <- function(grmFile = "",
       cat("No kins matrix provided to glmmkin\n")
       modglmm <- tryCatch(
         {
-          GMMAT::glmmkin(
-            formula,
-            data   = data,
-            id     = "IID",
-            family = poisson(link = "log")
+          callr::r(
+            func = function(formula, data) {
+              GMMAT::glmmkin(
+                formula,
+                data   = data,
+                id     = "IID",
+                family = poisson(link = "log")
+              )
+            },
+            args = list(formula = as.formula(formula), data = data),
+            show = FALSE
           )
         },
         error = function(e) {
