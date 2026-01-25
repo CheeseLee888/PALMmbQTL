@@ -57,7 +57,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   merged <- merge_abd_cov(abd, cov)
   data <- merged
   cat("Abundance and covariate files have been merged\n")
-  cat(colnames(data), "\n")
+  # cat(colnames(data), "\n")
 
   ## ------------------------------------------------------------------------
   ## Force the use of SeqDepth as offset：
@@ -125,15 +125,8 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     cat("pheno id:\n")
     cat(pheno_id[1:5], "\n")
 
-    if (!setequal(grm_id, pheno_id)) {
-      stop("ERROR! the sample IDs in the GRM file are not the same as those in the phenotype file\n")
-    }else {
-      cat("All sample IDs in the GRM file are the same as those in the phenotype file\n")
-    }
     if (!all(grm_id == pheno_id)) {
-      cat("GRM ID and phenotype ID are not in the same order; reorder GRM ...\n")
-      idx      <- match(pheno_id, grm_id)
-      grm_K    <- grm_K[idx, idx, drop = FALSE]
+      stop("GRM ID and phenotype ID are not in the same order!\n")
     }
 
   } else {

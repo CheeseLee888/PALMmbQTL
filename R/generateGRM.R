@@ -110,6 +110,8 @@ generateGRM <- function(genoFile = "", grmFile = "") {
 
   K         <- grm_res$grm       # GRM matrix
   sample.id <- grm_res$sample.id # sample order
+  rownames(K) <- sample.id
+  colnames(K) <- sample.id
 
   snpgdsClose(geno)
   ## If we created a temporary SNP GDS, remove it now
