@@ -96,6 +96,6 @@ fitNULLGLMM_multiV(
   outputPrefix = opt$outputPrefix,
   isCovariateOffset = opt$isCovariateOffset,
   useGRMtoFitNULL = opt$useGRMtoFitNULL,
-  batch_idx = opt$batch_idx,
-  batch_size = opt$batch_size
+  batch_idx = as.integer(opt$batch_idx),
+  batch_size = as.integer(opt$batch_size)
 )

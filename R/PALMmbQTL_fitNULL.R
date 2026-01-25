@@ -164,9 +164,14 @@ fitNULLGLMM_multiV <- function(grmFile = "",
       " to ", end_i, "\n", sep = "")
 
   batch_dir  <- paste0(outputPrefix, "_batches")
+  failed_pheno_file <- paste0(outputPrefix, "_failed_pheno.txt")
   if (batch_idx == 1 && dir.exists(batch_dir)) {
     cat("batch_idx == 1: cleaning existing batch directory:", batch_dir, "\n")
     unlink(list.files(batch_dir, full.names = TRUE), recursive = TRUE, force = TRUE)
+  }
+  if (batch_idx == 1 && file.exists(failed_pheno_file)) {
+    cat("batch_idx == 1: removing failed pheno file:", failed_pheno_file, "\n")
+    unlink(failed_pheno_file, force = TRUE)
   }
   if (!dir.exists(batch_dir)) dir.create(batch_dir, recursive = TRUE)
   ## ---------------------------------
@@ -205,7 +210,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
           cat("pheno: ", pheno_name, ", glmmkin failed.\n")
           write(
             pheno_name,
-            file   = paste0(outputPrefix, "_failed_pheno.txt"),
+            file   = failed_pheno_file,
             append = TRUE
           )
           NULL
@@ -226,7 +231,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
           cat("pheno: ", pheno_name, ", glmmkin failed.\n")
           write(
             pheno_name,
-            file   = paste0(outputPrefix, "_failed_pheno.txt"),
+            file   = failed_pheno_file,
             append = TRUE
           )
           NULL
