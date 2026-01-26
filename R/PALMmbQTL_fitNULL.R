@@ -159,6 +159,15 @@ fitNULLGLMM_multiV <- function(grmFile = "",
 
   batch_dir  <- paste0(outputPrefix, "_batches")
   failed_pheno_file <- paste0(outputPrefix, "_failed_pheno.txt")
+  if (start_i > 1){
+    cat("The previous pheno [", start_i - 1, "/", length(pheno_names), "] ", pheno_names[start_i - 1], "has segfault and exit unexpectedly. Append it to failed pheno file.\n")
+    write(
+      pheno_names[start_i - 1],
+      file   = failed_pheno_file,
+      append = TRUE
+    )
+  }
+  
   # progress file to indicate which batch_idx to run next
   progressFile <- paste0(outputPrefix, "_progress.txt")
 
