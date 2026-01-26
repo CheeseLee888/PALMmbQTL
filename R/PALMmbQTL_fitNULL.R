@@ -21,7 +21,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                isCovariateOffset = TRUE,
                                useGRMtoFitNULL = TRUE,
                                batch_idx = 1,
-                               batch_size = 5) {
+                               batch_size = 1) {
   ## set up output files
   modelOut <- paste0(outputPrefix, ".rda")
   # file.create(modelOut, showWarnings = TRUE)
@@ -148,16 +148,20 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   start_i <- (batch_idx - 1L) * batch_size + 1L
   end_i   <- length(pheno_names)
 
-  if (start_i > end_i) {
-    stop("start_i exceeds number of phenotypes: start_i = ",
-        start_i, ", total = ", end_i)
-  }
+  # Delete this block to allow processing the merge and save in the end (loop will be skipped if start_i > end_i)
+  # if (start_i > end_i) {
+  #   cat("All phenotypes processed. Exit.\n")
+  #   quit(status = 0)
+  # }
 
   cat("Start processing phenotypes from index ", start_i,
       " to ", end_i, "\n", sep = "")
 
   batch_dir  <- paste0(outputPrefix, "_batches")
   failed_pheno_file <- paste0(outputPrefix, "_failed_pheno.txt")
+  # progress file to indicate which batch_idx to run next
+  progressFile <- paste0(outputPrefix, "_progress.txt")
+
   if (batch_idx == 1 && dir.exists(batch_dir)) {
     cat("batch_idx == 1: cleaning existing batch directory:", batch_dir, "\n")
     unlink(list.files(batch_dir, full.names = TRUE), recursive = TRUE, force = TRUE)
@@ -169,96 +173,104 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   if (!dir.exists(batch_dir)) dir.create(batch_dir, recursive = TRUE)
   ## ---------------------------------
 
-  for (i in seq.int(start_i, end_i)) {
-    pheno_name <- pheno_names[i]
-    cat("[", i, "/", length(pheno_names), "] Fitting NULL GLMM for pheno: ", pheno_name, "\n")
+  if (start_i <= end_i) {
 
-    # construct the formula
-    if (length(covarColList) > 0) {
-      formula <- paste0(pheno_name, "~", paste0(covarColList, collapse = "+"))
-    } else {
-      formula <- paste0(pheno_name, "~ 1")
+    for (i in seq.int(start_i, end_i)) {
+      # next batch index to process
+      writeLines(as.character(i + 1), con = progressFile)
+
+      pheno_name <- pheno_names[i]
+      cat("[", i, "/", length(pheno_names), "] Fitting NULL GLMM for pheno: ", pheno_name, "\n")
+
+      # construct the formula
+      if (length(covarColList) > 0) {
+        formula <- paste0(pheno_name, "~", paste0(covarColList, collapse = "+"))
+      } else {
+        formula <- paste0(pheno_name, "~ 1")
+      }
+
+      if (isCovariateOffset && offsetCol != "") {
+        formula <- paste0(formula, "+offset(log(", offsetCol, "))")
+      }
+      if (i == start_i || i == end_i) {
+        cat("formula is ", formula, "\n")
+      }
+
+      # run glmmkin (skip failed phenotypes)
+      if (useGRMtoFitNULL) {
+        modglmm <- tryCatch(
+          {
+            GMMAT::glmmkin(
+              formula,
+              data   = data,
+              kins   = grm_K,
+              id     = "IID",
+              family = poisson(link = "log")
+            )
+          },
+          error = function(e) {
+            cat("pheno: ", pheno_name, ", glmmkin failed.\n")
+            write(
+              pheno_name,
+              file   = failed_pheno_file,
+              append = TRUE
+            )
+            NULL
+          }
+        )
+      }else{
+        cat("No kins matrix provided to glmmkin\n")
+        modglmm <- tryCatch(
+          {
+            GMMAT::glmmkin(
+              formula,
+              data   = data,
+              id     = "IID",
+              family = poisson(link = "log")
+            )
+          },
+          error = function(e) {
+            cat("pheno: ", pheno_name, ", glmmkin failed.\n")
+            write(
+              pheno_name,
+              file   = failed_pheno_file,
+              append = TRUE
+            )
+            NULL
+          }
+        )
+      }
+
+      if (!is.null(modglmm)) {
+        cat("pheno: ", pheno_name, ", glmmkin succeed.\n")
+        null_list[[pheno_name]] <- list(
+          pheno_name = pheno_name,
+          modglmm    = modglmm
+        )
+      }
+
+      ## --- add: save every <batch_size> phenotypes OR at the end, then clear null_list ---
+      if (i %% batch_size == 0L || i == length(pheno_names)) {
+        batch_file <- file.path(batch_dir, sprintf("batch_%04d.rds", batch_idx))
+        saveRDS(null_list, file = batch_file)
+        cat("Saved batch ", batch_idx, " to ", batch_file,
+            " (n=", length(null_list), ")\n", sep = "")
+        # cat("Contains pheno indexes: ",
+        #     paste0(seq.int(i - length(null_list) + 1, i), collapse = ", "), "\n")
+
+        # clear in-memory list to reduce memory usage
+        null_list <- list()
+        invisible(gc())
+        batch_idx <- batch_idx + 1
+      }
+      ## ------------------------------------------------------------------------
     }
 
-    if (isCovariateOffset && offsetCol != "") {
-      formula <- paste0(formula, "+offset(log(", offsetCol, "))")
-    }
-    if (i == start_i || i == end_i) {
-      cat("formula is ", formula, "\n")
-    }
-
-    # run glmmkin (skip failed phenotypes)
-    if (useGRMtoFitNULL) {
-      modglmm <- tryCatch(
-        {
-          GMMAT::glmmkin(
-            formula,
-            data   = data,
-            kins   = grm_K,
-            id     = "IID",
-            family = poisson(link = "log")
-          )
-        },
-        error = function(e) {
-          cat("pheno: ", pheno_name, ", glmmkin failed.\n")
-          write(
-            pheno_name,
-            file   = failed_pheno_file,
-            append = TRUE
-          )
-          NULL
-        }
-      )
-    }else{
-      cat("No kins matrix provided to glmmkin\n")
-      modglmm <- tryCatch(
-        {
-          GMMAT::glmmkin(
-            formula,
-            data   = data,
-            id     = "IID",
-            family = poisson(link = "log")
-          )
-        },
-        error = function(e) {
-          cat("pheno: ", pheno_name, ", glmmkin failed.\n")
-          write(
-            pheno_name,
-            file   = failed_pheno_file,
-            append = TRUE
-          )
-          NULL
-        }
-      )
-    }
-
-    if (!is.null(modglmm)) {
-      cat("pheno: ", pheno_name, ", glmmkin succeed.\n")
-      null_list[[pheno_name]] <- list(
-        pheno_name = pheno_name,
-        modglmm    = modglmm
-      )
-    }
-
-    ## --- add: save every <batch_size> phenotypes OR at the end, then clear null_list ---
-    if (i %% batch_size == 0L || i == length(pheno_names)) {
-      batch_file <- file.path(batch_dir, sprintf("batch_%04d.rds", batch_idx))
-      saveRDS(null_list, file = batch_file)
-      cat("Saved batch ", batch_idx, " to ", batch_file,
-          " (n=", length(null_list), ")\n", sep = "")
-      # cat("Contains pheno indexes: ",
-      #     paste0(seq.int(i - length(null_list) + 1, i), collapse = ", "), "\n")
-
-      # clear in-memory list to reduce memory usage
-      null_list <- list()
-      invisible(gc())
-      batch_idx <- batch_idx + 1
-    }
-    ## ------------------------------------------------------------------------
   }
 
 
   ## --- add: merge all batch files into one null_list, then save to modelOut ---
+  cat("Finish all phenotypes in the dataset. Merging batch files...\n")
   batch_files <- list.files(batch_dir, pattern = "^batch_[0-9]{4}\\.rds$", full.names = TRUE)
   batch_files <- sort(batch_files)
   if (length(batch_files) == 0) stop("No batch files found in ", batch_dir)
@@ -282,4 +294,6 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   ## --- clean up batch files ---
   unlink(batch_dir, recursive = TRUE, force = TRUE)
   cat("Temporary batch files have been removed from ", batch_dir, "\n", sep = "")
+
+  quit(status = 0)
 }

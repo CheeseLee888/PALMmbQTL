@@ -62,10 +62,47 @@ if [[ "${PALMmethod}" == 1 ]]; then
         --covFile=${covFile} \
         --outputPrefix=${palm1_step1_prefix}
 else
-    pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_fitNULL.R \
-        --grmFile=${grmFile} \
-        --abdFile=${abdFile} \
-        --covFile=${covFile} \
-        --outputPrefix=${palm2_step1_prefix}
+    # Progress file: records "which batch_idx to run next"
+    RESET_STEP1=1
+    PROGRESS="${palm2_step1_prefix}_progress.txt"
+
+    if [ "${RESET_STEP1}" -eq 1 ]; then
+        echo "[step1] RESET enabled: removing progress and restarting from 1"
+        rm -f "$PROGRESS"
+        echo 1 > "$PROGRESS"
+    else
+        if [ ! -f "$PROGRESS" ]; then
+            echo 1 > "$PROGRESS"
+        fi
+    fi
+
+    attempt=1
+    set +e   # Allow commands to fail inside the loop
+    
+    while true; do
+        batch_idx=$(cat "$PROGRESS")
+
+        echo "=== attempt=${attempt} resume batch_idx=${batch_idx} ==="
+
+        pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_fitNULL.R \
+            --grmFile=${grmFile} \
+            --abdFile=${abdFile} \
+            --covFile=${covFile} \
+            --outputPrefix=${palm2_step1_prefix} \
+            --batch_idx=${batch_idx}
+
+        rc=$?
+
+        # exit after all phenotypes are processed
+        if [ $rc -eq 0 ]; then
+            echo "All phenotypes processed. Stop."
+            rm -f "$PROGRESS"
+            break
+        fi
+
+        echo "Run crashed. Restart; will resume from progress=$(cat "$PROGRESS")" >&2
+        attempt=$((attempt + 1))
+    done
+    set -e  # Re-enable exit on error
 fi
 echo "Finish: Fit null model."
