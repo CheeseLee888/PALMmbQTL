@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ################################# parameter settings below #################################
-inFile=output/palm2_step2_g1.txt
+inFile=output/palm2_step2_allchr_g1.txt
 outdir=plot
 
 
