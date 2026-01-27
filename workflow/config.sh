@@ -21,6 +21,7 @@ chrom=NULL
 grmFile=${inputFolder}/grm.rds
 outputSnpFile=${outputFolder}/info_snp.txt
 outputFeatureFile=${outputFolder}/info_feature.txt
+outputSampleFile=${outputFolder}/info_sample.txt
 palm1_step1_prefix=${outputFolder}/palm1_step1_allpheno
 palm2_step1_prefix=${outputFolder}/palm2_step1_allpheno
 if [[ "${chrom}" == "NULL" ]]; then
@@ -45,6 +46,7 @@ export chrom
 export grmFile
 export outputSnpFile
 export outputFeatureFile
+export outputSampleFile
 export palm1_step1_prefix
 export palm1_step2_prefix
 export palm2_step1_prefix

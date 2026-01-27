@@ -18,3 +18,9 @@ pixi run --manifest-path=pixi.toml Rscript extdata/step0_featureInfo.R \
     --abdFile=${abdFile} \
     --outputFile=${outputFeatureFile}
 echo "Finish: Generate feature information."
+
+echo "Start: Generate sample information."
+pixi run --manifest-path=pixi.toml Rscript extdata/step0_sampleInfo.R \
+    --abdFile=${abdFile} \
+    --outputFile=${outputSampleFile}
+echo "Finish: Generate sample information."
