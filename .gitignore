@@ -32,6 +32,5 @@ guide/*.pdf
 guide/*.synctex.gz
 test*
 *noCov*
-example/quick.sh
-example/quick_docker.sh
 *.sbatch
+mytest/
