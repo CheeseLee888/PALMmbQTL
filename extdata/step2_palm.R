@@ -77,7 +77,7 @@ colnames(geno) <- colnames(G)
 # --------------------------
 # Subset by chromosome if specified
 # --------------------------
-if (!is.null(opt$chrom) && nzchar(opt$chrom)) {
+if (!is.null(opt$chrom) && toupper(opt$chrom) != "NULL") {
   message("Subsetting genotype data for chromosome: ", opt$chrom)
   chrom <- sub("^chr", "", opt$chrom, ignore.case = TRUE)
 

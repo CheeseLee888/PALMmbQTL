@@ -55,7 +55,7 @@ print(opt)
 # --------------------------
 inFile_to_use <- opt$inFile  # Default: directly use the user-provided inFile
 
-if (nzchar(opt$chrom)) {
+if (!is.null(opt$chrom) && toupper(opt$chrom) != "NULL") {
   message("Chromosome specified: ", opt$chrom)
 
   # Currently, --chrom is only implemented for PLINK bed/bim/fam
@@ -110,7 +110,7 @@ SPAGMMATtest(
 # --------------------------
 # Cleanup temporary files
 # --------------------------
-if (nzchar(opt$chrom)) {
+if (!is.null(opt$chrom) && toupper(opt$chrom) != "NULL") {
   tmp_files <- Sys.glob(paste0(tmp_prefix, ".*"))
   if (length(tmp_files) > 0L) {
     message(
