@@ -14,9 +14,6 @@
 *.sif
 *.tar
 
-# exclude data
-extdata/input/*
-extdata/output/*
-
 # example output
 example/output/*
+example/plot/*
