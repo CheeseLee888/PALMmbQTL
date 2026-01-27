@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-################################# parameter settings below #################################
-inputFolder=input
-outputFolder=output
-genoFile=${inputFolder}/geno
-abdFile=${inputFolder}/abd.txt
-outputSnpFile=${outputFolder}/info_snp.txt
-outputFeatureFile=${outputFolder}/info_feature.txt
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/config.sh"
+
 
 ################################# workflow below (do not modify) #################################
 mkdir -p "${outputFolder}"

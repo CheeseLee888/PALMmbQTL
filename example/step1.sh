@@ -1,21 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-################################# parameter settings below #################################
-######### required below #########
-PALMmethod=2 # 1 for 'PALM' or 2 for 'PALM-mbQTL'
-
-inputFolder=input
-outputFolder=output
-
-genoFile=${inputFolder}/geno
-abdFile=${inputFolder}/abd.txt
-covFile=${inputFolder}/cov.txt
-
-######### optional below #########
-grmFile=${inputFolder}/grm.rds
-palm1_step1_prefix=${outputFolder}/palm1_step1_allpheno
-palm2_step1_prefix=${outputFolder}/palm2_step1_allpheno
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/config.sh"
 
 
 ################################# workflow below (do not modify) #################################
