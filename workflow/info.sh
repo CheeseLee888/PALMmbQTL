@@ -8,13 +8,13 @@ source "${SCRIPT_DIR}/config.sh"
 mkdir -p "${outputFolder}"
 
 echo "Start: Generate SNP information."
-pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_snpInfo.R \
+pixi run --manifest-path=pixi.toml Rscript extdata/step0_snpInfo.R \
     --genoFile=${genoFile} \
     --outputFile=${outputSnpFile}
 echo "Finish: Generate SNP information."
 
 echo "Start: Generate feature information."
-pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_featureInfo.R \
+pixi run --manifest-path=pixi.toml Rscript extdata/step0_featureInfo.R \
     --abdFile=${abdFile} \
     --outputFile=${outputFeatureFile}
 echo "Finish: Generate feature information."

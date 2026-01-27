@@ -20,7 +20,7 @@ mkdir -p "${outputFolder}"
 
 # step0: check input files
 echo "Start: Check input files."
-pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_checkInput.R \
+pixi run --manifest-path=pixi.toml Rscript extdata/step0_checkInput.R \
     --abdFile=${abdFile} \
     --covFile=${covFile} \
     --genoFile=${genoFile}
@@ -33,7 +33,7 @@ if [[ "${PALMmethod}" == 2 ]]; then
         echo "GRM already exists at: ${grmFile}"
         echo "Skip generating GRM and reuse the existing GRM."
     else
-        pixi run --manifest-path=../pixi.toml Rscript ../extdata/step0_generateGRM.R \
+        pixi run --manifest-path=pixi.toml Rscript extdata/step0_generateGRM.R \
             --genoFile=${genoFile} \
             --grmFile=${grmFile}
     fi
@@ -43,7 +43,7 @@ fi
 # step1: fit null model for all phenotypes
 echo "Start: Fit null model."
 if [[ "${PALMmethod}" == 1 ]]; then
-    pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_palm.R \
+    pixi run --manifest-path=pixi.toml Rscript extdata/step1_palm.R \
         --abdFile=${abdFile} \
         --covFile=${covFile} \
         --outputPrefix=${palm1_step1_prefix}
@@ -70,7 +70,7 @@ else
 
         echo "=== attempt=${attempt} resume batch_idx=${batch_idx} ==="
 
-        pixi run --manifest-path=../pixi.toml Rscript ../extdata/step1_fitNULL.R \
+        pixi run --manifest-path=pixi.toml Rscript extdata/step1_fitNULL.R \
             --grmFile=${grmFile} \
             --abdFile=${abdFile} \
             --covFile=${covFile} \

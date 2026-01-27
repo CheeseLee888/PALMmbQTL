@@ -5,8 +5,8 @@
 PALMmethod=2 
 
 # input and output folders
-inputFolder=example/input
-outputFolder=example/output
+inputFolder=input
+outputFolder=output
 
 # input files
 genoFile=${inputFolder}/geno
