@@ -1,6 +1,10 @@
 
 ################################# parameter settings below #################################
 ##################################### required below #######################################
+# Set WORK and SIF paths
+WORK=/Users/peterli/Desktop/PALMmbQTL
+SIF=${WORK}/palmmbqtl.sif
+
 # PALM method; 1 for 'PALM' or 2 for 'PALM-mbQTL'
 PALMmethod=2
 
@@ -36,6 +40,8 @@ fi
 
 
 ###################### export variables for scripts (do not modify) ########################
+inputFolder=${WORK}/${inputFolder}
+outputFolder=${WORK}/${outputFolder}
 genoFile=${inputFolder}/${genoFile}
 abdFile=${inputFolder}/${abdFile}
 covFile=${inputFolder}/${covFile}
