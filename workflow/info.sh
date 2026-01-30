@@ -19,8 +19,8 @@ pixi run --manifest-path=pixi.toml Rscript extdata/step0_featureInfo.R \
     --outputFile=${outputFeatureFile}
 echo "Finish: Generate feature information."
 
-echo "Start: Generate sample information."
-pixi run --manifest-path=pixi.toml Rscript extdata/step0_sampleInfo.R \
+echo "Start: Generate sequencing depth information."
+pixi run --manifest-path=pixi.toml Rscript extdata/step0_seqdepthInfo.R \
     --abdFile=${abdFile} \
-    --outputFile=${outputSampleFile}
-echo "Finish: Generate sample information."
+    --outputFile=${outputSeqDepthFile}
+echo "Finish: Generate sequencing depth information."

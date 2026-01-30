@@ -35,7 +35,7 @@ rownames(abd_mat) <- sample_id
 SeqDepth <- rowSums(abd_mat, na.rm = TRUE)
 
 # Create a data frame for sample information
-sample_info <- data.frame(
+seqdepth_info <- data.frame(
   SampleID = sample_id,
   SeqDepth = SeqDepth,
   row.names = NULL
@@ -45,5 +45,5 @@ sample_info <- data.frame(
 if (is.null(opt$outputFile) || !nzchar(opt$outputFile)) {
   stop("The --outputFile argument is missing or empty. Please provide a valid file path.")
 }
-write.table(sample_info, file = opt$outputFile, sep = "\t", quote = FALSE, row.names = FALSE)
-cat("Sample information written to: ", opt$outputFile, "\n")
+write.table(seqdepth_info, file = opt$outputFile, sep = "\t", quote = FALSE, row.names = FALSE)
+cat("Sequencing depth information written to: ", opt$outputFile, "\n")

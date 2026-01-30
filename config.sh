@@ -25,7 +25,7 @@ SIF=palmmbqtl.sif
 grmFile=grm.rds
 outputSnpFile=info_snp.txt
 outputFeatureFile=info_feature.txt
-outputSampleFile=info_sample.txt
+outputSeqDepthFile=info_seqdepth.txt
 palm1_step1_prefix=palm1_step1_allpheno
 palm2_step1_prefix=palm2_step1_allpheno
 if [[ "${chrom}" == "NULL" ]]; then
@@ -49,7 +49,7 @@ covFile=${inputFolder}/${covFile}
 grmFile=${inputFolder}/${grmFile}
 outputSnpFile=${outputFolder}/${outputSnpFile}
 outputFeatureFile=${outputFolder}/${outputFeatureFile}
-outputSampleFile=${outputFolder}/${outputSampleFile}
+outputSeqDepthFile=${outputFolder}/${outputSeqDepthFile}
 palm1_step1_prefix=${outputFolder}/${palm1_step1_prefix}
 palm2_step1_prefix=${outputFolder}/${palm2_step1_prefix}
 palm1_step2_prefix=${outputFolder}/${palm1_step2_prefix}
@@ -67,7 +67,7 @@ export chrom
 export grmFile
 export outputSnpFile
 export outputFeatureFile
-export outputSampleFile
+export outputSeqDepthFile
 export palm1_step1_prefix
 export palm1_step2_prefix
 export palm2_step1_prefix
