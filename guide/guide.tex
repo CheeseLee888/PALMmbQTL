@@ -15,26 +15,16 @@
 \begin{document}
 \maketitle
 
-% \section{Overview}
-
-% PALM-mbQTL implements a Poisson mixed-effect model for microbiome QTL
-% analysis. For each microbial feature (e.g.\ genus abundance), the
-% pipeline
-
-% \begin{enumerate}[nosep]
-%   \item builds a genetic relationship matrix (GRM) from SNP genotypes;
-%   \item merges microbiome abundance with sample-level covariates;
-%   \item fits a null Poisson GLMM with random genetic effect; and
-%   \item performs single-variant score tests across the genome.
-% \end{enumerate}
-
-% This document describes the minimal Docker-based installation and the
-% example workflow in \texttt{example/}, which is driven by the shell
-% script \texttt{example/quick.sh}.  The same interface can be used on
-% real data by editing the parameter block at the top of
-% \texttt{quick.sh}.
-
-% An additional PALM mode based on our own implementation is also provided; a brief usage example is given below, while full details are documented in a separate PALM manual (PDF).
+\section{Overview}
+PALM-mbQTL is software for microbiome–host genetics association studies. 
+It implements the recently developed PALM method (Genome Biology, to appear). 
+The software includes two variants of PALM: PALM1 and PALM2. 
+Both methods are run in two steps: 
+Step 1 fits a null model (microbiome ~ covariates) that does not use genotype data; 
+Step 2 uses the Step 1 outputs together with SNP genotype files to compute association 
+summary statistics (effect estimates and standard errors). 
+Please run both PALM1 and PALM2 for each study cohort and return the resulting 
+summary statistics.
 
 
 % \section{Installation (Docker only)}
@@ -96,42 +86,60 @@ No additional download or build step is required.
 \subsection{Project setup}
 
 Unpack or clone the PALM-mbQTL project directory to a working location.
- Set the project root directory via the \texttt{WORK} variable in
-\texttt{config.sh}.
+After entering the project root directory, users may define the working
+directory via a local environment file.
+Specifically, create or edit a \texttt{.env} file to store the absolute path
+of the current project directory:
 
 \begin{verbatim}
-WORK=/path/to/PALMmbQTL
+cd /path/to/PALMmbQTL
+nano .env
 \end{verbatim}
 
-\subsection{Quick pre-run check}
-
-Before deploying the workflow on your own data, it is recommended to
-first run the core steps on the example data.
-Specifically, users can change to the project root directory
-(\texttt{WORK}) and execute
+with the following content:
 
 \begin{verbatim}
-cd $WORK
-bash workflow/info.sh
-bash workflow/step1.sh
-bash workflow/step2.sh
+export WORK=$(pwd)
 \end{verbatim}
 
-to verify that the configuration and input files are correctly set up and
-that the pipeline produces the expected outputs.
+Load the environment variables into the current shell session:
+
+\begin{verbatim}
+source .env
+\end{verbatim}
+
+\subsection{Test run}
+
+Before deploying the workflow on large-scale data or submitting jobs to an
+HPC scheduler, it is recommended to first perform a test run using the
+example data.
+
+Execute the core workflow steps sequentially:
+
+\begin{verbatim}
+bash workflow/info.sbatch
+bash workflow/step1.sbatch
+bash workflow/step2.sbatch
+\end{verbatim}
+
+This test run verifies that the configuration, input files, and container
+environment are correctly set up and that the pipeline produces the expected
+outputs under \texttt{example/output/}.
+
 
 
 
 \section{Example input files}
 
-The example data live in \texttt{example/input/}:
+The example input data live in \texttt{example/input/}:
 
 \begin{itemize}[nosep]
   \item \texttt{abd.txt}: abundance file.
   \item \texttt{cov.txt}: covariate file.
   \item \texttt{geno.bed}, \texttt{geno.bim}, \texttt{geno.fam}:
         PLINK genotype files.
-  % \item \texttt{grm.rds} (optional): precomputed GRM in RDS format. PALM-mbQTL only.
+  \item \texttt{grm.rds} (optional): precomputed GRM RDS file. 
+        Required only when analyzing family-based data.
 \end{itemize}
 
 \subsection{\texttt{abd.txt}}
@@ -141,7 +149,7 @@ DKR276	3789	674	728
 DLB658	3404	1670	194
 NTY571	1399	1269	184
 \end{verbatim}
-
+(IID is shortened here) \\
 Requirements:
 
 \begin{itemize}[nosep]
@@ -169,7 +177,7 @@ Requirements:
   \item One row per sample.
   \item First column: unique sample ID (name can be anything; in the example it is `IID`). 
   Sample ID column must match the `IID` column in `abd.txt`.
-  \item Remaining columns: covariates that will be included as fixed effects in the model.
+  \item Remaining columns: covariates that will be adjusted for in the model.
 \end{itemize}
 
 \subsection{\texttt{geno.bed/.bim/.fam}}
@@ -184,21 +192,39 @@ Standard PLINK binary format:
         microbiome/covariate files.
 \end{itemize}
 
-% \subsection{grm.rds}
-% Optional precomputed GRM in RDS format.
-% If not provided, the pipeline will generate the GRM from the
-% genotype files automatically.
+\subsection{grm.rds}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=1\textwidth]{figures/grm.png}
+\end{figure}
+Requirements:
+After reading the GRM file using \texttt{readRDS()} in R, the returned object 
+should be a list with two elements:
+\begin{itemize}
+  \item \texttt{K}: a numeric matrix of dimension $N \times N$, representing the genetic relationship matrix
+  \item \texttt{sample.id}: a character vector of length $N$, indicating the sample order corresponding to \texttt{K}
+\end{itemize}
+
+The row and column order of \texttt{K} must exactly match the order of \texttt{sample.id}.
+
+\subsection{Notes}  
+Sample IDs across different input files (e.g., \texttt{abd.txt}, \texttt{cov.txt}, genotype files, and \texttt{grm.rds}) do not need to appear in the same order. The pipeline will internally align samples by their IDs.
+
+However, the set of sample IDs must be identical across all input files. Samples present in one file but missing in another are not allowed.
+
 
 \section{Example output files}
 
-The example runs produce two sets of outputs under \texttt{example/output/}:
+The test run will produce two sets of outputs under \texttt{example/output/}:
 
 \begin{itemize}[nosep]
-  \item Files prefixed with \texttt{palm1} correspond to the PALM run, for
+  \item Files prefixed with \texttt{palm1} correspond to the output from 
+  using the main PALM method (PALM1), for
     example \texttt{palm1\_step1\_allpheno.rda} and
   	\texttt{palm1\_step2\_chr1\_g1.txt}.
   \item Files prefixed with \texttt{palm2} correspond to the
-    PALM-mbQTL run, for example \texttt{palm2\_step1\_allpheno.rda}
+    output from using a variant of PALM method (PALM2), 
+    for example \texttt{palm2\_step1\_allpheno.rda}
     and \texttt{palm2\_step2\_chr1\_g1.txt}.
   \item Filenames: \texttt{chr1} (chromosome name), \texttt{g1} (phenotype/gene name).
 \end{itemize}
@@ -239,14 +265,11 @@ Users only need to modify \texttt{config.sh}; no changes to the workflow scripts
 \subsection*{Required parameters}
 
 \begin{itemize}
-  \item \texttt{WORK} \\
-  Working directory of the PALM-mbQTL project. Absolute path is recommended.
-
   \item \texttt{PALMmethod} \\
   Integer indicating which PALM method to run:
   \begin{itemize}
-    \item \texttt{1}: PALM
-    \item \texttt{2}: PALM-mbQTL
+    \item \texttt{1}: Main PALM method
+    \item \texttt{2}: A variant of the PALM method
   \end{itemize}
 
   \item \texttt{inputFolder} \\
@@ -266,6 +289,24 @@ Users only need to modify \texttt{config.sh}; no changes to the workflow scripts
 
   \item \texttt{covFile} \\
   Path to covariate file. Should be put under \texttt{inputFolder/}.
+
+  \item \texttt{grmFile} \\
+  Path to the GRM (genetic relationship matrix) RDS file.
+  This parameter is \textbf{required only when analyzing family-based data}, 
+  where genetic relatedness among samples must be explicitly modeled. 
+  In such cases, users must provide a precomputed GRM file.
+  For population-based studies with unrelated samples, users can set 
+  \texttt{grmFile = NULL}, and an identity matrix will be used when fitting 
+  the null model.
+  The GRM file should be placed under \texttt{inputFolder/} and must be an 
+  RDS file containing:
+  \begin{itemize}
+    \item \texttt{sample.id}: a character vector of sample IDs
+    \item \texttt{K}: an $N \times N$ symmetric GRM matrix ordered exactly 
+    as \texttt{sample.id}
+  \end{itemize}
+  If \texttt{grmFile} is set to \texttt{NULL}, no GRM RDS file is needed.
+
 \end{itemize}
 
 \subsection*{Chromosome control}
@@ -275,6 +316,8 @@ Users only need to modify \texttt{config.sh}; no changes to the workflow scripts
   Chromosome to analyze in step 2.  
   Set to a specific chromosome number (1-22) to analyze one chromosome at a time.
   Set to \texttt{NULL} to analyze all chromosomes.
+  This parameter can also be used for parallel execution, for example by
+  setting \texttt{chrom=\$\{SLURM\_ARRAY\_TASK\_ID\}} in a SLURM array job.
 \end{itemize}
 
 \subsection*{Optional parameters}
@@ -284,25 +327,15 @@ The following parameters are pre-defined in \texttt{config.sh} and usually do no
 \begin{itemize}
   \item \texttt{SIF} \\
   Path to the Apptainer/Singularity image file (\texttt{.sif}).
-  This parameter is used when running the workflow inside an Apptainer or
-  Singularity container.
-
-  \item \texttt{grmFile} \\
-  Path to the GRM RDS file. Used only when \texttt{PALMmethod=2}.
-  Users do \textbf{not} need to provide a GRM file manually.  
-  If the specified file does not exist, the GRM will be generated automatically
-  from the genotype data and saved to this path.
-  If the file already exists, the GRM generation step will be skipped and
-  the existing GRM will be reused.
 
   \item \texttt{outputSnpFile} \\
   Output file containing SNP information.
 
   \item \texttt{outputFeatureFile} \\
-  Output file containing feature information.
+  Output file containing feature information, including average proportion and prevalence.
 
-  \item \texttt{outputSampleFile} \\
-  Output file containing sample information.
+  \item \texttt{outputSeqDepthFile} \\
+  Output file containing sequencing depth information.
 
   \item \texttt{palm1\_step1\_prefix} \\
   Output prefix for step 1 when \texttt{PALMmethod=1}.
@@ -316,6 +349,7 @@ The following parameters are pre-defined in \texttt{config.sh} and usually do no
   Output prefixes for step 2 results.  
   If \texttt{chrom=NULL}, results from all chromosomes are merged automatically;
   otherwise chromosome-specific output files are generated.
+  We suggest running jobs in parallel across chromosomes.
 \end{itemize}
 
 \subsection*{Notes}
@@ -344,18 +378,18 @@ Users do not need to interact with individual R scripts directly.
 
   Prepare your own input data by following the structure of the provided
   \texttt{example/} directory.
-  This includes the microbiome abundance table (\texttt{abd.txt}),
+  This includes the abundance file (\texttt{abd.txt}),
   the covariate file (\texttt{cov.txt}),
-  and PLINK genotype files (\texttt{.bed/.bim/.fam}).
+  the PLINK genotype files (\texttt{.bed/.bim/.fam}),
+  and optionally the GRM RDS file (\texttt{grm.rds}).
   File formats and requirements are described in Section~2.
 
   \item \textbf{Edit the configuration file \texttt{config.sh}}
 
-  Open \texttt{config.sh} and modify the parameters to point to your
-  own input and output paths.
+  Open \texttt{config.sh} and modify the parameters.
   In particular, set \texttt{PALMmethod}, \texttt{inputFolder},
   \texttt{outputFolder}, \texttt{genoFile}, \texttt{abdFile}, \texttt{covFile},
-   and \texttt{chrom}.
+   \texttt{grmFile} (if applicable), and \texttt{chrom}.
   All analysis parameters are defined in this file.
 
   \item \textbf{Run the workflow scripts}
@@ -368,27 +402,26 @@ Users do not need to interact with individual R scripts directly.
   or submitted to a job scheduler (e.g. \texttt{sbatch}) on HPC systems.
 
   \begin{itemize}
-    \item \texttt{info.sh} \\
+    \item \texttt{info.sbatch} \\
     Generates basic summary information for quality control and reporting,
-    including:
+    such as:
     SNP-level information from the genotype files,
-    feature-level summaries from the microbiome abundance table,
-    and sample-level information.
+    feature-level and sequencing depth information from the abundance file.
     This step does not perform association testing and is typically run once
-    per dataset.
+    per study.
 
-    \item \texttt{step1.sh} \\
+    \item \texttt{step1.sbatch} \\
     Fits the null models for all microbiome features.
     Input files are first validated for consistency.
-    When \texttt{PALMmethod=2}, a genetic relationship matrix (GRM) is generated
-    automatically if it does not already exist.
-    The fitted null models are saved to disk and reused by subsequent steps.
+    The fitted null models are saved and will be used by step 2.
 
-    \item \texttt{step2.sh} \\
-    Performs single-variant association testing using the fitted null models.
+    \item \texttt{step2.sbatch} \\
+    Performs single-variant association testing using the fitted null models 
+    and SNP genotypes.
     This step supports chromosome-wise execution via the \texttt{chrom} parameter
     in \texttt{config.sh}.
-    Users can run step 2 separately for different chromosomes (e.g. \texttt{chrom=1},
+    We encourage users to run step 2 separately for different chromosomes 
+    (e.g. \texttt{chrom=1},
     \texttt{chrom=2}, \ldots), enabling straightforward parallelization on
     high-performance computing systems.
   \end{itemize}
@@ -398,7 +431,7 @@ Users do not need to interact with individual R scripts directly.
 
   Output files are written to \texttt{outputFolder}.
   Association results are generated per chromosome and per phenotype, while
-  summary files provide feature-, SNP-, and sample-level information.
+  summary files provide feature, SNP, and sequencing depth information.
   Users can proceed with downstream analysis, visualization, and interpretation
   based on these outputs.
 \end{enumerate}
