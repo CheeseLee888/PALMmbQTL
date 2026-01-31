@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/../config.sh"
+source "$WORK/config.sh"
 
 
 ################################# workflow below (do not modify) #################################
@@ -19,13 +18,13 @@ fi
 # step2: score test for phenoCol
 echo "Start: Performe score test."
 if [[ "${PALMmethod}" == 1 ]]; then
-    pixi run --manifest-path=pixi.toml Rscript extdata/step2_palm.R \
+    pixi run --manifest-path=${WORK}/pixi.toml Rscript ${WORK}/extdata/step2_palm.R \
         --inFile=${genoFile} \
         --NULLmodelFile=${palm1_step1_prefix}.rda \
         --PALMOutputFile=${palm1_step2_prefix} \
         --chrom=${chrom}
 else
-    pixi run --manifest-path=pixi.toml Rscript extdata/step2_scoreTest.R \
+    pixi run --manifest-path=${WORK}/pixi.toml Rscript ${WORK}/extdata/step2_scoreTest.R \
         --inFile=${genoFile} \
         --NULLmodelFile=${palm2_step1_prefix}.rda \
         --PALMOutputFile=${palm2_step2_prefix} \

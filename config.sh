@@ -1,9 +1,6 @@
 
 ################################# parameter settings below #################################
 ##################################### required below #######################################
-# Set WORK and SIF paths
-WORK=/Users/peterli/Desktop/PALMmbQTL
-
 # PALM method; 1 for 'PALM' or 2 for 'PALM-mbQTL'
 PALMmethod=2
 
@@ -55,7 +52,6 @@ palm2_step1_prefix=${outputFolder}/${palm2_step1_prefix}
 palm1_step2_prefix=${outputFolder}/${palm1_step2_prefix}
 palm2_step2_prefix=${outputFolder}/${palm2_step2_prefix}
 
-export WORK
 export SIF
 export PALMmethod
 export inputFolder
