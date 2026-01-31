@@ -86,6 +86,11 @@ else
             break
         fi
 
+        if [ $rc -eq 2 ]; then
+            echo "Fatal preflight error detected. Abort." >&2
+            exit 1
+        fi
+
         echo "Run crashed. Restart; will resume from progress=$(cat "$PROGRESS")" >&2
         attempt=$((attempt + 1))
     done

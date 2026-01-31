@@ -22,17 +22,24 @@ fitNULLGLMM_multiV <- function(grmFile = "",
                                useGRMtoFitNULL = TRUE,
                                batch_idx = 1,
                                batch_size = 1) {
+  
+  # help function to print fatal error message and quit
+  fatal <- function(...) {
+    cat("FATAL:", ..., "\n")
+    quit(status = 2)
+  }
+
   ## set up output files
   modelOut <- paste0(outputPrefix, ".rda")
   # file.create(modelOut, showWarnings = TRUE)
 
   ## sanity checks for required files / arguments -------------------------------
   if (abdFile == "" || !file.exists(abdFile)) {
-    stop("ERROR: abdFile must be provided and must exist.")
+    fatal("ERROR: abdFile must be provided and must exist.")
   }
 
   if (covFile == "" || !file.exists(covFile)) {
-    stop("ERROR: covFile must be provided and must exist.")
+    fatal("ERROR: covFile must be provided and must exist.")
   }
 
   ## read tables with ID handling -----------------------------------------------
@@ -44,8 +51,8 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   pheno_names <- setdiff(colnames(abd), "IID")
   pheno_list <- abd[, pheno_names, drop = FALSE]
   # Simple sanity check
-  if (any(pheno_list < 0, na.rm = TRUE)) {
-    warning("Abundance table contains negative values; 
+  if (any(pheno_list < 0) || any(is.na(pheno_list))) {
+    fatal("Abundance table contains negative values or NA values; 
             please make sure abdFile is raw counts when using SeqDepth.")
   }
 
@@ -73,12 +80,9 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     
     data$SeqDepth <- seqdepth[match(data$IID, names(seqdepth))]
 
-    # Check for NA and non-positive values
-    if (any(is.na(data$SeqDepth))) {
-      warning("Some samples in merged data do not have SeqDepth (no matching abd).")
-    }
+    # Check for non-positive values in SeqDepth
     if (any(data$SeqDepth <= 0, na.rm = TRUE)) {
-      stop("SeqDepth contains non-positive values. Please check abdFile.")
+      fatal("SeqDepth contains non-positive values. Please check abdFile.")
     }
 
     # Set offsetCol to SeqDepth for use in the formula later
@@ -89,12 +93,12 @@ fitNULLGLMM_multiV <- function(grmFile = "",
 
     # Ensure the column exists
     if (!offsetCol %in% colnames(data)) {
-      stop("Specified offsetCol '", offsetCol, "' not found in merged data.")
+      fatal("Specified offsetCol '", offsetCol, "' not found in merged data.")
     }
 
     # Also check if values are > 0
     if (any(data[[offsetCol]] <= 0, na.rm = TRUE)) {
-      stop("Offset column '", offsetCol, "' contains non-positive values.")
+      fatal("Offset column '", offsetCol, "' contains non-positive values.")
     }
   }
 
@@ -102,7 +106,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   if (length(covarColList) > 0) {
     cat("Covariates: ", covarColList, "\n")
     if (!all(covarColList %in% colnames(data))) {
-      stop("ERROR! all covariates in covarColList must be in the merged data\n")
+      fatal("ERROR! all covariates in covarColList must be in the merged data\n")
     }
   }
 
@@ -114,7 +118,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   if (useGRMtoFitNULL) {
     cat("GRM will be used to fit the NULL model\n")
     if (!file.exists(grmFile)) {
-      stop("ERROR! grmFile ", grmFile, " does not exist\n")
+      fatal("grmFile ", grmFile, " does not exist\n")
     }
     grm_obj <- readRDS(grmFile)
     grm_K   <- grm_obj$K
@@ -126,7 +130,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
     cat(pheno_id[1:5], "\n")
 
     if (!all(grm_id == pheno_id)) {
-      stop("GRM ID and phenotype ID are not in the same order!\n")
+      fatal("GRM ID and phenotype ID are not in the same order!\n")
     }
 
   } else {
@@ -142,7 +146,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   ## --- add: batch saving settings ---
   # batch_idx is user-controlled, must be >= 1
   if (batch_idx < 1L) {
-    stop("batch_idx must be >= 1")
+    fatal("batch_idx must be >= 1")
   }
 
   start_i <- (batch_idx - 1L) * batch_size + 1L
@@ -282,7 +286,7 @@ fitNULLGLMM_multiV <- function(grmFile = "",
   cat("Finish all phenotypes in the dataset. Merging batch files...\n")
   batch_files <- list.files(batch_dir, pattern = "^batch_[0-9]{4}\\.rds$", full.names = TRUE)
   batch_files <- sort(batch_files)
-  if (length(batch_files) == 0) stop("No batch files found in ", batch_dir)
+  if (length(batch_files) == 0) fatal("No batch files found in ", batch_dir)
 
   null_list <- list()
   for (bf in batch_files) {
