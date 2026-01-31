@@ -15,6 +15,7 @@ outputFolder=example/output
 genoFile=geno
 abdFile=abd.txt
 covFile=cov.txt
+grmFile=grm.rds
 
 # chromosome number to analyze (for step2 only); set to 'NULL' for all chromosomes
 chrom=1
@@ -22,7 +23,6 @@ chrom=1
 ##################################### optional below #######################################
 # Default paths for other files, can be modified as needed
 SIF=palmmbqtl.sif
-grmFile=grm.rds
 outputSnpFile=info_snp.txt
 outputFeatureFile=info_feature.txt
 outputSeqDepthFile=info_seqdepth.txt

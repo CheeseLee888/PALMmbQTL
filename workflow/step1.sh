@@ -26,19 +26,19 @@ pixi run --manifest-path=pixi.toml Rscript extdata/step0_checkInput.R \
     --genoFile=${genoFile}
 echo "Finish: Check input files."    
 
-# step0: generate GRM from genotype data (only for PALM-mbQTL)
-if [[ "${PALMmethod}" == 2 ]]; then
-    echo "Start: Generate GRM."
-    if [[ -f "${grmFile}" ]]; then
-        echo "GRM already exists at: ${grmFile}"
-        echo "Skip generating GRM and reuse the existing GRM."
-    else
-        pixi run --manifest-path=pixi.toml Rscript extdata/step0_generateGRM.R \
-            --genoFile=${genoFile} \
-            --grmFile=${grmFile}
-    fi
-    echo "Finish: Generate GRM."
-fi
+# # step0: generate GRM from genotype data (only for PALM-mbQTL)
+# if [[ "${PALMmethod}" == 2 ]]; then
+#     echo "Start: Generate GRM."
+#     if [[ -f "${grmFile}" ]]; then
+#         echo "GRM already exists at: ${grmFile}"
+#         echo "Skip generating GRM and reuse the existing GRM."
+#     else
+#         pixi run --manifest-path=pixi.toml Rscript extdata/step0_generateGRM.R \
+#             --genoFile=${genoFile} \
+#             --grmFile=${grmFile}
+#     fi
+#     echo "Finish: Generate GRM."
+# fi
 
 # step1: fit null model for all phenotypes
 echo "Start: Fit null model."

@@ -48,7 +48,6 @@ option_list <- list(
 parser <- OptionParser(usage = "%prog [options]", option_list = option_list)
 args <- parse_args(parser, positional_arguments = 0)
 opt <- args$options
-print(opt)
 
 ## covariates dealing
 if (is.null(opt$covarColList) || length(opt$covarColList) == 0 || toupper(opt$covarColList)=="NULL") {
@@ -82,6 +81,12 @@ if (is.null(opt$covarColList) || length(opt$covarColList) == 0 || toupper(opt$co
 #   }
 #   return(y)
 # }
+
+if (basename(toupper(opt$grmFile)) == "NULL") {
+  opt$useGRMtoFitNULL <- FALSE
+}
+
+print(opt)
 
 set.seed(1)
 fitNULLGLMM_multiV(
