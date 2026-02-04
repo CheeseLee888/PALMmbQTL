@@ -317,7 +317,7 @@ Users only need to modify \texttt{config.sh}; no changes to the workflow scripts
   Set to a specific chromosome number (1-22) to analyze one chromosome at a time.
   Set to \texttt{NULL} to analyze all chromosomes.
   This parameter can also be used for parallel execution, for example by
-  setting \texttt{chrom=\$\{SLURM\_ARRAY\_TASK\_ID\}} in a SLURM array job.
+  setting \texttt{chrom=\$\{SLURM\_ARRAY\_TASK\_ID:-NULL\}} in a SLURM array job.
 \end{itemize}
 
 \subsection*{Optional parameters}
@@ -400,6 +400,12 @@ Users do not need to interact with individual R scripts directly.
   well-defined analysis task.
   The scripts can be executed directly using \texttt{bash} on a local machine
   or submitted to a job scheduler (e.g. \texttt{sbatch}) on HPC systems.
+  \noindent\textbf{Note:}  
+  The \texttt{\#SBATCH} directives at the beginning of each \texttt{.sbatch} 
+  script (e.g., job name, partition, CPU, memory, time limits and log info) 
+  are provided as examples and can be modified by users to match their own 
+  HPC environment and resource requirements.
+
 
   \begin{itemize}
     \item \texttt{info.sbatch} \\
