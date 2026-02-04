@@ -8,12 +8,6 @@ R/*.lo
 .DS_Store
 .Rhistory
 *.Rproj*
-extdata/input
-extdata/output
-extdata/run_kirin.R
-.Rproj.user
-extdata/*.sh
-extdata/*.sbatch
 *.sif
 *.tar
 *.swp
@@ -32,5 +26,4 @@ guide/*.pdf
 guide/*.synctex.gz
 test*
 *noCov*
-*.sbatch
 mytest/
