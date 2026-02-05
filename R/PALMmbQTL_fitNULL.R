@@ -210,49 +210,26 @@ fitNULLGLMM_multiV <- function(grmFile = "",
       }
 
       # run glmmkin (skip failed phenotypes)
-      if (useGRMtoFitNULL) {
-        modglmm <- tryCatch(
-          {
-            GMMAT::glmmkin(
-              formula,
-              data   = data,
-              kins   = grm_K,
-              id     = "IID",
-              family = poisson(link = "log")
-            )
-          },
-          error = function(e) {
-            cat("pheno: ", pheno_name, ", glmmkin failed.\n")
-            write(
-              pheno_name,
-              file   = failed_pheno_file,
-              append = TRUE
-            )
-            NULL
-          }
-        )
-      }else{
-        cat("No kins matrix provided to glmmkin\n")
-        modglmm <- tryCatch(
-          {
-            GMMAT::glmmkin(
-              formula,
-              data   = data,
-              id     = "IID",
-              family = poisson(link = "log")
-            )
-          },
-          error = function(e) {
-            cat("pheno: ", pheno_name, ", glmmkin failed.\n")
-            write(
-              pheno_name,
-              file   = failed_pheno_file,
-              append = TRUE
-            )
-            NULL
-          }
-        )
-      }
+      modglmm <- tryCatch(
+        {
+          GMMAT::glmmkin(
+            formula,
+            data   = data,
+            kins   = grm_K,
+            id     = "IID",
+            family = poisson(link = "log")
+          )
+        },
+        error = function(e) {
+          cat("pheno: ", pheno_name, ", glmmkin failed.\n")
+          write(
+            pheno_name,
+            file   = failed_pheno_file,
+            append = TRUE
+          )
+          NULL
+        }
+      )
 
       if (!is.null(modglmm)) {
         cat("pheno: ", pheno_name, ", glmmkin succeed.\n")
